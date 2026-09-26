@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;font:14px system-ui,-apple-system,sans-serif;background:#fafaf9}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>コストの決まり方</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#F6F8F7; --surface:#FFFFFF; --surface-2:#EDF1F0; --inset:#F0F4F3;
+  --ink:#13201E; --ink-2:#485855; --ink-3:#74847F; --line:#D5DEDB;
+  --accent:#0E6B68; --accent-soft:#DCEAE8;
+  --allow:#2B7448; --allow-soft:#DEEFE4;
+  --deny:#AE3729; --deny-soft:#F6E1DD;
+  --warn:#8E5B06; --warn-soft:#F6EAD1;
+  --serif:'Shippori Mincho',"Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:'Zen Kaku Gothic New',"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+    --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+    --accent:#52B2AD; --accent-soft:#14302E;
+    --allow:#6FC38B; --allow-soft:#142E1E;
+    --deny:#E4877A; --deny-soft:#331A16;
+    --warn:#D3A44E; --warn-soft:#2E2510;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+  --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+  --accent:#52B2AD; --accent-soft:#14302E;
+  --allow:#6FC38B; --allow-soft:#142E1E;
+  --deny:#E4877A; --deny-soft:#331A16;
+  --warn:#D3A44E; --warn-soft:#2E2510;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:0 96px}
+a{color:var(--accent)}
+
+/* ---------- header ---------- */
+.masthead{padding-block:56px 40px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,6vw,46px);line-height:1.3;margin:0 0 18px;text-wrap:balance;letter-spacing:.01em}
+.standfirst{margin:0;max-width:62ch;color:var(--ink-2);font-size:17px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.meta span{font-family:var(--mono);font-size:12px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);background:var(--surface)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:1fr;gap:40px;margin-top:40px}
+@media (min-width:1000px){ .cols{grid-template-columns:200px minmax(0,1fr);gap:56px} }
+nav.toc{font-size:14px}
+@media (min-width:1000px){ nav.toc{position:sticky;top:32px;align-self:start;max-height:calc(100vh - 64px);overflow-y:auto} }
+nav.toc h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px;font-weight:600}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+@media (max-width:999px){ nav.toc ol{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))} }
+nav.toc a{display:block;padding:5px 10px;border-radius:6px;text-decoration:none;color:var(--ink-2);line-height:1.5;border-left:2px solid transparent}
+nav.toc a:hover{background:var(--surface-2);color:var(--ink)}
+nav.toc a .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-right:7px}
+
+main{min-width:0;max-width:74ch}
+section{padding-block:44px;border-top:1px solid var(--line)}
+section:first-child{border-top:none;padding-top:8px}
+h2{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3.6vw,29px);line-height:1.45;margin:0 0 6px;text-wrap:balance}
+.h2num{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.12em;display:block;margin-bottom:8px}
+h3{font-family:var(--sans);font-weight:700;font-size:17px;margin:34px 0 10px;color:var(--ink);letter-spacing:.01em}
+p{margin:0 0 18px;max-width:66ch}
+ul,ol.body{margin:0 0 18px;padding-left:1.35em;max-width:66ch}
+li{margin-bottom:7px}
+strong{font-weight:700}
+em{font-style:normal;background:linear-gradient(transparent 62%,var(--accent-soft) 62%);font-weight:500}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);padding:2px 6px;border-radius:4px;word-break:break-word}
+
+/* ---------- blocks ---------- */
+.lead{font-size:17.5px;color:var(--ink-2);max-width:64ch}
+.goals{list-style:none;padding:0;margin:0;display:grid;gap:10px;max-width:66ch}
+.goals li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;margin:0;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.goals .tick{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:4px}
+
+.note{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.note p:last-child{margin-bottom:0}
+.note .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
+.note.warn{border-left-color:var(--warn)} .note.warn .label{color:var(--warn)}
+
+.trap{background:var(--deny-soft);border:1px solid transparent;border-radius:8px;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.trap .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--deny);display:block;margin-bottom:6px;font-weight:600}
+.trap p:last-child{margin-bottom:0}
+
+/* ---------- code ---------- */
+.code{background:var(--inset);border:1px solid var(--line);border-radius:8px;overflow-x:auto;margin:0 0 20px}
+.code pre{margin:0;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.75;color:var(--ink)}
+.code .cap{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding:10px 20px 0}
+.k{color:var(--accent)} .s{color:var(--ink-2)} .c{color:var(--ink-3)} .d{color:var(--deny)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 22px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+th,td{text-align:left;padding:12px 15px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:none}
+td.yes{color:var(--allow);font-weight:600} td.no{color:var(--deny);font-weight:600}
+
+/* ---------- eval ladder ---------- */
+.ladder{display:grid;gap:0;margin:0 0 8px}
+.rung{display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.rung .no{font-family:var(--mono);font-size:12px;color:var(--ink-3);text-align:center}
+.rung .q{font-size:15px;line-height:1.6}
+.rung .q small{display:block;color:var(--ink-3);font-size:12.5px;line-height:1.6;margin-top:2px}
+.out{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.out.deny{background:var(--deny-soft);color:var(--deny)}
+.out.allow{background:var(--allow-soft);color:var(--allow)}
+.drop{height:14px;margin-left:33px;border-left:2px solid var(--line)}
+.terminal{margin-top:14px;padding:14px 16px;border-radius:8px;background:var(--allow-soft);color:var(--allow);font-weight:700;font-size:15px}
+
+/* ---------- svg figure ---------- */
+figure{margin:0 0 22px}
+.fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+figcaption{font-size:13px;color:var(--ink-3);margin-top:10px;line-height:1.7}
+svg text{font-family:var(--sans)}
+
+/* ---------- judgement list ---------- */
+.judge{display:grid;gap:8px;margin:0 0 22px}
+.judge .row{display:grid;grid-template-columns:1fr;gap:4px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+@media (min-width:640px){ .judge .row{grid-template-columns:1fr auto 1fr;gap:14px;align-items:center} }
+.judge .cue{font-size:14.5px;color:var(--ink-2)}
+.judge .arrow{font-family:var(--mono);color:var(--ink-3);font-size:13px}
+.judge .ans{font-size:14.5px;font-weight:700;color:var(--accent)}
+
+/* ---------- quiz ---------- */
+details.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin:0 0 12px;overflow:hidden}
+details.q summary{cursor:pointer;padding:16px 18px;font-weight:500;line-height:1.75;list-style:none;font-size:15.5px}
+details.q summary::-webkit-details-marker{display:none}
+details.q summary::after{content:"解答を見る";display:block;font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:10px;letter-spacing:.08em}
+details.q[open] summary::after{content:"閉じる";color:var(--ink-3)}
+details.q summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.q .a{padding:0 18px 18px;border-top:1px solid var(--line);margin-top:0;padding-top:16px}
+details.q .a p{margin-bottom:12px;font-size:15px}
+details.q .a p:last-child{margin-bottom:0}
+.qnum{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.1em;display:block;margin-bottom:7px}
+.correct{color:var(--allow);font-weight:700}
+.opts{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:5px}
+.opts li{font-size:14.5px;color:var(--ink-2);margin:0;padding-left:1.8em;text-indent:-1.8em}
+
+/* ---------- homework ---------- */
+.hw{display:grid;gap:10px;margin:0 0 22px}
+.hw .item{display:grid;grid-template-columns:auto 1fr;gap:13px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;align-items:start}
+.hw .box{width:15px;height:15px;border:1.5px solid var(--ink-3);border-radius:3px;margin-top:6px}
+.hw .t{font-size:15px;line-height:1.7}
+.hw .t small{display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+
+footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3);line-height:1.8}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">AWS SAA-C03 / W9 座学</p>
+  <h1>コスト最適化 ―― 課金はどこで発生しているか</h1>
+  <p class="standfirst">出題比率20%のドメイン4は、実は独立した知識が少なく、これまでの各サービスの「安い側の選択肢」を集めたものです。ただしデータ転送料金だけは別で、ここを知らないと解けない設問が確実に出ます。課金がどこで発生するかを地図として持っておくのが今日の目的です。</p>
+  <div class="meta"><span>所要 60-90分</span><span>前提 W1-W5 読了</span><span>ドメイン4 (20%)</span></div>
+</header>
+
+<div class="cols">
+
+<nav class="toc">
+  <h2>目次</h2>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
+    <li><a href="#s2"><span class="n">02</span>設問の型</a></li>
+    <li><a href="#s3"><span class="n">03</span>購入オプション</a></li>
+    <li><a href="#s4"><span class="n">04</span>スポット</a></li>
+    <li><a href="#s5"><span class="n">05</span>データ転送</a></li>
+    <li><a href="#s6"><span class="n">06</span>ストレージ</a></li>
+    <li><a href="#s7"><span class="n">07</span>コンピュート</a></li>
+    <li><a href="#s8"><span class="n">08</span>管理ツール</a></li>
+    <li><a href="#s9"><span class="n">09</span>6つの柱</a></li>
+    <li><a href="#s10"><span class="n">10</span>試験での判断軸</a></li>
+    <li><a href="#s11"><span class="n">11</span>確認問題</a></li>
+    <li><a href="#s12"><span class="n">12</span>今日の宿題</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="s1" data-toc="ゴール">
+
+  <span class="h2num">01</span>
+  <h2>この講義のゴール</h2>
+  <p class="lead">ドメイン4は新しいサービスをほとんど覚えません。これまで学んだサービスそれぞれに「安い側の選択肢」があり、それをどういう条件で選ぶかを問われます。唯一の例外がデータ転送料金です。次の3つができていれば合格です。</p>
+  <ul class="goals">
+    <li><span class="tick">01</span><div><strong>データが動いたときに課金されるかどうかを即答できる。</strong><br>同一AZ内、AZ間、リージョン間、インターネット向き、NAT Gateway 経由――それぞれで誰が払うかを地図として持っている。</div></li>
+    <li><span class="tick">02</span><div><strong>ワークロードの説明文から購入オプションを選べる。</strong><br>「常時稼働」「中断に耐えられる」「1年以上使う」「将来インスタンスを変えるかもしれない」という言葉と、オンデマンド／スポット／RI／Savings Plans が結びついている。</div></li>
+    <li><span class="tick">03</span><div><strong>「コストを下げる」設問で、要件を壊す選択肢を弾ける。</strong><br>安いだけの答えと、要件を満たしたうえで安い答えを区別できる。</div></li>
+  </ul>
+  <div class="note">
+    <span class="label">なぜ今この順番か</span>
+    <p>コスト最適化を最初に学ぶと、何を削っているのか分からないまま数字だけ覚えることになります。EC2、S3、VPC、RDS を一通り見た今だからこそ、「この構成のどこに課金メーターが回っているか」という見方ができます。逆に、この講義で分からない箇所はコストの理解不足ではなく、そのサービス自体の理解不足です。W1〜W5 に戻ってください。</p>
+  </div></section>
+
+<section id="s2" data-toc="設問の型">
+
+  <span class="h2num">02</span>
+  <h2>コスト設問の2つの型</h2>
+  <p class="lead">ドメイン4の設問は、ほぼ2つの言い回しに集約されます。どちらの型かを見分けることが、選択肢を絞る最初の一手です。</p>
+
+  <h3>型1「最もコスト効率が高いのはどれか」</h3>
+  <p>この型で最初にやることは<strong>設問文から要件を抜き出すこと</strong>です。可用性、耐久性、レイテンシ、保持期間、復旧時間は必ず書いてあります。選択肢には、その要件を静かに落とすことで安くしているものが混ざっています。</p>
+  <p>たとえば「本番データベースの可用性を維持しながらコストを下げたい」という設問で「マルチAZ配置をシングルAZに変更する」という選択肢は、安いけれども要件を満たしていません。<em>コスト最適化とは「安くすること」ではなく「要件を満たす構成のうち最も安いものを選ぶこと」です。</em></p>
+
+  <h3>型2「運用負荷を上げずにコストを下げる」</h3>
+  <p>こちらは<strong>運用負荷という第二の軸</strong>が加わった型です。「運用オーバーヘッドを最小限に」「管理を追加せずに」「最小の労力で」という表現が出てきたら、この型です。</p>
+  <p>この型では、自前でスクリプトを書く、cron で定期実行する、担当者が毎月レビューする――といった選択肢が並びます。コスト削減としては正しくても、運用負荷が増えるため不正解です。正解は AWS 側が自動でやってくれるマネージドな機能で、S3 のアクセスパターンが不明なときに「Intelligent-Tiering を有効にする」が選ばれるのはこの軸のためです。</p>
+
+  <h3>罠になる選択肢の5パターン</h3>
+  <p>誤答の作られ方には型があります。模試で間違えたときは、自分がどのパターンに引っかかったかを分類しておくと再発が減ります。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>パターン</th><th>選択肢の見え方</th><th>見分け方</th></tr></thead>
+    <tbody>
+      <tr><td><strong>要件破り</strong></td><td>マルチAZをやめる、バックアップ保持期間を短くする、重要データを One Zone-IA に置く</td><td>設問文の可用性・耐久性の要件と突き合わせる。<strong>設問に書いてある制約は絶対</strong></td></tr>
+      <tr><td><strong>運用負荷の付け替え</strong></td><td>Lambda とスクリプトで自前の自動化を作る、定期的に手動でレビューする</td><td>「運用負荷を上げずに」とあれば不正解。マネージド機能があるならそちらが優先</td></tr>
+      <tr><td><strong>期間のミスマッチ</strong></td><td>3か月のプロジェクトに3年の RI、検証環境に長期コミットメント</td><td>設問に書かれた利用期間とコミットメント期間を比べる</td></tr>
+      <tr><td><strong>特性のミスマッチ</strong></td><td>ステートフルな本番DBをスポットインスタンスで動かす、即時取り出しが必要なデータを Glacier Deep Archive へ</td><td>そのサービスが前提とする使い方から外れていないか</td></tr>
+      <tr><td><strong>隠れコスト</strong></td><td>S3 へのアクセスを NAT Gateway 経由のままにする、少量の通信に Interface エンドポイントを大量に立てる</td><td>時間料金とデータ処理料金が別に乗るものを知っているか。ここが今日の中心</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「コストを削減したい」とだけ見て最も安い選択肢を選ぶと外れます。設問文の前半には必ず「99.99%の可用性を維持しながら」「監査のため7年間保持する」といった条件が埋まっています。<strong>後半の「最もコスト効率が高いのは」だけを読んで選ぶ</strong>のが、この分野の最大の失点源です。</p>
+  </div></section>
+
+<section id="s3" data-toc="購入オプション">
+
+  <span class="h2num">03</span>
+  <h2>購入オプションを選ぶ</h2>
+  <p class="lead">EC2 の料金は、突き詰めれば「インスタンス時間 × 単価」です。購入オプションは、このうち単価を下げる手段です。使わない時間を減らすのは後の節で扱います。</p>
+
+  <h3>4つの選択肢を1枚に並べる</h3>
+  <p>設問はこの4つのどれを選ぶかを聞いてきます。割引率の大小ではなく<strong>何を差し出して割引を得ているか</strong>で覚えてください。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>オプション</th><th>差し出すもの</th><th>割引の大きさ</th><th>中断</th><th>キャパシティ確保</th><th>設問に出る言葉</th></tr></thead>
+    <tbody>
+      <tr><td><strong>オンデマンド</strong></td><td>何も差し出さない</td><td>基準（割引なし）</td><td class="no">されない</td><td class="no">保証なし</td><td>「予測できない」「短期」</td></tr>
+      <tr><td><strong>スポット</strong></td><td>中断されない保証</td><td>最大（オンデマンドの数分の一）</td><td class="yes">される（通知あり）</td><td class="no">保証なし</td><td>「中断に耐えられる」「ステートレス」「バッチ」</td></tr>
+      <tr><td><strong>Reserved Instance</strong></td><td>1年または3年の利用コミット、および構成の固定</td><td>大</td><td class="no">されない</td><td>ゾーン指定なら確保できる</td><td>「常時稼働」「安定した使用量」</td></tr>
+      <tr><td><strong>Savings Plans</strong></td><td>1年または3年の<strong>金額</strong>コミット</td><td>大</td><td class="no">されない</td><td class="no">保証しない</td><td>「柔軟性を保ちながら」「Fargate や Lambda も使う」</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>この表で大事なのは「差し出すもの」の列です。スポットは<em>可用性</em>を、RI と Savings Plans は<em>期間の自由</em>を差し出している。差し出せないものが設問に書いてあれば、その選択肢は消えます。</p>
+
+  <h3>Reserved Instance の中身</h3>
+  <p>RI は「このインスタンスを1年（または3年）使い続けます」と宣言して割引を得る仕組みです。物理的な予約ではなく、請求上の割引が稼働インスタンスに自動適用されます。軸は2つあります。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>Standard RI</th><th>Convertible RI</th></tr></thead>
+    <tbody>
+      <tr><td><strong>割引率</strong></td><td class="yes">大きい</td><td>Standard より小さい</td></tr>
+      <tr><td><strong>インスタンスファミリーの変更</strong></td><td class="no">できない</td><td class="yes">できる（同等以上の価値への交換）</td></tr>
+      <tr><td><strong>OS・テナンシーの変更</strong></td><td class="no">できない</td><td class="yes">できる</td></tr>
+      <tr><td><strong>途中での売却</strong></td><td class="yes">RI マーケットプレイスで売れる</td><td class="no">売れない</td></tr>
+      <tr><td><strong>向く状況</strong></td><td>構成が固まっていて3年変えない</td><td>世代交代やリファクタリングの可能性がある</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>支払い方法は3つあり、<strong>全額前払い → 一部前払い → 前払いなし</strong>の順に割引が大きくなります。「初期費用を抑えたい」なら前払いなし、「割引を最大化したい」なら全額前払いです。</p>
+
+  <p>もうひとつ、<strong>リージョン指定 RI とゾーン指定 RI</strong>の違いがあります。リージョン指定は AZ を固定せず、同一ファミリー内でサイズをまたいで割引が適用されます（Linux かつ共有テナンシーの場合）。ゾーン指定は AZ を固定する代わりに<strong>キャパシティの予約</strong>が付きます。「特定の AZ でキャパシティを確保したい」ならゾーン指定 RI か、独立した機能であるオンデマンドキャパシティ予約です。</p>
+
+  <div class="note warn">
+    <span class="label">よく混同されるところ</span>
+    <p>「Reserved」という語感から RI は常にキャパシティを予約すると思われがちですが、<strong>リージョン指定 RI は予約しません</strong>。純粋に請求上の割引です。<strong>Savings Plans もどちらの形でも予約しません</strong>。「キャパシティを保証したい」という要件は割引の話と切り離し、オンデマンドキャパシティ予約かゾーン指定 RI を選んでください。</p>
+  </div>
+
+  <h3>Savings Plans の2種類</h3>
+  <p>Savings Plans は「1時間あたりいくら使い続けます」という<strong>金額のコミット</strong>です。タイプではなく金額を約束するので RI より柔軟で、種類は2つあります。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>Compute Savings Plans</th><th>EC2 Instance Savings Plans</th></tr></thead>
+    <tbody>
+      <tr><td><strong>割引率</strong></td><td>Compute のほうが小さい</td><td class="yes">こちらが大きい</td></tr>
+      <tr><td><strong>インスタンスファミリー</strong></td><td class="yes">自由に変えられる</td><td class="no">指定したファミリーに固定</td></tr>
+      <tr><td><strong>リージョン</strong></td><td class="yes">またげる</td><td class="no">指定したリージョンに固定</td></tr>
+      <tr><td><strong>インスタンスサイズ・OS・テナンシー</strong></td><td class="yes">自由</td><td class="yes">自由</td></tr>
+      <tr><td><strong>対象サービス</strong></td><td class="yes">EC2 に加えて Fargate と Lambda もカバー</td><td class="no">EC2 のみ</td></tr>
+      <tr><td><strong>向く状況</strong></td><td>構成が変わる、サーバーレスへの移行を進めている</td><td>使うファミリーとリージョンが決まっている</td></tr>
+    </tbody>
+  </table></div>
+
+  <p><strong>Compute は広く浅く、EC2 Instance は狭く深く。</strong>設問に「Fargate」「Lambda」が出てきたら Compute Savings Plans しか選べません。逆に「今後もこのファミリーを使い続ける」「リージョンは固定」なら、割引の大きい EC2 Instance Savings Plans が正解です。</p>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>RI と Savings Plans のどちらかを選ばせる設問では、<strong>柔軟性を求める言葉が出ていれば Savings Plans</strong>です。Savings Plans は個々のインスタンスに紐づかず、最も割引額の大きいリソースへ自動で適用されるため、管理の手間も少なくて済みます。</p>
+  </div>
+
+  <h3>ワークロードの言葉から逆引きする</h3>
+  <ul>
+    <li><strong>「24時間365日稼働、今後3年間は構成を変えない」</strong> → Standard RI（3年・全額前払い）または EC2 Instance Savings Plans。</li>
+    <li><strong>「常時稼働だが、来年タイプを見直すかもしれない」</strong> → Convertible RI または Compute Savings Plans。</li>
+    <li><strong>「夜間に走るバッチ、失敗しても翌朝やり直せる」</strong> → スポット。</li>
+        <li><strong>「ベースラインは一定で、日中だけ増える」</strong> → ベースライン分を RI か Savings Plans、増分をオンデマンドまたはスポットで賄う<em>組み合わせ</em>。この型はよく正解になります。</li>
+  </ul></section>
+
+<section id="s4" data-toc="スポット">
+
+  <span class="h2num">04</span>
+  <h2>スポットに向くもの、向かないもの</h2>
+  <p class="lead">スポットインスタンスは、AWS の余剰キャパシティを大幅な割引で使う仕組みです。余剰がなくなれば取り上げられる――この一点で向き不向きは判断できます。</p>
+
+  <h3>中断はどう起きるか</h3>
+  <p>キャパシティが必要になると AWS はインスタンスを回収します。このとき<strong>2分前に中断通知</strong>がインスタンスメタデータと EventBridge 経由で届き、アプリケーションはその間に状態を保存し、ロードバランサーから外れ、ジョブをキューへ戻します。さらに早い段階で中断の可能性を知らせる<strong>キャパシティ再調整の推奨</strong>もあり、Auto Scaling グループと組み合わせれば先回りして代替を立ち上げられます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>向く</th><th>向かない</th></tr></thead>
+    <tbody>
+      <tr><td class="yes">ステートレスな Web/API のスケールアウト分</td><td class="no">ステートフルなデータベース、プライマリノード</td></tr>
+      <tr><td class="yes">バッチ処理、ETL、データ変換</td><td class="no">中断すると最初からやり直しになる長時間処理</td></tr>
+      <tr><td class="yes">CI/CD のビルドエージェント</td><td class="no">ライセンスがホストに固定された商用ソフトウェア</td></tr>
+      <tr><td class="yes">EMR のタスクノード、コンテナのワーカー</td><td class="no">EMR のマスターノード、コアノード</td></tr>
+      <tr><td class="yes">動画エンコード、シミュレーション、レンダリング</td><td class="no">締め切りが厳格でやり直す時間がない処理</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>中断への備え</h3>
+  <ol class="body">
+    <li><strong>チェックポイント。</strong>途中経過を定期的に S3 や EFS に書き出し、再開できるようにします。「長時間のバッチをスポットで動かしたい」の正解はたいていこれです。</li>
+    <li><strong>キューで作業単位を管理する。</strong>SQS に作業を入れ、可視性タイムアウトで、完了しなかった作業が自動的に別のインスタンスへ渡るようにします。中断を検知しなくても処理が失われません。</li>
+    <li><strong>容量プールを分散する。</strong>スポットの空きはインスタンスタイプと AZ の組み合わせ（容量プール）ごとに独立しています。<strong>複数のタイプと複数の AZ を指定する</strong>ほど同時に枯れる確率が下がる――これが Spot Fleet や EC2 Fleet、混在インスタンスポリシーの核心です。</li>
+    <li><strong>割り当て戦略をキャパシティ最適化にする。</strong>最安値優先（lowest-price）は単価の安いプールを選びますが、そこは枯渇しやすい。<strong>キャパシティ最適化（capacity-optimized）</strong>は空きの多いプールを選ぶため中断されにくく、「中断を最小化したい」という設問ではこちらです。</li>
+    <li><strong>オンデマンドと混ぜる。</strong>Auto Scaling グループでは「ベース台数はオンデマンド、超過分の何%をスポット」と指定できます。最低限の可用性を確保しつつスケールアウト分だけ安くする定番です。</li>
+  </ol>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「コストを最小化したい」とだけ見るとスポットが正解に見えます。しかし<strong>「ミッションクリティカル」「中断できない」「常に稼働している必要がある」</strong>があれば即座に消えます。逆に<strong>「フォールトトレラント」「中断に耐えられる」「時間に余裕がある」</strong>は、出題者がスポットを選ばせるために置いたサインです。</p>
+  </div>
+
+  <div class="note">
+    <span class="label">コンテナの場合</span>
+    <p>ECS と EKS では <strong>Fargate Spot</strong> が使えます。サーバーを管理せずスポットの割引を得る選択肢で、「運用負荷を上げずにコンテナのコストを下げたい」の正解です。中断される性質は同じです。</p>
+  </div></section>
+
+<section id="s5" data-toc="データ転送">
+
+  <span class="h2num">05</span>
+  <h2>データ転送料金の地図</h2>
+  <p class="lead">この節が今日の中心です。データ転送料金は他のサービスの知識からは導けない独立した知識で、「なぜこの構成のほうが安いのか」という形で必ず問われます。一度地図にしてしまえば、あとは当てはめるだけです。</p>
+
+  <h3>まず4つの境界を覚える</h3>
+  <p>データがどこを越えたかで課金が決まります。境界は内側から「同一 AZ」「AZ 間」「リージョン間」「インターネット」の4つです。</p>
+
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 860 380" width="860" height="380" role="img" aria-label="データ転送の課金境界を示す入れ子の図。内側から同一AZは無料、AZ間は往復とも課金、リージョン間は送信側で課金、インターネット境界は外向きが課金で内向きが無料。右側にNAT Gateway、Interfaceエンドポイント、Gatewayエンドポイント、CloudFrontの追加料金の有無を示す。">
+        <rect x="20" y="16" width="500" height="344" rx="12" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.6"/>
+        <text x="40" y="42" font-size="12.5" fill="var(--deny)" font-weight="700">インターネット境界 ―― 外向きは課金 / 内向きは無料</text>
+
+        <rect x="44" y="58" width="452" height="284" rx="10" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.6"/>
+        <text x="64" y="84" font-size="12.5" fill="var(--warn)" font-weight="700">リージョン間 ―― 送信側で課金</text>
+
+        <rect x="68" y="100" width="404" height="214" rx="10" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="88" y="126" font-size="12.5" fill="var(--ink-2)" font-weight="700">AZ 間 ―― 往復とも課金</text>
+
+        <rect x="92" y="142" width="356" height="148" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.6"/>
+        <text x="112" y="168" font-size="12.5" fill="var(--allow)" font-weight="700">同一 AZ・プライベート IP ―― 無料</text>
+
+        <rect x="112" y="186" width="140" height="46" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="182" y="215" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text>
+        <rect x="288" y="186" width="140" height="46" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="358" y="215" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text>
+        <line x1="256" y1="209" x2="284" y2="209" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M284 209 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <path d="M256 209 l9 -5 v10 z" fill="var(--ink-3)"/>
+        <text x="270" y="262" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">パブリック IP を経由すると同一 AZ でも課金</text>
+
+        <text x="540" y="30" font-size="12.5" fill="var(--ink-2)" font-weight="700">この上に乗る追加料金</text>
+
+        <rect x="540" y="44" width="300" height="58" rx="8" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/>
+        <text x="558" y="68" font-size="13.5" fill="var(--ink)" font-weight="700">NAT Gateway</text>
+        <text x="558" y="87" font-size="11.5" fill="var(--ink-3)">時間料金 ＋ 処理データ量あたりの料金</text>
+
+        <rect x="540" y="114" width="300" height="58" rx="8" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/>
+        <text x="558" y="138" font-size="13.5" fill="var(--ink)" font-weight="700">Interface エンドポイント</text>
+        <text x="558" y="157" font-size="11.5" fill="var(--ink-3)">AZ ごとの時間料金 ＋ 処理データ量</text>
+
+        <rect x="540" y="184" width="300" height="58" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.6"/>
+        <text x="558" y="208" font-size="13.5" fill="var(--ink)" font-weight="700">Gateway エンドポイント</text>
+        <text x="558" y="227" font-size="11.5" fill="var(--ink-3)">S3 / DynamoDB のみ。追加料金なし</text>
+
+        <rect x="540" y="254" width="300" height="58" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.6"/>
+        <text x="558" y="278" font-size="13.5" fill="var(--ink)" font-weight="700">AWS オリジン → CloudFront</text>
+        <text x="558" y="297" font-size="11.5" fill="var(--ink-3)">オリジンからの取得に転送料金なし</text>
+      </svg>
+    </div>
+    <figcaption>内側ほど安く、外側ほど高い。左の4層とは<strong>別枠で</strong>、右側の仕掛けを通ると時間料金と処理料金が上乗せされます。「安くする」とは、データを内側に留めるか、右側の課金装置を外すかです。</figcaption>
+  </figure>
+
+  <h3>原則を言葉で確認する</h3>
+  <div class="tw"><table>
+    <thead><tr><th>データの動き</th><th>課金</th><th>設問での意味</th></tr></thead>
+    <tbody>
+      <tr><td>インターネットから AWS へ（インバウンド）</td><td class="yes">原則無料</td><td>取り込みは安く、出すのが高い。移行時の転送コストを心配する選択肢は的外れ</td></tr>
+      <tr><td>AWS からインターネットへ（アウトバウンド）</td><td class="no">課金</td><td>コスト削減設問の主戦場。CloudFront やキャッシュで削る</td></tr>
+      <tr><td>同一 AZ 内、プライベート IP での通信</td><td class="yes">無料</td><td>同じ AZ に寄せると安い。ただし可用性とのトレードオフになる</td></tr>
+      <tr><td>同一 AZ 内でも、パブリック IP や Elastic IP 経由</td><td class="no">課金</td><td>同じ VPC にいるのに公開エンドポイント名で呼ぶ構成ミスが設問になる</td></tr>
+      <tr><td>AZ をまたぐ通信（同一リージョン）</td><td class="no">課金。しかも送信側・受信側の双方向</td><td>マルチ AZ 構成のコストはここに出る。可用性のために払う費用</td></tr>
+      <tr><td>リージョンをまたぐ通信</td><td class="no">課金（送信元リージョン側）</td><td>クロスリージョンレプリケーション、DR 構成のコスト</td></tr>
+      <tr><td>同一リージョンの AWS サービス間（S3 から EC2 など）</td><td class="yes">同一 AZ なら無料</td><td>同じリージョンに置くのはレイテンシだけでなくコストの理由もある</td></tr>
+      <tr><td>AWS のオリジンから CloudFront へ</td><td class="yes">無料</td><td>オリジン側の転送料金がなくなり、配信は CloudFront の料金体系になる</td></tr>
+    </tbody>
+  </table></div>
+
+  <p><strong>「インバウンド無料、アウトバウンド課金」</strong>――この非対称性がすべての出発点です。だから「オンプレミスから数十テラバイトを移行する」設問で転送コストを心配する選択肢は的外れになり、「解析結果を社外に大量配信する」設問ではコストが論点になります。</p>
+
+  <h3>CloudFront を挟むと何が安くなるか</h3>
+  <p>CloudFront を前に置くと、コストの構造が2か所で変わります。第一に、<strong>オリジン（S3 や EC2、ALB）から CloudFront への転送は無料</strong>です。第二に、エンドユーザーへの配信は CloudFront の料金体系になり、直接インターネットに出す場合より単価が低く設定されています。キャッシュが効けばオリジンへのリクエスト自体も減ります。「静的コンテンツを世界中に配信していて転送コストが高い」という設問の答えは、ほぼ確実に CloudFront です。</p>
+
+  <h3>NAT Gateway ―― この講義でいちばん出るところ</h3>
+  <p>NAT Gateway には<strong>起動時間に対する料金</strong>と<strong>通過データ量に対する処理料金</strong>の2つがかかります。重要なのは、処理料金が<em>アウトバウンド転送料金とは別に上乗せで</em>かかることです。外に出るデータは二重取りになります。</p>
+  <p>また、AZ ごとに NAT Gateway を置くのが可用性の定石ですが、時間料金は AZ の数だけ増えます。1つにまとめれば他の AZ からの通信が AZ 間転送料金を生みます。<strong>冗長性を取るか、時間料金を取るか</strong>のトレードオフです。</p>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「プライベートサブネットの EC2 が S3 に大量のデータを書き込んでいる。NAT Gateway のコストが想定以上に高い。運用負荷を増やさずにコストを下げる方法は？」――<strong>答えは S3 用の Gateway エンドポイントを作成し、ルートテーブルを向けることです。</strong>追加料金がなく、S3 への通信が NAT Gateway を通らなくなるため処理料金も転送料金も消えます。形を変えて何度も出ます。</p>
+    <p>誤答としてよく並ぶのは「NAT インスタンスに置き換える」（運用負荷が増え可用性も落ちる）、「VPC ピアリングを設定する」（S3 は対象外）、「Interface エンドポイントを作る」（S3 でも使えるが時間料金と処理料金がかかる）です。</p>
+  </div>
+
+  <h3>VPC エンドポイントの2種類</h3>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>Gateway エンドポイント</th><th>Interface エンドポイント（PrivateLink）</th></tr></thead>
+    <tbody>
+      <tr><td><strong>対象サービス</strong></td><td class="no">S3 と DynamoDB のみ</td><td class="yes">多数の AWS サービス、および他社・自社の公開サービス</td></tr>
+      <tr><td><strong>実体</strong></td><td>ルートテーブルのエントリ</td><td>サブネット内の ENI（プライベート IP を持つ）</td></tr>
+      <tr><td><strong>料金</strong></td><td class="yes">追加料金なし</td><td class="no">AZ ごとの時間料金 ＋ 処理データ量あたりの料金</td></tr>
+      <tr><td><strong>オンプレミスから利用</strong></td><td class="no">できない</td><td class="yes">できる（Direct Connect / VPN 経由）</td></tr>
+      <tr><td><strong>コスト設問での位置</strong></td><td>S3・DynamoDB の NAT 迂回はこれ一択</td><td>他サービスで NAT を避けたいとき。通信量が少ないと割高になる</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>S3 か DynamoDB が相手なら Gateway エンドポイント、それ以外なら Interface エンドポイント。ただしオンプレミスから VPC 経由で S3 に届かせたい場合は Gateway エンドポイントが使えず、<strong>Interface エンドポイントが正解</strong>です。「オンプレミス」の一語で答えが変わります。</p>
+  </div>
+
+  <h3>その他、転送料金が論点になる構成</h3>
+  <ul>
+    <li><strong>VPC ピアリング。</strong>接続そのものに時間料金はなく、通過データに通常の AZ 間・リージョン間の転送料金が適用されます（同一 AZ 内なら無料）。</li>
+    <li><strong>Direct Connect。</strong>ポートの時間料金がかかる一方、アウトバウンドの転送単価はインターネット経由より低く設定されています。「オンプレミスとの継続的な大量転送」ではコストの理由でも正解になります。</li>
+  </ul></section>
+
+<section id="s6" data-toc="ストレージ">
+
+  <span class="h2num">06</span>
+  <h2>ストレージのコストを削る</h2>
+  <p class="lead">ストレージのコスト削減は「置き場所を変える」「使っていないものを消す」の2つです。設問では前者が圧倒的に多く、S3 のストレージクラス選択が本丸です。</p>
+
+  <h3>S3 のストレージクラスをどう選ぶか</h3>
+  <p>ストレージクラスは<strong>保管料金と取り出しコスト（料金と時間）のトレードオフ</strong>です。保管が安いほど取り出しに料金と時間がかかります。設問が与えてくるのは「アクセス頻度」「取り出しにどれだけ待てるか」「その AZ が落ちたら困るか」の3点です。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>クラス</th><th>選ぶ条件</th><th>注意点</th></tr></thead>
+    <tbody>
+      <tr><td><strong>S3 Standard</strong></td><td>頻繁にアクセスする。パターンが分かっていて高頻度</td><td>取り出し料金なし。保管が最も高い</td></tr>
+      <tr><td><strong>Intelligent-Tiering</strong></td><td class="yes">アクセスパターンが<strong>分からない、あるいは変わる</strong></td><td>オブジェクトごとのモニタリング料金がかかる。<strong>取り出し料金はかからない</strong></td></tr>
+      <tr><td><strong>Standard-IA</strong></td><td>アクセスは少ないが、必要なときは即座に取り出す</td><td>最低保管期間 30 日、取り出し料金あり、最小課金オブジェクトサイズあり</td></tr>
+      <tr><td><strong>One Zone-IA</strong></td><td>アクセスは少なく、<strong>失われても再生成できる</strong>データ</td><td class="no">単一 AZ。AZ 障害でデータが失われる。本番の唯一のコピーには使わない</td></tr>
+      <tr><td><strong>Glacier Instant Retrieval</strong></td><td>たまにしかアクセスしないが、必要なときはミリ秒で取り出す</td><td>最低保管期間 90 日</td></tr>
+      <tr><td><strong>Glacier Flexible Retrieval</strong></td><td>年に数回、数分から数時間待てる</td><td>最低保管期間 90 日。取り出しには時間がかかる</td></tr>
+      <tr><td><strong>Glacier Deep Archive</strong></td><td class="yes">法令対応のアーカイブ。年に一度あるかどうか、取り出しに半日待てる</td><td>最低保管期間 180 日。最安だが最も待つ</td></tr>
+    </tbody>
+  </table></div>
+
+
+  <div class="note">
+    <span class="label">Intelligent-Tiering が正解になる条件</span>
+    <p>Intelligent-Tiering は<strong>アクセスパターンが不明または変動する</strong>ときに選びます。設問に「30日後にアクセスされなくなる」と書いてあれば、ライフサイクルで Standard-IA に移すほうが安く、Intelligent-Tiering は不正解です。判断の言葉は<strong>「予測できない」「変化する」</strong>。明確な日数が書いてあればライフサイクルです。</p>
+  </div>
+
+  <h3>ライフサイクルルールと、消し忘れの回収</h3>
+  <p>ライフサイクルには<strong>移行（transition）</strong>と<strong>失効（expiration）</strong>の2つのアクションがあります。「保持期間を過ぎたら削除」なら失効、「古くなったら安いクラスへ」なら移行です。</p>
+  <p>もうひとつ設問に出るのが<strong>不完全なマルチパートアップロードの削除</strong>です。分割アップロードの途中で失敗すると断片が残って課金され続け、しかもオブジェクト一覧には現れません。ライフサイクルルールで一定日数後に中止・削除するのが定石です。</p>
+
+  <div class="code">
+    <div class="cap">コストの穴を塞ぐライフサイクル設定の骨格</div>
+<pre>{
+  <span class="k">"Rules"</span>: [
+    {
+      <span class="k">"ID"</span>: <span class="s">"archive-then-expire"</span>,
+      <span class="k">"Status"</span>: <span class="s">"Enabled"</span>,
+      <span class="k">"Filter"</span>: { <span class="k">"Prefix"</span>: <span class="s">"logs/"</span> },
+      <span class="k">"Transitions"</span>: [
+        { <span class="k">"Days"</span>: 30,  <span class="k">"StorageClass"</span>: <span class="s">"STANDARD_IA"</span> },
+        { <span class="k">"Days"</span>: 180, <span class="k">"StorageClass"</span>: <span class="s">"DEEP_ARCHIVE"</span> }
+      ],
+      <span class="k">"Expiration"</span>: { <span class="k">"Days"</span>: 2555 }        <span class="c">// 7年で削除</span>
+    },
+    {
+      <span class="k">"ID"</span>: <span class="s">"abort-incomplete-uploads"</span>,   <span class="c">// これを入れていない環境が多い</span>
+      <span class="k">"Status"</span>: <span class="s">"Enabled"</span>,
+      <span class="k">"Filter"</span>: {},
+      <span class="k">"AbortIncompleteMultipartUpload"</span>: { <span class="k">"DaysAfterInitiation"</span>: 7 }
+    }
+  ]
+}</pre>
+  </div>
+
+  <p>バージョニングを有効にしたバケットでは<strong>古いバージョンも課金対象</strong>です。削除したつもりのオブジェクトが非現行バージョンとして残るため、非現行バージョンの移行と失効もルールに入れます。「オブジェクト数は増えていないのに S3 のコストが増え続ける」という設問の答えは、バージョニングか不完全なマルチパートアップロードです。</p>
+
+  <div class="note">
+    <span class="label">どこに何があるか分からないとき</span>
+    <p>「まずコストの内訳を可視化したい」段階では、<strong>S3 Storage Lens</strong>（バケット横断の利用状況と推奨）や <strong>S3 Storage Class Analysis</strong>（アクセスパターンから移行日数を提案）が答えです。</p>
+  </div>
+
+  <h3>EBS ―― ボリュームとスナップショット</h3>
+  <ul>
+    <li><strong>gp2 から gp3 へ。</strong>gp3 は同容量で gp2 より安く、IOPS とスループットを容量と切り離して設定できます。「性能を維持したままコストを下げる」という EBS の設問では、まずこれを疑ってください。</li>
+    <li><strong>ボリュームタイプの選択。</strong>高い IOPS が要る場合のみ io1/io2、大容量のシーケンシャルアクセスなら st1、めったに読まないなら sc1。過剰な io2 は削減余地の典型です。</li>
+    <li><strong>スナップショットは増分。</strong>2回目以降は変更ブロックのみ課金されますが、世代が溜まれば増えます。<strong>Data Lifecycle Manager</strong> で作成と世代削除を自動化するのが、運用負荷を上げずに削る答えです。長期保管分は<strong>アーカイブ階層</strong>へ移せます（最低保管期間あり）。</li>
+    <li><strong>プロビジョニングしたぶんだけ課金される。</strong>EBS は使用量ではなく確保した容量に課金されます。100 GiB のボリュームに 10 GiB しか入っていなくても 100 GiB 分です。</li>
+  </ul>
+
+  <h3>使っていないのに課金されているもの</h3>
+  <p>コスト設問の地味な定番です。Trusted Advisor で洗い出される代表格を挙げます。</p>
+  <ul>
+    <li><strong>どこにも関連付けられていない Elastic IP。</strong>実行中のインスタンスに紐づかない Elastic IP は課金されます。加えて現在はパブリック IPv4 アドレス自体に時間料金がかかります。</li>
+    <li><strong>アタッチされていない EBS ボリューム。</strong>インスタンスを終了しても、終了時削除の設定によってはボリュームが残ります。残れば課金され続けます。</li>
+    <li><strong>停止したままのインスタンスのボリューム。</strong>停止すればコンピューティング料金は止まりますが、<strong>EBS の料金は止まりません</strong>。「停止しているのに課金される」の答えはこれです。</li>
+    <li><strong>使われていないロードバランサー、古いスナップショット、放置されたテスト用 RDS。</strong>いずれも時間課金です。</li>
+  </ul></section>
+
+<section id="s7" data-toc="コンピュート">
+
+  <span class="h2num">07</span>
+  <h2>コンピューティングのコストを削る</h2>
+  <p class="lead">単価を下げるのが購入オプションでした。この節は<strong>使う量そのものを減らす</strong>話です。設問が「購入オプション」と「サイジング・スケジューリング」のどちらを問うているかを見分けてください。</p>
+
+  <h3>適切なサイジング</h3>
+  <p>過剰なインスタンスサイズは、最も見つけやすく最も大きい削減余地です。根拠は実測値で、CPU 使用率が数%のまま推移しているインスタンスは1〜2段階小さくできます。ここで出てくるのが <strong>AWS Compute Optimizer</strong> です。CloudWatch のメトリクスを分析し、EC2・Auto Scaling グループ・EBS・Lambda・Fargate 上の ECS について最適なサイズを推奨します。Trusted Advisor も低使用率のインスタンスを指摘しますが、<strong>具体的な推奨サイズまで出すのは Compute Optimizer</strong> という切り分けです。</p>
+
+  <div class="note warn">
+    <span class="label">メモリ使用率は既定では見えない</span>
+    <p>EC2 の CloudWatch 標準メトリクスに<strong>メモリ使用率は含まれません</strong>。メモリを根拠にサイジングするには CloudWatch エージェントが必要です。設問にエージェントの選択肢があれば、それが正解の一部です。</p>
+  </div>
+
+  <h3>Graviton への移行</h3>
+  <p>AWS 自社設計の Arm ベースプロセッサである Graviton は、同等の x86 インスタンスより<strong>価格性能比が高い</strong>という位置づけで、EC2 のほか RDS、ElastiCache、OpenSearch、Lambda、Fargate でも選べます。</p>
+  <p>判断軸は<strong>アーキテクチャを変えられるかどうか</strong>です。Java、Python、Node.js、Go やコンテナ化されたアプリなら移行は容易で、コスト削減の正解になります。逆に x86 バイナリに依存する商用ソフトでは選べません。設問に「再コンパイルできる」「コンテナ化されている」とあれば、Graviton が狙われているサインです。</p>
+
+  <h3>Auto Scaling と停止スケジュール</h3>
+  <p>そもそも動いていなければ課金されません。これが最も確実な削減です。</p>
+  <ol class="body">
+    <li><strong>需要に追随させる。</strong>ターゲット追跡ポリシーで必要な台数だけ動かします。ピークに合わせて台数を固定した構成は、削減余地そのものです。</li>
+    <li><strong>スケジュールで増減させる。</strong>負荷の波が時間帯で決まっているならスケジュールされたアクションで台数を変えます。予測が可能なら予測スケーリングも選択肢です。</li>
+    <li><strong>開発・検証環境を夜間と週末に止める。</strong>平日の日中しか使わない環境を24時間動かす理由はありません。Auto Scaling グループなら希望容量をゼロにするスケジュール、単体なら <strong>EventBridge Scheduler</strong> から停止・起動を呼ぶのが定石です。設問では「開発環境のコストが本番と同程度」という形で出ます。</li>
+    <li><strong>スケールインを恐れない。</strong>スケールアウトだけ設定した構成は、事実上ピーク固定です。</li>
+  </ol>
+
+  <div class="note">
+    <span class="label">停止と終了の違いを踏まえる</span>
+    <p>停止（stop）でコンピューティング料金は止まりますが、EBS とアタッチされた Elastic IP の料金は続きます。ゼロにするには終了（terminate）が必要で、その場合は再構築が要ります。<strong>「夜間停止」の削減効果は EBS の分だけ目減りする</strong>――ここまで読めていると選択肢を比較できます。</p>
+  </div>
+
+  <h3>Lambda のメモリ設定とコストの関係</h3>
+  <p>Lambda の料金は<strong>リクエスト数</strong>と<strong>実行時間 × 割り当てメモリ量</strong>（GB 秒）で決まります。ここで直感に反するのは、<strong>メモリ割り当てを増やすと比例して CPU 性能も上がる</strong>点です。CPU を使う処理ではメモリを増やすと実行時間が縮み、単価は上がっても<em>総コストが下がる場合があります</em>。メモリを最小にするのが常に最安、という思い込みは誤りです。</p>
+  <p>設問で「Lambda の実行時間が長くコストが高い」と来たら、メモリ設定の見直しが候補です。最適点は関数ごとに違うため実測して決めます。加えて Arm（Graviton）を選べば同じ処理をより安く実行できます。</p>
+
+  <div class="trap">
+    <span class="label">引っかけ</span>
+    <p><strong>プロビジョニングされた同時実行</strong>はコールドスタート対策であって、コスト削減策ではありません。待機分にも課金されるためむしろコストは上がります。「コストを下げたい」で選ぶと誤答、「コールドスタートのレイテンシを解消したい」なら正解――目的によって正解にも誤答にもなる典型です。</p>
+  </div>
+
+  <h3>そもそも EC2 でなくてよいか</h3>
+  <p>断続的にしか動かないバッチを常時起動の EC2 で回しているなら、Lambda や Fargate、AWS Batch に移せばアイドル時間の課金が消えます。目安は<strong>稼働率</strong>――ほぼ常時なら EC2 とコミットメント、たまにしか使わないならサーバーレスです。</p></section>
+
+<section id="s8" data-toc="管理ツール">
+
+  <span class="h2num">08</span>
+  <h2>コスト管理ツールの役割分担</h2>
+  <p class="lead">名前が似ていて混同しやすい領域です。<strong>過去を見るのか、未来を止めるのか、詳細を掘るのか、異常を検知するのか、改善案を出すのか</strong>――この5つの動詞で切り分ければ、設問はほぼ一発で解けます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>ツール</th><th>何をするか</th><th>設問に出る言葉</th><th>選ばない場面</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Cost Explorer</strong></td><td>過去の利用実績を可視化・分析し、将来を予測する。RI / Savings Plans の購入推奨も出す</td><td>「傾向を分析したい」「どのサービスにいくらかかっているか見たい」「購入すべき量を知りたい」</td><td>リソース単位の明細が必要なとき</td></tr>
+      <tr><td><strong>AWS Budgets</strong></td><td>予算のしきい値を決め、超過や超過予測を通知する。アクションで自動制御もできる</td><td>「上限を決めて通知したい」「予算超過を防ぎたい」</td><td>分析そのものが目的のとき</td></tr>
+      <tr><td><strong>Cost and Usage Report</strong></td><td>最も詳細な明細を S3 に出力する。Athena や QuickSight で自由に分析</td><td>「時間単位」「リソース単位」「独自の集計」「社内の請求システムに取り込む」</td><td>「手早く見たい」だけのとき（負荷が高い）</td></tr>
+      <tr><td><strong>Cost Anomaly Detection</strong></td><td>機械学習で通常と異なる支出パターンを検知して通知する</td><td>「想定外の請求に気づきたい」「異常な増加を検知」「しきい値を決めずに」</td><td>決まった上限を守らせたいとき（それは Budgets）</td></tr>
+      <tr><td><strong>Compute Optimizer</strong></td><td>メトリクスを分析し、EC2・ASG・EBS・Lambda の適切なサイズを推奨する</td><td>「オーバープロビジョニングを見つけたい」「推奨サイズが欲しい」</td><td>コストの内訳を見たいとき</td></tr>
+      <tr><td><strong>Trusted Advisor</strong></td><td>コスト・セキュリティ・信頼性など複数の観点でベストプラクティス違反をチェックする</td><td>「使われていないリソースを洗い出す」「幅広く点検したい」</td><td>詳細な推奨サイズが必要なとき</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>いちばん迷う組み合わせ</h3>
+  <ul>
+    <li><strong>Budgets と Cost Anomaly Detection。</strong>Budgets は<em>自分で決めたしきい値</em>の超過を通知し、Anomaly Detection は<em>しきい値なしで</em>普段と違う動きを検知します。金額が書いてあれば Budgets、「想定外の」「異常な」とあれば Anomaly Detection です。</li>
+    <li><strong>Cost Explorer と Cost and Usage Report。</strong>前者はコンソールでグラフを見る道具、後者は生データを吐き出す道具です。「リソース単位」「Athena で分析」とあれば CUR です。</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">設計前に見積もる</span>
+    <p>まだ何も動かしていない段階――「移行前に費用を試算したい」――では <strong>AWS Pricing Calculator</strong> が答えです。Cost Explorer は実績がないと使えません。</p>
+  </div>
+
+  <h3>タグによるコスト配分</h3>
+  <p>「どの部署が、どのプロジェクトがいくら使っているか」を知りたいという要件は頻出です。答えは<strong>コスト配分タグ</strong>です。</p>
+  <p>タグには AWS が自動で付ける生成タグ（<code>aws:</code> で始まる）と、利用者が付けるユーザー定義タグがあります。どちらも<strong>請求コンソールでコスト配分タグとして有効化しないと、Cost Explorer や請求レポートで内訳に使えません</strong>。ここが設問になります。</p>
+
+  <div class="note warn">
+    <span class="label">タグは遡及しない</span>
+    <p>コスト配分タグを有効化しても、<strong>有効化より前の期間には適用されません</strong>。「先月分の部署別内訳を今すぐ出したい」という設問で、今からタグを有効化する選択肢は解決になりません。<strong>タグ付けは事前に、組織的に強制する</strong>――そのために Organizations のタグポリシーや、必須タグがなければ作成させない SCP を併用します。</p>
+  </div>
+
+  <h3>Organizations の一括請求</h3>
+  <p>Organizations で複数アカウントをまとめると、請求は管理アカウントに集約されます。支払いの手間の話にとどまらず、<strong>コスト上の実利が2つ</strong>あります。</p>
+  <ol class="body">
+    <li><strong>ボリューム割引の合算。</strong>使用量に応じて単価が下がる従量段階（S3 のストレージやデータ転送など）は、組織全体の使用量を合算して判定されます。アカウントを分けていても、割引の観点では1つの利用者として扱われます。</li>
+    <li><strong>Reserved Instance と Savings Plans の共有。</strong>あるアカウントで購入した RI / Savings Plans の未使用分が、組織内の他のアカウントに自動で適用されます。環境別・チーム別に分割していてもコミットメントを使い切れます。共有はアカウント単位でオフにもできます。</li>
+  </ol>
+
+  <p>設問での見分け方は<strong>「複数アカウント」＋「コスト」</strong>の組み合わせです。この2語が並んだら、一括請求によるボリューム割引と RI/SP 共有を思い出してください。「部門ごとに請求を切りたい」なら、アカウントを分割したうえで一括請求とコスト配分タグで内訳を出すのが標準的な答えです。</p></section>
+
+<section id="s9" data-toc="6つの柱">
+
+  <span class="h2num">09</span>
+  <h2>Well-Architected Framework の6つの柱</h2>
+  <p class="lead">最後に、SAA 全体を貫く観点を置いておきます。Well-Architected Framework は、AWS が「良い設計とは何か」を6つの視点に分解したものです。試験は、この6つのうちどれを優先するかを選ばせる形で作られています。コスト最適化は、そのひとつにすぎません。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>柱</th><th>問うていること</th></tr></thead>
+    <tbody>
+      <tr><td><strong>運用上の優秀性</strong><br><span style="color:var(--ink-3);font-size:13px">Operational Excellence</span></td><td>手作業を自動化し、小さく変更し、監視して改善できるか。「運用負荷を上げずに」という設問文は、この柱の言い換えです。</td></tr>
+      <tr><td><strong>セキュリティ</strong><br><span style="color:var(--ink-3);font-size:13px">Security</span></td><td>データと資産を守れているか。最小権限、多層防御、保管時と転送時の暗号化、追跡可能性。W1 の IAM がここに入ります。</td></tr>
+      <tr><td><strong>信頼性</strong><br><span style="color:var(--ink-3);font-size:13px">Reliability</span></td><td>障害から回復し、需要の変化に応えられるか。単一障害点の排除、マルチ AZ、自動復旧、RTO / RPO。</td></tr>
+      <tr><td><strong>パフォーマンス効率</strong><br><span style="color:var(--ink-3);font-size:13px">Performance Efficiency</span></td><td>要求される性能を無駄のない資源で満たせているか。適切なサービスの選択、キャッシュ、需要に合わせた調整。</td></tr>
+      <tr><td><strong>コスト最適化</strong><br><span style="color:var(--ink-3);font-size:13px">Cost Optimization</span></td><td>不要な支出をなくし、支出の所在を把握できているか。今日の講義がまるごとこの柱です。</td></tr>
+      <tr><td><strong>持続可能性</strong><br><span style="color:var(--ink-3);font-size:13px">Sustainability</span></td><td>環境負荷を減らせているか。使用リソースの最小化、効率の高いハードウェア（Graviton など）の活用、不要データの削除。後から追加された6番目の柱です。</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>重要なのは<strong>これらがしばしば互いに衝突する</strong>ことです。マルチ AZ は信頼性を上げますが AZ 間転送料金でコストは上がり、スポットはコストを下げますが信頼性を落とします。Well-Architected Framework は「全部を最大化せよ」ではなく、<em>要件に応じてどれを優先するかを意識的に選べ</em>と言っています。</p>
+
+  <div class="note">
+    <span class="label">試験での使い方</span>
+    <p>SAA の設問は、<strong>設問文が優先する柱を必ず名指ししています。</strong>「可用性を維持しながら」なら信頼性、「レイテンシを最小化」ならパフォーマンス効率、「運用負荷を最小限に」なら運用上の優秀性、「最もコスト効率が高い」ならコスト最適化。複数並ぶ場合は<strong>制約として書かれているほうが上位</strong>です。「可用性を維持しながらコストを削減する」なら、可用性は満たすべき制約、コストは最小化すべき目的。この読み分けが全分野で効きます。</p>
+  </div></section>
+
+<section id="s10" data-toc="試験での判断軸">
+
+  <span class="h2num">10</span>
+  <h2>試験での判断軸</h2>
+  <p class="lead">設問文にこの手がかりが出たら、この答えに寄せる――という対応表です。コスト分野は選択肢の言い換えが多く、この対応が入っているかどうかで解答速度が変わります。</p>
+
+  <div class="judge">
+    <div class="row"><span class="cue">中断に耐えられる / フォールトトレラント / バッチ</span><span class="arrow">→</span><span class="ans">スポットインスタンス</span></div>
+    <div class="row"><span class="cue">常時稼働 + 今後1〜3年 + 構成を変えない</span><span class="arrow">→</span><span class="ans">Standard RI / EC2 Instance Savings Plans</span></div>
+    <div class="row"><span class="cue">柔軟性を保ちたい / Fargate や Lambda も使う</span><span class="arrow">→</span><span class="ans">Compute Savings Plans</span></div>
+    <div class="row"><span class="cue">NAT Gateway のコストが高い + 相手は S3 / DynamoDB</span><span class="arrow">→</span><span class="ans">Gateway エンドポイント（追加料金なし）</span></div>
+    <div class="row"><span class="cue">NAT を避けたい + 相手は S3・DynamoDB 以外</span><span class="arrow">→</span><span class="ans">Interface エンドポイント（PrivateLink）</span></div>
+    <div class="row"><span class="cue">インターネットへの配信量が多くコストが高い</span><span class="arrow">→</span><span class="ans">CloudFront（オリジンからの転送は無料）</span></div>
+    <div class="row"><span class="cue">アクセスパターンが予測できない / 変化する</span><span class="arrow">→</span><span class="ans">S3 Intelligent-Tiering</span></div>
+    <div class="row"><span class="cue">7年保持 + 取り出しに数時間〜半日待てる</span><span class="arrow">→</span><span class="ans">Glacier Deep Archive</span></div>
+    <div class="row"><span class="cue">オーバープロビジョニングを見つけて推奨が欲しい</span><span class="arrow">→</span><span class="ans">Compute Optimizer</span></div>
+    <div class="row"><span class="cue">金額のしきい値を決めて通知・自動制御したい</span><span class="arrow">→</span><span class="ans">AWS Budgets</span></div>
+    <div class="row"><span class="cue">想定外・異常な増加に気づきたい（しきい値なし）</span><span class="arrow">→</span><span class="ans">Cost Anomaly Detection</span></div>
+    <div class="row"><span class="cue">リソース単位・時間単位で独自に分析したい</span><span class="arrow">→</span><span class="ans">Cost and Usage Report + Athena</span></div>
+    <div class="row"><span class="cue">部門別・プロジェクト別に費用を割り当てたい</span><span class="arrow">→</span><span class="ans">コスト配分タグ（事前有効化が必要）</span></div>
+    <div class="row"><span class="cue">複数アカウント + ボリューム割引 / RI の有効活用</span><span class="arrow">→</span><span class="ans">Organizations の一括請求</span></div>
+  </div>
+
+  <div class="note warn">
+    <span class="label">対応表の使い方</span>
+    <p>この表は暗記するものではなく、<strong>模試で間違えたときに戻ってくる場所</strong>です。誤答の原因が「対応を知らなかった」なら覚え直す、「知っていたが設問文の制約を読み落とした」なら読み方の問題――と切り分けてください。コスト分野は後者が多いはずです。</p>
+  </div></section>
+
+<section id="s11" data-toc="確認問題">
+
+  <span class="h2num">11</span>
+  <h2>確認問題</h2>
+  <p class="lead">先に自分で答えを決めてから開いてください。この分野は「なんとなく安そう」で選ぶ癖がつきやすいので、選んだ理由を一文で言えるか確かめてから開くこと。</p>
+
+  <details class="q">
+    <summary><span class="qnum">Q1</span>プライベートサブネットの複数の EC2 が、同一リージョンの S3 バケットへ日次で数テラバイトのログを書き込んでいる。請求を見ると NAT Gateway の費用が大半を占めていた。運用負荷を増やさずにコストを削減する方法はどれか。
+      <ul class="opts">
+        <li>A. NAT Gateway を NAT インスタンスに置き換える</li>
+        <li>B. S3 用の Gateway エンドポイントを作成し、ルートテーブルに追加する</li>
+        <li>C. EC2 インスタンスをパブリックサブネットに移動し、パブリック IP を割り当てる</li>
+        <li>D. VPC ピアリング接続を S3 との間に設定する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>Gateway エンドポイントには追加料金がありません。S3 宛ての通信が NAT Gateway を通らなくなるため、処理データ量料金が消えます。設定はルートテーブルの変更だけです。</p>
+      <p><strong>判断軸:</strong> A は自前で管理するインスタンスが増えて運用負荷が上がり、可用性も落ちます。C はセキュリティ要件を壊します。D は S3 がピアリングの対象ではありません。<strong>相手が S3 か DynamoDB なら Gateway エンドポイント</strong>――反射で出るようにしてください。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q2</span>ある企業は、今後3年間サイズを変えずに稼働させる基幹システムを EC2 で運用している。同時にコンテナ化を進めており、一部を Fargate へ移す計画がある。移行後もコミットメントの割引を無駄にしたくない。最も適した購入オプションはどれか。
+      <ul class="opts">
+        <li>A. 3年の Standard Reserved Instance を購入する</li>
+        <li>B. 3年の EC2 Instance Savings Plans を購入する</li>
+        <li>C. 3年の Compute Savings Plans を購入する</li>
+        <li>D. スポットインスタンスに移行する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: C</span></p>
+      <p>Compute Savings Plans は EC2 に加えて Fargate と Lambda もカバーします。EC2 から Fargate へワークロードが移っても、コミットした金額分の割引が自動的に適用先を移します。</p>
+      <p><strong>判断軸:</strong> A と B は割引率では有利ですが EC2 のみが対象です。<strong>Fargate や Lambda という単語が出た時点で、選べるのは Compute Savings Plans だけ</strong>。D は基幹システムに中断のリスクを持ち込みます。「割引率が最大のもの」ではなく「要件を満たすもののうち割引が大きいもの」という順序を守ってください。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q3</span>データ分析チームが新しい S3 バケットにデータを蓄積し始めた。当初は頻繁に参照されるが、その後どの程度参照されるかは読めず、データセットごとにも差がある。取り出し料金は避けたい。運用負荷を最小限にストレージコストを最適化する方法はどれか。
+      <ul class="opts">
+        <li>A. すべてのオブジェクトを S3 Standard-IA に保存する</li>
+        <li>B. S3 Intelligent-Tiering を使用する</li>
+        <li>C. 30日後に S3 One Zone-IA へ移行するライフサイクルルールを設定する</li>
+        <li>D. アクセスログを Athena で毎月分析し、結果に基づいて手動でストレージクラスを変更する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>アクセスパターンが予測できず、データセットごとにも異なるという条件は Intelligent-Tiering のためにある設問文です。自動で階層が切り替わり、<strong>取り出し料金がかからない</strong>点も要件に合致します。</p>
+      <p><strong>判断軸:</strong> A は当初の頻繁なアクセスで取り出し料金が膨らみます。C は日数が根拠のない決め打ちで、One Zone-IA は単一 AZ のため元データには適しません。D は毎月の手作業が発生し「運用負荷を最小限に」に反します。<strong>「予測できない」は Intelligent-Tiering、「◯日後と分かっている」はライフサイクル</strong>です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q4</span>ある部門から「先月の請求が突然増えたが原因が分からない。今後は想定外の増加にすぐ気づきたい。ただし、どの金額を超えたら異常なのかは自分たちでも決められない」と相談を受けた。最も適した方法はどれか。
+      <ul class="opts">
+        <li>A. AWS Budgets で月次のコスト予算を作成し、80%超過時に通知する</li>
+        <li>B. AWS Cost Anomaly Detection でモニターを作成し、検知時に通知する</li>
+        <li>C. Cost and Usage Report を S3 に出力し、Athena で毎日集計するクエリを実行する</li>
+        <li>D. Cost Explorer を毎朝開いて前日との差分を確認する運用を定める</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>Cost Anomaly Detection は過去の支出パターンを学習し、通常と異なる支出を検知して通知します。しきい値を人が決めなくてよい点が設問の条件に対応しています。</p>
+      <p><strong>判断軸:</strong> A は<strong>しきい値を決められるという前提</strong>が要件と合いません。C は自前の集計を作る必要があり運用負荷が高い。D は自動化されておらず検知が遅れます。<strong>「しきい値を自分で決める → Budgets」「決められない → Cost Anomaly Detection」</strong>で覚えてください。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q5</span>Auto Scaling グループで動く EC2 の Web 層が AZ-a と AZ-c に分散しており、同一 VPC 内の別 AZ にある内部 API を、パブリック DNS 名で直接呼び出している。可用性要件を維持したままデータ転送コストを下げたい。最も効果があるのはどれか。
+      <ul class="opts">
+        <li>A. すべてのインスタンスを単一の AZ に集約する</li>
+        <li>B. 内部 API の呼び出しをプライベート IP（または内部 DNS 名）に変更する</li>
+        <li>C. 内部 API の前に CloudFront ディストリビューションを配置する</li>
+        <li>D. VPC ピアリング接続を追加する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>同一 VPC 内でもパブリック DNS 名を使うとトラフィックがパブリック IP 経由で扱われ、転送料金が発生します。プライベート IP（内部 DNS 名）に切り替えれば同一 AZ 内の通信は無料になり、可用性構成には一切手を触れません。</p>
+      <p><strong>判断軸:</strong> A は AZ 間転送料金をなくせますが<strong>可用性要件を壊す</strong>ため不正解――最初に疑うべき「要件破り」です。C は外部配信向けで内部通信には効きません。D は同一 VPC 内なのでピアリングの出番がありません。<strong>同一 VPC 内でパブリック名、という記述はコスト設問の仕込み</strong>です。</p>
+    </div>
+  </details></section>
+
+<section id="s12" data-toc="今日の宿題">
+
+  <span class="h2num">12</span>
+  <h2>今日の宿題</h2>
+  <p>この時点で模試は数回終えているはずです。今日の宿題は新しい知識を足すことより、<strong>すでに間違えたものをコストという軸で見直すこと</strong>に重心を置いています。25分を確保してください。</p>
+
+  <div class="hw">
+    <div class="item"><span class="box"></span><span class="t"><code>notes/cost/</code> の README チェックリストを埋める<small>購入オプション、データ転送、ストレージ、管理ツールの4項目。埋まらない行はその節に戻る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">データ転送の4つの境界を、資料を見ずに図として描く<small>同一AZ / AZ間 / リージョン間 / インターネット。NAT Gateway と2種類のエンドポイントを書き足せれば完成</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d4-cost.md</code> に判断軸を追記<small>10の対応表から、自分が知らなかった行だけを写す</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>drills/mistakes.md</code> のコスト関連の誤答を読み返す<small>02の「罠になる選択肢の5パターン」のどれに当たるかを各誤答の横に1語で書く。同じパターンが3つ以上あれば、それが弱点</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">W9 の Issue のチェック項目を埋め、<code>plan/log.md</code> に1行残す<small>「購入オプションと Savings Plans」「データ転送料金とエンドポイント」「コスト管理ツールの使い分け」の3つ。ログには時間と、いちばん意外だったことを</small></span></div>
+  </div>
+
+  <div class="note">
+    <span class="label">次回に向けて</span>
+    <p>ドメイン4はこれで一巡しました。残りの期間でやることは、新しい知識の追加ではなく<strong>ドメインをまたいだ設問への対応</strong>です。試験では「可用性を維持しながら、運用負荷を上げずに、コストを最小化する」と複数の柱が同時に条件として与えられます。<strong>制約として書かれているものを満たしたうえで、目的として書かれているものを最小化する</strong>――この読み方を次の模試で試してください。解けなかった設問より、<em>正解したが理由を説明できなかった設問</em>のほうが危険です。</p>
+  </div></section>
+
+<footer>
+  AWS SAA-C03 / W9 座学<br>
+  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
+</footer>
+
+</main>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;font:14px system-ui,-apple-system,sans-serif;background:#fafaf9}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>S3 とストレージ選定</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#F6F8F7; --surface:#FFFFFF; --surface-2:#EDF1F0; --inset:#F0F4F3;
+  --ink:#13201E; --ink-2:#485855; --ink-3:#74847F; --line:#D5DEDB;
+  --accent:#0E6B68; --accent-soft:#DCEAE8;
+  --allow:#2B7448; --allow-soft:#DEEFE4;
+  --deny:#AE3729; --deny-soft:#F6E1DD;
+  --warn:#8E5B06; --warn-soft:#F6EAD1;
+  --serif:'Shippori Mincho',"Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:'Zen Kaku Gothic New',"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+    --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+    --accent:#52B2AD; --accent-soft:#14302E;
+    --allow:#6FC38B; --allow-soft:#142E1E;
+    --deny:#E4877A; --deny-soft:#331A16;
+    --warn:#D3A44E; --warn-soft:#2E2510;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+  --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+  --accent:#52B2AD; --accent-soft:#14302E;
+  --allow:#6FC38B; --allow-soft:#142E1E;
+  --deny:#E4877A; --deny-soft:#331A16;
+  --warn:#D3A44E; --warn-soft:#2E2510;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:0 96px}
+a{color:var(--accent)}
+
+/* ---------- header ---------- */
+.masthead{padding-block:56px 40px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,6vw,46px);line-height:1.3;margin:0 0 18px;text-wrap:balance;letter-spacing:.01em}
+.standfirst{margin:0;max-width:62ch;color:var(--ink-2);font-size:17px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.meta span{font-family:var(--mono);font-size:12px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);background:var(--surface)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:1fr;gap:40px;margin-top:40px}
+@media (min-width:1000px){ .cols{grid-template-columns:200px minmax(0,1fr);gap:56px} }
+nav.toc{font-size:14px}
+@media (min-width:1000px){ nav.toc{position:sticky;top:32px;align-self:start;max-height:calc(100vh - 64px);overflow-y:auto} }
+nav.toc h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px;font-weight:600}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+@media (max-width:999px){ nav.toc ol{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))} }
+nav.toc a{display:block;padding:5px 10px;border-radius:6px;text-decoration:none;color:var(--ink-2);line-height:1.5;border-left:2px solid transparent}
+nav.toc a:hover{background:var(--surface-2);color:var(--ink)}
+nav.toc a .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-right:7px}
+
+main{min-width:0;max-width:74ch}
+section{padding-block:44px;border-top:1px solid var(--line)}
+section:first-child{border-top:none;padding-top:8px}
+h2{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3.6vw,29px);line-height:1.45;margin:0 0 6px;text-wrap:balance}
+.h2num{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.12em;display:block;margin-bottom:8px}
+h3{font-family:var(--sans);font-weight:700;font-size:17px;margin:34px 0 10px;color:var(--ink);letter-spacing:.01em}
+p{margin:0 0 18px;max-width:66ch}
+ul,ol.body{margin:0 0 18px;padding-left:1.35em;max-width:66ch}
+li{margin-bottom:7px}
+strong{font-weight:700}
+em{font-style:normal;background:linear-gradient(transparent 62%,var(--accent-soft) 62%);font-weight:500}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);padding:2px 6px;border-radius:4px;word-break:break-word}
+
+/* ---------- blocks ---------- */
+.lead{font-size:17.5px;color:var(--ink-2);max-width:64ch}
+.goals{list-style:none;padding:0;margin:0;display:grid;gap:10px;max-width:66ch}
+.goals li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;margin:0;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.goals .tick{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:4px}
+
+.note{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.note p:last-child{margin-bottom:0}
+.note .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
+.note.warn{border-left-color:var(--warn)} .note.warn .label{color:var(--warn)}
+
+.trap{background:var(--deny-soft);border:1px solid transparent;border-radius:8px;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.trap .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--deny);display:block;margin-bottom:6px;font-weight:600}
+.trap p:last-child{margin-bottom:0}
+
+/* ---------- code ---------- */
+.code{background:var(--inset);border:1px solid var(--line);border-radius:8px;overflow-x:auto;margin:0 0 20px}
+.code pre{margin:0;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.75;color:var(--ink)}
+.code .cap{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding:10px 20px 0}
+.k{color:var(--accent)} .s{color:var(--ink-2)} .c{color:var(--ink-3)} .d{color:var(--deny)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 22px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+th,td{text-align:left;padding:12px 15px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:none}
+td.yes{color:var(--allow);font-weight:600} td.no{color:var(--deny);font-weight:600}
+
+/* ---------- eval ladder ---------- */
+.ladder{display:grid;gap:0;margin:0 0 8px}
+.rung{display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.rung .no{font-family:var(--mono);font-size:12px;color:var(--ink-3);text-align:center}
+.rung .q{font-size:15px;line-height:1.6}
+.rung .q small{display:block;color:var(--ink-3);font-size:12.5px;line-height:1.6;margin-top:2px}
+.out{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.out.deny{background:var(--deny-soft);color:var(--deny)}
+.out.allow{background:var(--allow-soft);color:var(--allow)}
+.drop{height:14px;margin-left:33px;border-left:2px solid var(--line)}
+.terminal{margin-top:14px;padding:14px 16px;border-radius:8px;background:var(--allow-soft);color:var(--allow);font-weight:700;font-size:15px}
+
+/* ---------- svg figure ---------- */
+figure{margin:0 0 22px}
+.fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+figcaption{font-size:13px;color:var(--ink-3);margin-top:10px;line-height:1.7}
+svg text{font-family:var(--sans)}
+
+/* ---------- judgement list ---------- */
+.judge{display:grid;gap:8px;margin:0 0 22px}
+.judge .row{display:grid;grid-template-columns:1fr;gap:4px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+@media (min-width:640px){ .judge .row{grid-template-columns:1fr auto 1fr;gap:14px;align-items:center} }
+.judge .cue{font-size:14.5px;color:var(--ink-2)}
+.judge .arrow{font-family:var(--mono);color:var(--ink-3);font-size:13px}
+.judge .ans{font-size:14.5px;font-weight:700;color:var(--accent)}
+
+/* ---------- quiz ---------- */
+details.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin:0 0 12px;overflow:hidden}
+details.q summary{cursor:pointer;padding:16px 18px;font-weight:500;line-height:1.75;list-style:none;font-size:15.5px}
+details.q summary::-webkit-details-marker{display:none}
+details.q summary::after{content:"解答を見る";display:block;font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:10px;letter-spacing:.08em}
+details.q[open] summary::after{content:"閉じる";color:var(--ink-3)}
+details.q summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.q .a{padding:0 18px 18px;border-top:1px solid var(--line);margin-top:0;padding-top:16px}
+details.q .a p{margin-bottom:12px;font-size:15px}
+details.q .a p:last-child{margin-bottom:0}
+.qnum{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.1em;display:block;margin-bottom:7px}
+.correct{color:var(--allow);font-weight:700}
+.opts{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:5px}
+.opts li{font-size:14.5px;color:var(--ink-2);margin:0;padding-left:1.8em;text-indent:-1.8em}
+
+/* ---------- homework ---------- */
+.hw{display:grid;gap:10px;margin:0 0 22px}
+.hw .item{display:grid;grid-template-columns:auto 1fr;gap:13px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;align-items:start}
+.hw .box{width:15px;height:15px;border:1.5px solid var(--ink-3);border-radius:3px;margin-top:6px}
+.hw .t{font-size:15px;line-height:1.7}
+.hw .t small{display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+
+footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3);line-height:1.8}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">AWS SAA-C03 / W3 座学</p>
+  <h1>ストレージ ―― どこに置き、いつ移すか</h1>
+  <p class="standfirst">ストレージはSAAで最も選択肢の数が多い領域です。S3のストレージクラスだけで6種類以上あり、さらにEBS・EFS・FSxが並びます。設問は必ず「アクセス頻度」「共有の要否」「プロトコル」「取り出しまでの許容時間」のどれかを手がかりとして与えてきます。その手がかりと答えの対応を作るのが今日の目的です。</p>
+  <div class="meta"><span>所要 60-90分</span><span>前提 W2 読了</span><span>ドメイン3・4</span></div>
+</header>
+
+<div class="cols">
+
+<nav class="toc">
+  <h2>目次</h2>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
+    <li><a href="#s2"><span class="n">02</span>ストレージクラス</a></li>
+    <li><a href="#s3"><span class="n">03</span>ライフサイクル</a></li>
+    <li><a href="#s4"><span class="n">04</span>バージョンと保持</a></li>
+    <li><a href="#s5"><span class="n">05</span>アクセス制御</a></li>
+    <li><a href="#s6"><span class="n">06</span>暗号化</a></li>
+    <li><a href="#s7"><span class="n">07</span>性能と転送</a></li>
+    <li><a href="#s8"><span class="n">08</span>EBS</a></li>
+    <li><a href="#s9"><span class="n">09</span>EFS と FSx</a></li>
+    <li><a href="#s10"><span class="n">10</span>移行とハイブリッド</a></li>
+    <li><a href="#s11"><span class="n">11</span>試験での判断軸</a></li>
+    <li><a href="#s12"><span class="n">12</span>確認問題</a></li>
+    <li><a href="#s13"><span class="n">13</span>今日の宿題</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="s1" data-toc="ゴール">
+
+  <span class="h2num">01</span>
+  <h2>この講義のゴール</h2>
+  <p class="lead">ストレージの設問は、サービス名を知っているかではなく、<em>要件の一文からどの軸で切るかを判断できるか</em>を問います。今日終わったときに、次の3つができていれば合格です。</p>
+  <ul class="goals">
+    <li><span class="tick">01</span><div><strong>アクセス頻度と取り出し時間から、S3のストレージクラスを1つに絞れる。</strong><br>最小保存期間という落とし穴も含めて、なぜそれを選ぶか言える。</div></li>
+    <li><span class="tick">02</span><div><strong>ブロック・ファイル・オブジェクトの3分類を反射的に切り分けられる。</strong><br>「複数EC2から共有」「Windowsから」「1台に速いディスク」が、それぞれどこに着地するか即答できる。</div></li>
+    <li><span class="tick">03</span><div><strong>暗号化とアクセス制御を、要件の言葉から逆引きできる。</strong><br>「監査したい」「鍵を預けられない」「期限付きで外部に渡す」が、それぞれ何を指すか分かる。</div></li>
+  </ul>
+  <div class="note">
+    <span class="label">今日の全体像</span>
+    <p>ストレージは3つの型しかありません。<strong>オブジェクト</strong>（S3。HTTPで出し入れする、部分更新しない）、<strong>ブロック</strong>（EBS・インスタンスストア。OSがファイルシステムを載せる生ディスク）、<strong>ファイル</strong>（EFS・FSx。NFSやSMBでマウントして複数台から共有する）。設問を読んだらまずこの3つのどれかを決める。それだけで選択肢の半分は消えます。</p>
+  </div></section>
+
+<section id="s2" data-toc="ストレージクラス">
+
+  <span class="h2num">02</span>
+  <h2>S3 のストレージクラス</h2>
+  <p class="lead">6つ以上あって覚えにくく見えますが、実際に効いている軸は<strong>3つだけ</strong>です。どれくらいの頻度で読むか、読むときに何秒待てるか、AZが1つ落ちたときに失われてよいか。この3つを設問から拾えば、クラスは自動的に決まります。</p>
+
+  <h3>比較表</h3>
+  <div class="tw"><table>
+    <thead><tr><th>クラス</th><th>想定アクセス頻度</th><th>取り出しにかかる時間</th><th>最小保存期間</th><th>AZ</th></tr></thead>
+    <tbody>
+      <tr><td><strong>S3 Standard</strong></td><td>頻繁（日常的に読む）</td><td>ミリ秒</td><td class="yes">なし</td><td>3以上</td></tr>
+      <tr><td><strong>S3 Intelligent-Tiering</strong></td><td><strong>予測できない／変動する</strong></td><td>階層による（既定の階層はミリ秒）</td><td class="yes">なし</td><td>3以上</td></tr>
+      <tr><td><strong>S3 Standard-IA</strong></td><td>月1回程度</td><td>ミリ秒</td><td>30日</td><td>3以上</td></tr>
+      <tr><td><strong>S3 One Zone-IA</strong></td><td>月1回程度かつ<strong>失っても再作成できる</strong></td><td>ミリ秒</td><td>30日</td><td class="no">1</td></tr>
+      <tr><td><strong>S3 Glacier Instant Retrieval</strong></td><td>四半期に1回程度</td><td class="yes">ミリ秒</td><td>90日</td><td>3以上</td></tr>
+      <tr><td><strong>S3 Glacier Flexible Retrieval</strong></td><td>年に1〜2回</td><td>Expedited 1〜5分 / Standard 3〜5時間 / Bulk 5〜12時間</td><td>90日</td><td>3以上</td></tr>
+      <tr><td><strong>S3 Glacier Deep Archive</strong></td><td>年1回未満（ほぼ読まない）</td><td>Standard 12時間以内 / Bulk 48時間以内</td><td>180日</td><td>3以上</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>この表で最も設問に直結するのは<strong>「取り出しにかかる時間」の列</strong>です。設問は必ず、要件のどこかに待てる時間を書いてきます。「監査時には即座に参照できる必要がある」と書いてあれば Glacier Flexible Retrieval は消えます。「取り出しに数時間かかっても問題ない」と書いてあれば、Glacier Instant Retrieval を選ぶ理由はなくなります（より高いので）。</p>
+
+  <h3>Intelligent-Tiering が正解になる条件</h3>
+  <p>Intelligent-Tiering は、オブジェクトごとのアクセス状況を監視して自動で階層を移します。既定では次のように進みます。</p>
+  <ul>
+    <li><strong>Frequent Access</strong>（最初はここ）→ 30日連続で未アクセス → <strong>Infrequent Access</strong> → さらに90日連続で未アクセス → <strong>Archive Instant Access</strong>。ここまではすべてミリ秒で読めます。</li>
+    <li>任意で <strong>Archive Access</strong>（90日以上）と <strong>Deep Archive Access</strong>（180日以上）を有効化できます。こちらに落ちると取り出しに分〜時間かかるので、業務要件を確認してから有効にします。</li>
+    <li><strong>取り出し料金がかかりません。</strong>代わりにオブジェクト単位の監視・自動化料金がかかります。</li>
+    <li>128KB未満のオブジェクトは監視対象外で、Frequent Access に留まります。小さいファイルが大量にある場合、思ったほどコストが下がりません。</li>
+  </ul>
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>設問に「<strong>アクセスパターンが予測できない</strong>」「時間とともに変化する」「運用の手間をかけずに」という語が出たら Intelligent-Tiering です。逆に「<strong>30日後にはほとんど読まれないことが分かっている</strong>」と明言されていたら、それはライフサイクルルールで Standard-IA に落とす設問であって、Intelligent-Tiering ではありません。パターンが既知かどうかが分かれ目です。</p>
+  </div>
+
+  <h3>One Zone-IA を選んでよい場面は限られる</h3>
+  <p>One Zone-IA は単一AZにしかデータを置きません。安いのは事実ですが、そのAZが失われればオブジェクトも失われます。設問で正解になるのは、<em>元データが別の場所にあり、再作成できるもの</em>に限られます。具体的には、S3にある原本から生成したサムネイル、別リージョンにレプリカがあるコピー、オンプレにマスターがあるバックアップの二次コピーなどです。監査ログ、法定保存文書、唯一の原本を One Zone-IA に置く選択肢は、コストが安くても不正解です。</p>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「最小保存期間」を無視した選択肢です。たとえば7日間だけ保持する一時ファイルを Standard-IA に置くと、30日分の保存料金を請求されます。Standard に置いたほうが安い。<strong>短命なデータに IA 系・Glacier 系を選ばせる選択肢は、コスト最適化に見えて逆</strong>です。加えて IA 系と Glacier Instant Retrieval には<strong>128KBの課金下限</strong>があり、10KBのファイルも128KB分として課金されます。小さいファイルを大量に IA へ落とす選択肢も同じ罠です。</p>
+  </div></section>
+
+<section id="s3" data-toc="ライフサイクル">
+
+  <span class="h2num">03</span>
+  <h2>ライフサイクルと遷移の制約</h2>
+  <p class="lead">クラスを選べたら、次は「いつ移すか」です。ライフサイクルルールは、日数を条件にして自動で遷移・削除を行います。ここには方向と日数の制約があり、設問はその制約を突いてきます。</p>
+
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 860 300" width="860" height="300" role="img" aria-label="S3ライフサイクルの遷移が左から右への一方通行であり、逆方向にはrestoreとコピーが必要であることを示す図">
+        <text x="15" y="28" font-size="12.5" fill="var(--ink-3)" font-weight="600">遷移は一方通行 ―― 右へは進めるが、左へは戻れない</text>
+
+        <rect x="15" y="60" width="142" height="72" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="86" y="90" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 Standard</text>
+        <text x="86" y="112" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">最小保存期間なし</text>
+
+        <rect x="187" y="60" width="142" height="72" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="258" y="90" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Standard-IA</text>
+        <text x="258" y="112" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">最小 30 日</text>
+
+        <rect x="359" y="60" width="142" height="72" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="430" y="90" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier IR</text>
+        <text x="430" y="112" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">最小 90 日</text>
+
+        <rect x="531" y="60" width="142" height="72" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="602" y="90" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier Flexible</text>
+        <text x="602" y="112" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">最小 90 日</text>
+
+        <rect x="703" y="60" width="142" height="72" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="774" y="90" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Deep Archive</text>
+        <text x="774" y="112" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">最小 180 日</text>
+
+        <line x1="157" y1="96" x2="183" y2="96" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M187 96 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <line x1="329" y1="96" x2="355" y2="96" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M359 96 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <line x1="501" y1="96" x2="527" y2="96" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M531 96 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <line x1="673" y1="96" x2="699" y2="96" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M703 96 l-9 -5 v10 z" fill="var(--ink-3)"/>
+
+        <rect x="15" y="160" width="830" height="40" rx="6" fill="var(--inset)"/>
+        <text x="86" y="185" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">ミリ秒</text>
+        <text x="258" y="185" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">ミリ秒</text>
+        <text x="430" y="185" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">ミリ秒</text>
+        <text x="602" y="185" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">分〜12時間</text>
+        <text x="774" y="185" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">12〜48時間</text>
+
+        <line x1="770" y1="240" x2="95" y2="240" stroke="var(--deny)" stroke-width="1.8" stroke-dasharray="6 4"/>
+        <path d="M86 240 l9 -5 v10 z" fill="var(--deny)"/>
+        <rect x="316" y="222" width="228" height="36" rx="6" fill="var(--deny-soft)"/>
+        <text x="430" y="245" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">ライフサイクルでは戻せない</text>
+
+        <text x="430" y="285" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">戻すには restore してから別クラスへコピーし直す</text>
+      </svg>
+    </div>
+    <figcaption>遷移はウォーターフォール（一方通行）です。Glacier 系から Standard に「戻す」ライフサイクルルールは書けません。設問で「アーカイブしたデータを通常クラスに戻す運用」が出たら、<strong>restore してコピーし直す</strong>という手順が正解側にあります。</figcaption>
+  </figure>
+
+  <h3>ルールに書ける5つのアクション</h3>
+  <ol class="body">
+    <li><strong>Transition</strong> ―― 現行バージョンを別クラスへ移す。</li>
+    <li><strong>Expiration</strong> ―― 現行バージョンを削除する。バージョニング有効なら削除マーカーが付くだけです。</li>
+    <li><strong>NoncurrentVersionTransition / NoncurrentVersionExpiration</strong> ―― 非現行（古い）バージョンを移す・消す。バージョニングを有効にしたまま容量を抑える定番です。</li>
+    <li><strong>AbortIncompleteMultipartUpload</strong> ―― 途中で失敗したマルチパートアップロードの断片を消す。これを設定していないと、見えないパートに課金され続けます。<strong>「請求額に説明のつかないS3の容量がある」型の設問の答え</strong>です。</li>
+    <li><strong>ExpiredObjectDeleteMarker</strong> ―― 中身のない削除マーカーだけが残った状態を掃除します。</li>
+  </ol>
+
+  <div class="code">
+    <div class="cap">ライフサイクルルールの例（現行版を段階的に落とし、古い版は短く切る）</div>
+<pre>{
+  <span class="k">"ID"</span>: <span class="s">"logs-tiering"</span>,
+  <span class="k">"Filter"</span>: { <span class="k">"Prefix"</span>: <span class="s">"logs/"</span> },
+  <span class="k">"Status"</span>: <span class="s">"Enabled"</span>,
+  <span class="k">"Transitions"</span>: [
+    { <span class="k">"Days"</span>: 30,  <span class="k">"StorageClass"</span>: <span class="s">"STANDARD_IA"</span> },   <span class="c">// 30日未満は指定できない</span>
+    { <span class="k">"Days"</span>: 120, <span class="k">"StorageClass"</span>: <span class="s">"DEEP_ARCHIVE"</span> }
+  ],
+  <span class="k">"NoncurrentVersionExpiration"</span>: { <span class="k">"NoncurrentDays"</span>: 30 },
+  <span class="k">"AbortIncompleteMultipartUpload"</span>: { <span class="k">"DaysAfterInitiation"</span>: 7 }
+}</pre>
+  </div>
+
+  <h3>覚えておく制約</h3>
+  <ul>
+    <li><strong>Standard から Standard-IA / One Zone-IA へは、最低30日経ってから。</strong>29日で移すルールは作れません。</li>
+    <li><strong>128KB未満のオブジェクトは、既定ではどのクラスにも遷移しません。</strong>移したい場合は <code>ObjectSizeGreaterThan</code> などのサイズフィルタを明示します。ただし遷移のリクエスト料金のほうが節約額を上回ることが多く、AWS自身が推奨していません。</li>
+    <li><strong>Glacier 系に置いたオブジェクトには、1件あたり約40KBのメタデータ課金が付きます。</strong>内訳は S3 Standard 料金で8KB、Glacier 料金で32KBです。小さいファイルを何億件も Deep Archive に送ると、本体より管理データのほうが高くなります。この場合は先にまとめて（アーカイブファイル化して）から送るのが正解です。</li>
+    <li><strong>最小保存期間より前に削除・遷移すると、残りの期間分が課金されます。</strong>Deep Archive に入れた翌日に消しても180日分払います。</li>
+  </ul></section>
+
+<section id="s4" data-toc="バージョンと保持">
+
+  <span class="h2num">04</span>
+  <h2>バージョニング・保持・レプリケーション</h2>
+  <p class="lead">「消えては困る」という要件には段階があります。<em>うっかり消したものを戻したい</em>のか、<em>規制で誰にも消させたくない</em>のか、<em>リージョンごと失われても残したい</em>のか。設問はこの3段階のどれかを書いてきます。</p>
+
+  <h3>バージョニング ―― すべての前提</h3>
+  <p>バージョニングを有効にすると、上書きも削除も既存データを壊しません。削除は<strong>削除マーカー</strong>という新しいバージョンを積むだけで、マーカーを消せば元に戻ります。</p>
+  <ul>
+    <li>一度有効にしたバージョニングは<strong>無効化できません</strong>。できるのは「停止（Suspended）」までで、それまでに作られたバージョンは残り続けます。</li>
+    <li>古いバージョンも課金対象です。ライフサイクルの <code>NoncurrentVersionExpiration</code> とセットで設計するのが実務の定石です。</li>
+    <li><strong>この後に出てくる Object Lock もレプリケーションも、バージョニングが有効であることが前提</strong>です。ここが試験で最も繰り返し問われます。</li>
+  </ul>
+
+  <h3>MFA Delete</h3>
+  <p>バージョンの完全削除と、バージョニング状態の変更に、MFAのコードを要求する設定です。特徴が2つあります。<strong>バージョニングが有効でなければ設定できないこと</strong>、そして<strong>バケット所有者のルートユーザーが CLI / API から設定する必要があること</strong>（マネジメントコンソールからは設定できません）。「IAM管理者が有効化する」という選択肢は不正解です。</p>
+
+  <h3>Object Lock ―― WORM</h3>
+  <p>Object Lock は書き込み後に変更できない状態（Write Once Read Many）を作ります。モードが2つあり、<strong>誰が解除できるか</strong>だけが違います。</p>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>ガバナンスモード</th><th>コンプライアンスモード</th></tr></thead>
+    <tbody>
+      <tr><td><strong>解除できる人</strong></td><td><code>s3:BypassGovernanceRetention</code> を持つプリンシパル</td><td class="no">誰も解除できない（ルートユーザーを含む）</td></tr>
+      <tr><td><strong>保持期間の短縮</strong></td><td class="yes">権限があれば可能</td><td class="no">不可</td></tr>
+      <tr><td><strong>典型的な目的</strong></td><td>誤操作の防止。設定のテスト</td><td>金融・医療などの法規制対応</td></tr>
+    </tbody>
+  </table></div>
+  <p>これとは別に<strong>リーガルホールド</strong>があります。期限がなく、<code>s3:PutObjectLegalHold</code> の権限があればいつでも着脱できます。訴訟対応や監査中など、<em>いつまで保持すべきか分からない</em>ときに使います。保持期間とリーガルホールドは独立していて、同時にかけられます。</p>
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「管理者を含め<strong>誰も</strong>削除できないようにしたい」という要件に、<em>バケットポリシーで <code>s3:DeleteObject</code> を Deny する</em>という選択肢が並びます。これは不正解です。バケットポリシー自体を管理者が書き換えられるからです。同じ理由でガバナンスモードも不正解。<strong>「誰も」「ルートユーザーでも」と書いてあったらコンプライアンスモード</strong>、と直結させてください。</p>
+  </div>
+
+  <h3>レプリケーション ―― CRR と SRR</h3>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>CRR（クロスリージョン）</th><th>SRR（同一リージョン）</th></tr></thead>
+    <tbody>
+      <tr><td><strong>目的</strong></td><td>DR、地理的に離れた利用者へのレイテンシ短縮、法規制による地理分散</td><td>ログの集約、本番から検証環境へのデータ複製、アカウント分離による保護</td></tr>
+      <tr><td><strong>設問の手がかり</strong></td><td>「別リージョンに」「災害復旧」「海外拠点からの読み取りが遅い」</td><td>「同じリージョンの別バケット／別アカウントに」「監査用に隔離」</td></tr>
+    </tbody>
+  </table></div>
+  <p>どちらにも共通する前提と挙動があります。</p>
+  <ul>
+    <li><strong>送信元・送信先の両方でバージョニングが有効であること。</strong>片方だけでは設定できません。</li>
+    <li>S3がレプリケートするための<strong>IAMロール</strong>が必要です。</li>
+    <li><strong>非同期</strong>です。書き込んだ瞬間に相手側にあるとは限りません。所要時間に保証が欲しい場合は <strong>S3 Replication Time Control（RTC）</strong> を使うと、99.99%のオブジェクトを15分以内に複製するSLAが付きます。</li>
+    <li><strong>ルール作成時点で既に存在しているオブジェクトは複製されません。</strong>既存分は <strong>S3 Batch Replication</strong> で別途流します。「設定したのに古いデータが複製されない」型の設問の答えです。</li>
+    <li>削除マーカーの複製は任意設定です。バージョンIDを指定した削除は複製されません（複製先に削除が伝播して両方消える、という事故を防ぐ設計です）。</li>
+  </ul></section>
+
+<section id="s5" data-toc="アクセス制御">
+
+  <span class="h2num">05</span>
+  <h2>S3 のアクセス制御</h2>
+  <p class="lead">S3には権限の書ける場所が複数あります。並べて覚えるのではなく、<strong>「誰に」「何を」「どの粒度で」渡したいか</strong>から逆引きします。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>仕組み</th><th>主語</th><th>これが正解になる要件</th></tr></thead>
+    <tbody>
+      <tr><td><strong>IAMポリシー</strong></td><td>自アカウントのユーザー／ロール</td><td>「この人（このEC2）は何にアクセスできるか」を管理したい。対象バケットが多数あり、人の側でまとめたい</td></tr>
+      <tr><td><strong>バケットポリシー</strong></td><td>バケット</td><td><strong>クロスアカウント</strong>で許可したい。VPCエンドポイント経由のみ（<code>aws:SourceVpce</code>）、HTTPSのみ（<code>aws:SecureTransport</code>）といった条件をバケット全体に強制したい</td></tr>
+      <tr><td><strong>ACL</strong></td><td>バケット／オブジェクト個別</td><td class="no">原則として使わない。新規バケットでは既定で無効（Object Ownership が Bucket owner enforced）。AWSも無効化を推奨</td></tr>
+      <tr><td><strong>署名付きURL</strong></td><td>URLを渡された誰か</td><td><strong>期限付き</strong>で特定のオブジェクトだけを、AWSアカウントを持たない相手に渡したい。アップロード用にも発行できる</td></tr>
+      <tr><td><strong>Block Public Access</strong></td><td>アカウント／バケット</td><td>ポリシーやACLが何と書かれていても<strong>公開を上書きで禁じたい</strong>。既定で有効。ガードレール</td></tr>
+      <tr><td><strong>Access Points</strong></td><td>アプリケーション／チーム</td><td>1つの大きなバケットを多数のチームが共有していて、<strong>バケットポリシーが肥大化して管理できなくなった</strong></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>署名付きURLの性質</h3>
+  <p>署名付きURLは<strong>発行した主体の権限の範囲でしか動きません</strong>。読み取り権限しかないロールが発行したURLで書き込むことはできません。有効期限は発行時に指定します。「社外のパートナーに、このレポートだけ、48時間だけ渡したい」という設問は常にこれです。逆に「動画を世界中の視聴者に配信」なら CloudFront であり、その場合はバケットを公開せず <strong>OAC（Origin Access Control）</strong> で CloudFront 経由だけに絞るのが正解の形です。</p>
+
+  <h3>Access Points の役割</h3>
+  <p>Access Points は、1つのバケットに対して<strong>名前付きのエンドポイントを複数作り、それぞれに個別のポリシーを付ける</strong>仕組みです。分析チームは <code>analytics/</code> 配下だけ読める、取り込みジョブは <code>raw/</code> 配下にだけ書ける、といった分割を、巨大な1枚のバケットポリシーを書かずに実現できます。VPCからのみアクセスできるアクセスポイントも作れます。さらに <strong>Multi-Region Access Points</strong> は、複数リージョンのバケット群に対して単一のグローバルなエンドポイントを提供し、最も近いバケットへルーティングします。</p>
+
+  <div class="note warn">
+    <span class="label">Block Public Access の位置づけ</span>
+    <p>これは権限を与える仕組みではなく、<strong>与えられた公開権限を無効化する上書きスイッチ</strong>です。バケットポリシーに <code>"Principal": "*"</code> と書いてあっても、Block Public Access が有効なら公開されません。設問で「バケットが意図せず公開されていた。再発を防ぐには」と来たら、アカウントレベルでの Block Public Access 有効化と、IAM Access Analyzer for S3 による検知が答えになります。</p>
+  </div></section>
+
+<section id="s6" data-toc="暗号化">
+
+  <span class="h2num">06</span>
+  <h2>暗号化 ―― 鍵を誰が持つか</h2>
+  <p class="lead">暗号化の選択肢は、機能の差ではなく<strong>鍵を誰が持ち、誰が管理し、使用履歴を追えるか</strong>の差です。設問は必ずそのどれかを要件として書いてきます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>方式</th><th>鍵を管理するのは</th><th>鍵の使用を監査できるか</th><th>これが正解になる要件</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SSE-S3</strong><br><span style="color:var(--ink-3);font-size:13px">AES-256</span></td><td>AWS（完全におまかせ）</td><td class="no">キー単位の使用記録は追えない</td><td>要件が「保存時に暗号化されていること」だけ。追加費用なし。<strong>2023年1月以降、新規オブジェクトは既定でこれが適用されます</strong></td></tr>
+      <tr><td><strong>SSE-KMS</strong></td><td>顧客（KMSキー）</td><td class="yes">CloudTrail に <code>Decrypt</code> / <code>GenerateDataKey</code> が残る</td><td>「<strong>誰がいつ復号したか監査したい</strong>」「鍵のローテーションを自分で制御したい」「鍵ポリシーで、S3の権限とは別に復号を止められるようにしたい」</td></tr>
+      <tr><td><strong>DSSE-KMS</strong></td><td>顧客（KMSキー）</td><td class="yes">同上</td><td>二重に暗号化する必要がある、極めて厳格な規制要件</td></tr>
+      <tr><td><strong>SSE-C</strong></td><td>顧客（毎リクエストで鍵を送る）</td><td class="no">AWS側に鍵は残らない</td><td>「<strong>鍵をAWSに預けられない</strong>」が暗号化処理はS3に任せたい。HTTPS必須で、鍵を失えば復号不能</td></tr>
+      <tr><td><strong>クライアントサイド暗号化</strong></td><td>顧客（アプリ側で完結）</td><td class="no">AWSは平文を一切見ない</td><td>「AWSに平文を渡さない」ことそのものが要件。鍵管理の責任はすべて自分</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>実務でも試験でも、判断の中心は <strong>SSE-S3 と SSE-KMS のどちらか</strong>です。切り分けの言葉はひとつ、<em>監査とアクセス制御の粒度</em>です。「暗号化してあればよい」なら SSE-S3、「鍵の使用者を特定・制限したい」なら SSE-KMS。</p>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>SSE-KMS でオブジェクトを読み書きすると、<strong>リクエストごとに KMS の API が呼ばれます</strong>。毎秒数万件を処理するデータパイプラインでは KMS 側のリクエストクォータに当たり、<code>ThrottlingException</code> や 503 が出ます。ここで「SSE-S3 に切り替える」を選ぶと監査要件を落とすので不正解。正解は <strong>S3 Bucket Keys</strong> の有効化です。バケット単位のキーを使って KMS の呼び出し回数を大幅に削減し、暗号化方式も監査も維持したまま解決します。</p>
+  </div>
+
+  <h3>転送中の暗号化</h3>
+  <p>保存時の暗号化とは別の話です。HTTPS を強制したい場合は、バケットポリシーで <code>aws:SecureTransport</code> が <code>false</code> のリクエストを Deny します。「保存時の暗号化は有効なのに、監査で転送経路を指摘された」型の設問はこの形を問うています。</p></section>
+
+<section id="s7" data-toc="性能と転送">
+
+  <span class="h2num">07</span>
+  <h2>S3 の性能と大きなファイルの扱い</h2>
+  <p class="lead">性能の設問は「遅い」「失敗する」「高い」のどれかで来ます。原因の切り分けが、そのまま答えになります。</p>
+
+  <h3>マルチパートアップロード</h3>
+  <ul>
+    <li>単一の PUT で送れる上限は <strong>5GB</strong>。それを超えるオブジェクトはマルチパートが<strong>必須</strong>です。オブジェクト自体の上限は 5TB。</li>
+    <li>AWSは<strong>100MBを超えたらマルチパートを使う</strong>ことを推奨しています。パートを並列に送れるので速く、失敗したパートだけ再送できるので不安定な回線に強い。</li>
+    <li>パートは最大10,000個です。</li>
+    <li><strong>中断したアップロードのパートは課金され続けます。</strong>ライフサイクルの <code>AbortIncompleteMultipartUpload</code> で必ず掃除します。</li>
+  </ul>
+
+  <h3>Transfer Acceleration</h3>
+  <p>CloudFront のエッジロケーションを入口にして、そこから AWS のバックボーン経由でバケットまで運びます。効くのは<strong>クライアントとバケットが地理的に遠いとき</strong>です。同一リージョン内のEC2からのアップロードには効果がありません。「海外の拠点から東京のバケットへの大容量アップロードが遅い」という設問の答えがこれです。なお、有効化前に効果を測定できる比較ツールがAWSから提供されています。</p>
+
+  <h3>プレフィックス設計</h3>
+  <p>S3のリクエストレートは<strong>プレフィックス単位</strong>で決まります。1プレフィックスあたり、書き込み系（PUT / COPY / POST / DELETE）が毎秒3,500、読み取り系（GET / HEAD）が毎秒5,500です。<strong>プレフィックスの数に上限はありません</strong>。したがって、プレフィックスを分けて並列化すればリニアにスケールします。10個に分ければ読み取りは毎秒55,000まで伸びます。</p>
+  <p>設問で <code>503 Slow Down</code> が出てくる場合、原因は「バケットの上限」ではなく「1つのプレフィックスに集中している」ことです。日付をパスの先頭に置く設計（<code>2026/09/20/...</code>）は、その日のデータが1プレフィックスに集中するので不利になりがちです。<strong>スケーリングは即座ではなく段階的に行われる</strong>点も押さえてください。急激なスパイクでは一時的に503が出て、しばらくすると収まります。</p>
+
+  <h3>S3 Select とバイト範囲フェッチ</h3>
+  <p>大きな CSV / JSON / Parquet から<strong>必要な行と列だけ</strong>を SQL のサブセットで抜き出し、転送量とアプリ側の処理を減らす機能です。効くのは「1つのオブジェクトの一部だけが欲しい」ケースです。<strong>複数オブジェクトをまたいだ集計や JOIN は Athena</strong> の仕事で、ここが切り分けの線になります。オブジェクトの特定バイト範囲だけを並列に取得する<strong>バイト範囲フェッチ</strong>も、大きなファイルの先頭メタデータだけ読みたいときに使えます。</p></section>
+
+<section id="s8" data-toc="EBS">
+
+  <span class="h2num">08</span>
+  <h2>EBS とインスタンスストア</h2>
+  <p class="lead">ブロックストレージの設問は、<strong>SSD か HDD か</strong>と<strong>データが消えてよいか</strong>の2択に還元できます。</p>
+
+  <h3>ボリュームタイプの選択軸</h3>
+  <div class="tw"><table>
+    <thead><tr><th>タイプ</th><th>種別</th><th>選ぶ決め手</th><th>ブートボリューム</th></tr></thead>
+    <tbody>
+      <tr><td><strong>gp3</strong></td><td>汎用SSD</td><td><strong>既定の選択肢。</strong>3,000 IOPS と 125 MiB/s が容量に関係なく含まれ、IOPSとスループットを容量と独立に追加できる。gp2 より安い</td><td class="yes">可</td></tr>
+      <tr><td><strong>gp2</strong></td><td>汎用SSD</td><td>旧世代。性能が容量に比例（1GiBあたり3 IOPS）し、小さいボリュームはバーストに依存する。<strong>新規に選ぶ理由はほぼない</strong></td><td class="yes">可</td></tr>
+      <tr><td><strong>io2 / io2 Block Express</strong></td><td>プロビジョンドIOPS SSD</td><td>耐久性 99.999%。Block Express は最大 256,000 IOPS / 4,000 MiB/s。<strong>単一ボリュームに極端なIOPSと低レイテンシが要る本番データベース</strong></td><td class="yes">可</td></tr>
+      <tr><td><strong>st1</strong></td><td>スループット最適化HDD</td><td>最小125GiB、最大500 MiB/s。<strong>大容量のシーケンシャル読み書き</strong>（ログ処理、ビッグデータ、データウェアハウス）を安く</td><td class="no">不可</td></tr>
+      <tr><td><strong>sc1</strong></td><td>コールドHDD</td><td>最小125GiB、最大250 MiB/s。EBSの中で最安。<strong>めったにアクセスしない大容量データ</strong></td><td class="no">不可</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>設問に <strong>IOPS</strong> という語が出たら SSD 系（gp3 / io2）、<strong>スループット（MiB/s）</strong>や<strong>シーケンシャル</strong>という語が出たら HDD 系（st1 / sc1）です。「gp2 を使っているが性能が足りない。コストは増やしたくない」と来たら、ほぼ確実に <strong>gp3 への変更</strong>が正解です。io2 は高価なので、「データベース」と書いてあるだけでは飛びつかず、<em>サブミリ秒</em>や<em>数万IOPS</em>といった数字の裏付けがあるかを確認してください。</p>
+  </div>
+
+  <h3>スナップショットと暗号化</h3>
+  <ul>
+    <li>スナップショットは内部的に S3 に保存される<strong>増分</strong>バックアップです。2回目以降は差分だけを取ります。</li>
+    <li>EBSボリュームは<strong>単一AZ</strong>のリソースです。別AZにコピーしたければスナップショットを経由します。別リージョン・別アカウントへのコピーもでき、これがDRの基本形になります。</li>
+    <li>自動化は <strong>Data Lifecycle Manager（DLM）</strong>、または複数サービスをまとめるなら <strong>AWS Backup</strong>。</li>
+    <li>スナップショットから作ったボリュームは、初回アクセス時にレイテンシが出ます。これを避けるのが <strong>Fast Snapshot Restore</strong>（追加料金あり）です。</li>
+    <li>暗号化は KMS を使います。有効にすると、保存データ・インスタンスとボリューム間の転送・スナップショット・そのスナップショットから作るボリュームまで、すべて暗号化されます。</li>
+    <li><strong>既存の暗号化されていないボリュームを、その場で暗号化することはできません。</strong>スナップショットを取り、暗号化を指定してそのスナップショットをコピーし、コピーからボリュームを作ります。この3手順が設問の正解になります。アカウント単位で「既定で暗号化」を有効化しておけば、以後の新規ボリュームは自動的に暗号化されます。</li>
+  </ul>
+
+  <h3>マルチアタッチ</h3>
+  <p>1つのボリュームを複数のEC2に同時にアタッチする機能です。条件が厳しく、<strong>io1 / io2 のみ</strong>、<strong>同一AZ</strong>、<strong>Nitro世代のインスタンス</strong>、<strong>最大16台</strong>です。さらに重要なのは、<strong>XFS や ext4 のような通常のファイルシステムでは壊れる</strong>ことです。クラスタ対応のファイルシステムが前提になります。したがって「複数のEC2からファイルを共有したい」という一般的な設問の答えは<strong>マルチアタッチではなく EFS</strong> です。マルチアタッチが正解になるのは、クラスタソフトウェアを前提とした高可用性構成が明示されている場合に限られます。</p>
+
+  <h3>インスタンスストアとの違い</h3>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>EBS</th><th>インスタンスストア</th></tr></thead>
+    <tbody>
+      <tr><td><strong>実体</strong></td><td>ネットワーク越しのブロックストレージ</td><td>ホストに物理的に直結したディスク</td></tr>
+      <tr><td><strong>性能</strong></td><td>プロビジョニングした分</td><td class="yes">最高のIOPSと最低のレイテンシ</td></tr>
+      <tr><td><strong>インスタンス停止・終了時</strong></td><td class="yes">残る</td><td class="no">消える（再起動では残る）</td></tr>
+      <tr><td><strong>スナップショット</strong></td><td class="yes">取れる</td><td class="no">取れない</td></tr>
+      <tr><td><strong>サイズ変更</strong></td><td class="yes">後から変更可能</td><td class="no">インスタンスタイプで固定</td></tr>
+    </tbody>
+  </table></div>
+  <p>インスタンスストアが正解になるのは、<strong>失われても構わないデータ</strong>のときだけです。キャッシュ、一時的なスクラッチ領域、シャッフル処理の中間ファイル、レプリカを他ノードに持つ分散データベース。設問に「一時的な」「バッファ」「最高のI/O性能」が揃っていればこれです。逆に「永続化が必要」と一言でも書いてあれば消えます。</p></section>
+
+<section id="s9" data-toc="EFS と FSx">
+
+  <span class="h2num">09</span>
+  <h2>共有ファイルストレージ ―― EFS と FSx</h2>
+  <p class="lead">「複数のサーバーから同じファイルを見たい」と書いてあったら、この節の話です。あとは<strong>プロトコルとOS</strong>で一意に決まります。</p>
+
+  <h3>EFS</h3>
+  <p>EFS は NFS v4.1 のマネージドファイルシステムです。<strong>複数のAZにある複数のEC2から同時にマウントできます</strong>。容量は自動で伸縮し、事前のサイズ指定は不要です。Auto Scaling グループのインスタンスが増減しても、同じディレクトリを共有し続けられる――これが EFS の存在理由であり、そのまま設問の手がかりになります。</p>
+  <ul>
+    <li><strong>Linux 専用</strong>です。Windows からの SMB は FSx の領域です。</li>
+    <li>ストレージクラスは <strong>Standard / Infrequent Access（IA）/ Archive</strong> の3つ。加えて、単一AZに置く <strong>One Zone</strong> のバリアントがあり、開発環境や再作成可能なデータのコストを下げられます。</li>
+    <li>ライフサイクル管理の既定は、<strong>30日アクセスがなければ IA、90日で Archive</strong> へ移動します。アクセスされても自動では戻りませんが、「初回アクセスで Standard に戻す」設定を有効にできます。</li>
+    <li>スループットモードは Elastic（既定。使った分だけ）、Provisioned、Bursting から選べます。「容量は小さいがスループットが要る」場合に Provisioned を選びます。</li>
+    <li>アクセスにはAZごとの<strong>マウントターゲット</strong>と、NFS のポート 2049 を許可するセキュリティグループが必要です。「マウントできない」型の設問はたいていここです。</li>
+  </ul>
+
+  <h3>FSx の4種類</h3>
+  <p>FSx は「既にあるファイルシステムの世界を、そのままAWSに持ってくる」サービス群です。設問には必ず固有名詞のヒントが埋まっています。</p>
+  <div class="tw"><table>
+    <thead><tr><th>種類</th><th>プロトコル</th><th>設問に出る手がかり</th></tr></thead>
+    <tbody>
+      <tr><td><strong>FSx for Windows File Server</strong></td><td>SMB</td><td>「Windows」「SMB」「Active Directory との統合」「既存の共有ドライブを移行」。<strong>Windows と書いてあればこれ</strong></td></tr>
+      <tr><td><strong>FSx for Lustre</strong></td><td>Lustre（POSIX）</td><td>「HPC」「機械学習の学習データ」「ゲノム解析」「金融シミュレーション」「数百GB/秒」。<strong>S3バケットとリンクして、S3のオブジェクトをファイルとして高速に処理できる</strong>のが決め手</td></tr>
+      <tr><td><strong>FSx for NetApp ONTAP</strong></td><td>NFS / SMB / iSCSI を同時</td><td>「NetApp」「オンプレの ONTAP をそのまま」「複数プロトコルを同時に使いたい」「スナップショットや重複排除を維持」</td></tr>
+      <tr><td><strong>FSx for OpenZFS</strong></td><td>NFS</td><td>「ZFS」「オンプレのLinuxファイルサーバーを移行」「NFSだけでよい」「低レイテンシ」</td></tr>
+    </tbody>
+  </table></div>
+  <p>Lustre にはデプロイタイプが2つあります。<strong>Scratch</strong> は一時的な処理用でレプリケートされず、サーバー障害でデータを失いますが最も速い。<strong>Persistent</strong> は長期利用向けで、同一AZ内で自動的に復旧します。「一時的な処理」「長期保存は不要」と書いてあれば Scratch です。</p>
+
+  <div class="note">
+    <span class="label">3秒で切る順番</span>
+    <p>① Windows / SMB → FSx for Windows File Server。② HPC・機械学習・S3と連携した超高速処理 → FSx for Lustre。③ NetApp / ZFS という固有名詞 → 対応する FSx。④ それ以外で Linux から NFS 共有 → <strong>EFS</strong>。⑤ そもそも共有が要らない1台だけの話 → EBS。この順で潰せば迷いません。</p>
+  </div></section>
+
+<section id="s10" data-toc="移行とハイブリッド">
+
+  <span class="h2num">10</span>
+  <h2>ハイブリッド構成とデータ移行</h2>
+  <p class="lead">オンプレミスが絡む設問は、<strong>移行して終わりなのか、使い続けるのか</strong>をまず読み分けます。使い続けるなら Storage Gateway、移すだけなら DataSync か Snow です。</p>
+
+  <h3>Storage Gateway の4形態</h3>
+  <div class="tw"><table>
+    <thead><tr><th>形態</th><th>オンプレ側から見た姿</th><th>クラウド側の保存先</th><th>設問の手がかり</th></tr></thead>
+    <tbody>
+      <tr><td><strong>S3 File Gateway</strong></td><td>NFS / SMB の共有</td><td>S3 のオブジェクト</td><td>「ファイルをそのままS3に置きたい」「オンプレにキャッシュを残しつつ容量を無限に」</td></tr>
+      <tr><td><strong>FSx File Gateway</strong></td><td>SMB の共有</td><td>FSx for Windows File Server</td><td>「オンプレの拠点から FSx への低レイテンシアクセスとキャッシュ」</td></tr>
+      <tr><td><strong>Volume Gateway</strong></td><td>iSCSI のブロックデバイス</td><td>S3 / EBSスナップショット</td><td>「ブロックストレージ」「既存アプリがiSCSIを使う」。<strong>Cached</strong> は主データがクラウドで手元はキャッシュ、<strong>Stored</strong> は主データが手元でクラウドはバックアップ</td></tr>
+      <tr><td><strong>Tape Gateway</strong></td><td>仮想テープライブラリ（VTL）</td><td>S3 / Glacier</td><td>「<strong>テープ</strong>」「既存のバックアップソフトを変えずに物理テープを廃止したい」</td></tr>
+    </tbody>
+  </table></div>
+  <p>Volume Gateway の2モードは頻出です。切り分けの言葉は<strong>「主データがどちらにあるか」</strong>。低レイテンシで全データにアクセスし続ける必要があるなら Stored、手元のディスク容量を減らしたいなら Cached です。</p>
+
+  <h3>AWS Backup</h3>
+  <p>EBS、EFS、FSx、RDS、DynamoDB、S3、Storage Gateway など<strong>複数サービスのバックアップを1か所で定義・実行・監査する</strong>サービスです。バックアップ計画に頻度と保持期間とライフサイクル（一定期間後にコールドストレージへ）を書き、タグで対象を選びます。クロスリージョン・クロスアカウントのコピーにも対応します。<strong>Backup Vault Lock</strong> を使えば、バックアップ自体を WORM 化でき、ガバナンスモードとコンプライアンスモードという Object Lock と同じ構図の選択肢を持ちます。</p>
+  <p>設問での切り分けはこうです。「<strong>複数サービスにまたがるバックアップを中央で管理し、コンプライアンス報告を出したい</strong>」→ AWS Backup。「EBSスナップショットのスケジュール取得と世代管理だけ」→ Data Lifecycle Manager でも足ります。</p>
+
+  <h3>大容量移行は計算で決める</h3>
+  <p>ここは暗記ではなく計算の問題です。<strong>所要日数 = データ量 ÷ 実効回線速度</strong>。この一本で判断できます。例えば 100 TB を 1 Gbps の回線で送ると、100 TB = 800,000 Gbit、1 Gbps で 800,000 秒、およそ <strong>9.3 日</strong>。回線を100%占有した理想値なので、実際はこの数倍を見ます。同じ 100 TB を 100 Mbps で送れば約93日で、たいていの期限に間に合いません。</p>
+  <div class="tw"><table>
+    <thead><tr><th>状況</th><th>選ぶもの</th></tr></thead>
+    <tbody>
+      <tr><td>回線で期限内に終わる。かつ<strong>継続的に同期</strong>したい</td><td><strong>AWS DataSync</strong>（NFS / SMB / HDFS / オブジェクトストレージ ↔ S3・EFS・FSx。増分転送、検証、スケジュール実行）</td></tr>
+      <tr><td>回線が細い、または<strong>一度きりの大量移行に期限がある</strong></td><td><strong>AWS Snowball Edge</strong>（物理デバイスを郵送。現行世代は Storage Optimized 210TB）</td></tr>
+      <tr><td>移行ではなく<strong>ハイブリッドで使い続ける</strong></td><td><strong>Storage Gateway</strong></td></tr>
+      <tr><td>恒常的に太い専用線が欲しい</td><td><strong>Direct Connect</strong>（ただし開通に数週間〜数か月。<strong>「今月中に移行」には間に合わない</strong>）</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note warn">
+    <span class="label">Snow ファミリーの現状</span>
+    <p>試験の選択肢には Snowcone や旧世代の Snowball Edge が今も登場しますが、実機としては<strong>2024年11月に Snowcone と旧世代 Snowball Edge モデルの提供が終了</strong>しており、現行は Snowball Edge Storage Optimized 210TB などに絞られています。AWS は新規の大容量移行に DataSync や AWS Data Transfer Terminal を案内する方向です。<strong>試験では「回線では間に合わない量のオフライン移行 = Snow」という対応で答えつつ、実務ではまず DataSync を検討する</strong>、と二段構えで持っておいてください。</p>
+  </div></section>
+
+<section id="s11" data-toc="試験での判断軸">
+
+  <span class="h2num">11</span>
+  <h2>試験での判断軸</h2>
+  <p class="lead">設問文にこの手がかりが出たら、この答えに寄せる――という対応表です。ストレージの設問の多くは、この1行で決着します。</p>
+
+  <div class="judge">
+    <div class="row"><span class="cue">アクセスパターンが予測できない / 変動する</span><span class="arrow">→</span><span class="ans">S3 Intelligent-Tiering</span></div>
+    <div class="row"><span class="cue">月に数回。読むときはミリ秒で必要</span><span class="arrow">→</span><span class="ans">S3 Standard-IA</span></div>
+    <div class="row"><span class="cue">安く。失っても再生成できる二次コピー</span><span class="arrow">→</span><span class="ans">S3 One Zone-IA</span></div>
+    <div class="row"><span class="cue">アーカイブだが即座に取り出したい</span><span class="arrow">→</span><span class="ans">S3 Glacier Instant Retrieval</span></div>
+    <div class="row"><span class="cue">法定保存7年。取り出しは12時間でよい</span><span class="arrow">→</span><span class="ans">S3 Glacier Deep Archive</span></div>
+    <div class="row"><span class="cue">ルートユーザーでも削除できないこと</span><span class="arrow">→</span><span class="ans">Object Lock コンプライアンスモード</span></div>
+    <div class="row"><span class="cue">誰がいつ復号したかを監査したい</span><span class="arrow">→</span><span class="ans">SSE-KMS</span></div>
+    <div class="row"><span class="cue">KMSのスロットリングで書き込みが失敗</span><span class="arrow">→</span><span class="ans">S3 Bucket Keys を有効化</span></div>
+    <div class="row"><span class="cue">期限付きで特定ファイルだけ社外に渡す</span><span class="arrow">→</span><span class="ans">署名付きURL</span></div>
+    <div class="row"><span class="cue">チーム別に権限を分けたいがポリシーが肥大化</span><span class="arrow">→</span><span class="ans">S3 Access Points</span></div>
+    <div class="row"><span class="cue">複数AZの複数EC2から同じファイルを共有（Linux）</span><span class="arrow">→</span><span class="ans">Amazon EFS</span></div>
+    <div class="row"><span class="cue">Windows / SMB / Active Directory</span><span class="arrow">→</span><span class="ans">FSx for Windows File Server</span></div>
+    <div class="row"><span class="cue">HPC・機械学習でS3のデータを超高速に処理</span><span class="arrow">→</span><span class="ans">FSx for Lustre</span></div>
+    <div class="row"><span class="cue">既存バックアップソフトのテープを置き換え</span><span class="arrow">→</span><span class="ans">Tape Gateway</span></div>
+  </div>
+
+  <div class="note">
+    <span class="label">迷ったときの最終手段</span>
+    <p>2択まで絞れて決まらないときは、<strong>要件に書かれていない機能を提供している側を落とす</strong>のがSAAの定石です。「取り出しに数時間かかってよい」と書いてある設問で Glacier Instant Retrieval を選ぶのは、要件を超えた性能に金を払うことになり、コスト最適化という出題意図に反します。逆に、<strong>要件を1つでも満たせない選択肢は、他がどれだけ安くても不正解</strong>です。</p>
+  </div></section>
+
+<section id="s12" data-toc="確認問題">
+
+  <span class="h2num">12</span>
+  <h2>確認問題</h2>
+  <p class="lead">先に自分で答えを決めてから開いてください。特にQ3は、計算してから開くこと。</p>
+
+  <details class="q">
+    <summary><span class="qnum">Q1</span>新しいデータレイクを構築する。取り込まれるデータがどの程度読まれるかは事前に予測できず、データセットによって大きく異なる見込みである。運用の手間を増やさずにストレージコストを最適化したい。最も適切なのはどれか。
+      <ul class="opts">
+        <li>A. すべて S3 Standard に保存する</li>
+        <li>B. S3 Intelligent-Tiering に保存する</li>
+        <li>C. 30日後に S3 Standard-IA へ遷移するライフサイクルルールを設定する</li>
+        <li>D. すべて S3 One Zone-IA に保存し、コストを最小化する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>「アクセスパターンが予測できない」かつ「運用の手間をかけたくない」は Intelligent-Tiering の定義そのものです。オブジェクトごとに監視して自動で階層を移し、取り出し料金もかかりません。</p>
+      <p><strong>判断軸:</strong> C は<em>読まれ方が分かっている</em>ときの手段です。この設問では30日後も頻繁に読まれるデータが混在する可能性があり、IA の取り出し料金でかえって高くつきます。D は単一AZで、データレイクの原本を置く先としては耐久性の要件を満たしません。A は間違いではありませんが最適化になっていません。<strong>「予測できない」という語を見た瞬間に B に寄せてください。</strong></p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q2</span>金融規制により、取引記録を5年間、<strong>社内の管理者やルートユーザーを含む誰も</strong>削除・改変できない状態で S3 に保存する必要がある。適切な構成はどれか。
+      <ul class="opts">
+        <li>A. バケットポリシーで s3:DeleteObject と s3:PutObject を Deny する</li>
+        <li>B. バージョニングを有効にし、Object Lock をガバナンスモードで保持期間5年に設定する</li>
+        <li>C. バージョニングを有効にし、Object Lock をコンプライアンスモードで保持期間5年に設定する</li>
+        <li>D. バージョニングと MFA Delete を有効にする</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: C</span></p>
+      <p>コンプライアンスモードは、保持期間中は<strong>ルートユーザーを含め誰も</strong>オブジェクトを削除できず、保持期間の短縮もモードの変更もできません。前提としてバージョニングが有効である必要があり、選択肢もそれを含んでいます。</p>
+      <p><strong>判断軸:</strong> A はバケットポリシー自体を管理者が書き換えられるので、要件の「管理者を含む」を満たしません。B は <code>s3:BypassGovernanceRetention</code> 権限を持つ者が解除できます。D は MFA を持つルートユーザーが削除できます。<strong>「誰も」「ルートユーザーでも」という語は、コンプライアンスモード以外を全部落とすための合図</strong>です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q3</span>オンプレミスのデータセンターにある 300 TB のアーカイブを S3 に移行する。専用線はなく、インターネット回線の実効速度は 500 Mbps。移行の期限は3週間で、移行完了後に継続的な同期は不要である。最も適切な方法はどれか。
+      <ul class="opts">
+        <li>A. AWS DataSync でインターネット経由の転送を行う</li>
+        <li>B. AWS Snowball Edge を注文し、デバイスに書き込んで返送する</li>
+        <li>C. S3 Transfer Acceleration を有効にして aws s3 sync で転送する</li>
+        <li>D. AWS Direct Connect を新規に契約し、専用線経由で転送する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>計算します。300 TB は 2,400,000 Gbit。500 Mbps（0.5 Gbps）で割ると 4,800,000 秒、およそ<strong>56日</strong>です。これは回線を100%占有した理想値なので、実際はさらに長くかかります。3週間には到底収まらないため、オフライン移送を選びます。</p>
+      <p><strong>判断軸:</strong> A と C は同じ物理回線を使う以上、上限は変わりません。Transfer Acceleration は経路を最適化するもので、回線帯域そのものを増やすわけではありません。D は Direct Connect の開通に数週間から数か月かかるため、期限に間に合いません。<strong>移行の設問を見たら、まずデータ量を bit に直して回線速度で割る。</strong>それが3桁の日数になれば Snow、数日で済むなら DataSync です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q4</span>3つのアベイラビリティゾーンにまたがる Auto Scaling グループの Linux EC2 インスタンス群が、同じディレクトリに対して POSIX 準拠で同時に読み書きする必要がある。インスタンス数は負荷に応じて増減する。適切なストレージはどれか。
+      <ul class="opts">
+        <li>A. io2 ボリュームをマルチアタッチで全インスタンスにアタッチする</li>
+        <li>B. Amazon EFS をすべてのインスタンスにマウントする</li>
+        <li>C. FSx for Windows File Server を共有ドライブとしてマウントする</li>
+        <li>D. 各インスタンスに gp3 ボリュームを付け、cron で相互に rsync する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>EFS は複数AZの複数インスタンスから同時にマウントでき、容量も自動で伸縮します。Auto Scaling でインスタンスが増減する構成と相性が良い、というより、そのために存在するサービスです。</p>
+      <p><strong>判断軸:</strong> A はマルチアタッチが<strong>同一AZ内の最大16台</strong>に限られ、さらに通常のファイルシステムでは同時書き込みでデータが壊れます。この設問は3AZなので成立しません。C は SMB / Windows 向けで、Linux の POSIX 要件に合いません。D は各インスタンスのデータがずれるため、同時読み書きの整合性を満たせません。<strong>「複数AZ」「Linux」「同時に読み書き」の3語が揃ったら EFS</strong> です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q5</span>データ取り込みパイプラインが毎秒数万件のオブジェクトを S3 に書き込んでいる。すべてのオブジェクトは SSE-KMS で暗号化しており、鍵の使用履歴を CloudTrail で監査する要件がある。運用開始後、ThrottlingException と 503 エラーが頻発するようになった。要件を維持したまま解決する方法はどれか。
+      <ul class="opts">
+        <li>A. 暗号化方式を SSE-S3 に変更する</li>
+        <li>B. S3 Bucket Keys を有効にする</li>
+        <li>C. 書き込み先のプレフィックスを10個に分割する</li>
+        <li>D. 暗号化方式を SSE-C に変更し、鍵をアプリケーション側で管理する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>SSE-KMS はオブジェクトごとに KMS の API を呼ぶため、高スループットのパイプラインでは KMS 側のリクエストクォータに当たります。S3 Bucket Keys を有効にすると、バケット単位で生成したキーを再利用して KMS の呼び出し回数を大幅に削減できます。暗号化方式も CloudTrail での監査も維持されたままです。</p>
+      <p><strong>判断軸:</strong> A と D は<strong>要件（鍵の使用履歴を CloudTrail で監査）を落としています</strong>。「エラーは消えるが要件を満たさない」選択肢は、SAAでは常に不正解です。C はプレフィックス分割で S3 側のリクエストレート上限には効きますが、KMS のクォータには一切効きません。<strong>エラーがどの層で出ているかを特定してから対策を選ぶ</strong>、という読み方が問われています。</p>
+    </div>
+  </details></section>
+
+<section id="s13" data-toc="今日の宿題">
+
+  <span class="h2num">13</span>
+  <h2>今日の宿題</h2>
+  <p>ストレージは選択肢が多いぶん、書き出して整理しないと定着しません。25分でここまでやってください。</p>
+
+  <div class="hw">
+    <div class="item"><span class="box"></span><span class="t"><code>notes/storage/</code> の README チェックリストを埋める<small>S3クラス / ライフサイクル / 保護 / 暗号化 / EBS / EFS・FSx / ゲートウェイ。各項目に「どんな要件のときに選ぶか」を1行ずつ</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">ストレージクラスの比較表を、資料を見ずに再現する<small>列は「アクセス頻度」「取り出し時間」「最小保存期間」の3つだけでよい。書けなければ02に戻る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d3-performance.md</code> と <code>notes/00_map/d4-cost.md</code> に追記<small>d3 には EBS のタイプ選択とS3のプレフィックス設計、d4 にはライフサイクルと最小保存期間の罠。11の判断軸表から、自分が知らなかった行だけを写す</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">W3 の Issue のチェック項目を埋める<small>「S3: ストレージクラスとライフサイクル」「S3: アクセス制御と暗号化」「ブロック/ファイル: EBS・EFS・FSx の使い分け」</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>plan/log.md</code> に1行残す<small>かかった時間と、今日いちばん腑に落ちなかったこと。次回その1点から始めます</small></span></div>
+  </div>
+
+  <div class="note">
+    <span class="label">週末のハンズオン</span>
+    <p>2本やります。<strong>① S3 のライフサイクル設定</strong>――テスト用バケットにバージョニングを有効にし、プレフィックスを切って遷移ルールと非現行バージョンの失効、未完了マルチパートの中止を設定します。ルールを保存しようとして「30日未満は指定できない」と怒られる経験を、実際にしておいてください。<strong>② EC2 に IAM ロールを付けて、キーなしで S3 にアクセスする</strong>――W1でやった<em>アクセスキーを書かない</em>を、今度は自分の手で成立させます。ロールを付ける前に <code>aws s3 ls</code> が失敗することを先に確認してから、ロールをアタッチして成功に変わる瞬間を見るのがポイントです。</p>
+  </div>
+
+  <div class="note">
+    <span class="label">次回</span>
+    <p>W4 はデータベースです。RDS と Aurora の違い、リードレプリカとマルチAZの使い分け、DynamoDB のキャパシティモードとインデックス、そして ElastiCache。<strong>「リードレプリカは可用性のためではなく読み取り性能のため」</strong>という一点だけ、先に頭に入れておいてください。ここを取り違えると、マルチAZとの比較問題を全部落とします。</p>
+  </div></section>
+
+<footer>
+  AWS SAA-C03 / W3 座学<br>
+  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
+</footer>
+
+</main>
+</div>
+</div>
+</body>
+</html>

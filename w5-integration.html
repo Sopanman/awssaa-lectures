@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;font:14px system-ui,-apple-system,sans-serif;background:#fafaf9}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>疎結合と監視の設計</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#F6F8F7; --surface:#FFFFFF; --surface-2:#EDF1F0; --inset:#F0F4F3;
+  --ink:#13201E; --ink-2:#485855; --ink-3:#74847F; --line:#D5DEDB;
+  --accent:#0E6B68; --accent-soft:#DCEAE8;
+  --allow:#2B7448; --allow-soft:#DEEFE4;
+  --deny:#AE3729; --deny-soft:#F6E1DD;
+  --warn:#8E5B06; --warn-soft:#F6EAD1;
+  --serif:'Shippori Mincho',"Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:'Zen Kaku Gothic New',"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+    --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+    --accent:#52B2AD; --accent-soft:#14302E;
+    --allow:#6FC38B; --allow-soft:#142E1E;
+    --deny:#E4877A; --deny-soft:#331A16;
+    --warn:#D3A44E; --warn-soft:#2E2510;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+  --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+  --accent:#52B2AD; --accent-soft:#14302E;
+  --allow:#6FC38B; --allow-soft:#142E1E;
+  --deny:#E4877A; --deny-soft:#331A16;
+  --warn:#D3A44E; --warn-soft:#2E2510;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:0 96px}
+a{color:var(--accent)}
+
+/* ---------- header ---------- */
+.masthead{padding-block:56px 40px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,6vw,46px);line-height:1.3;margin:0 0 18px;text-wrap:balance;letter-spacing:.01em}
+.standfirst{margin:0;max-width:62ch;color:var(--ink-2);font-size:17px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.meta span{font-family:var(--mono);font-size:12px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);background:var(--surface)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:1fr;gap:40px;margin-top:40px}
+@media (min-width:1000px){ .cols{grid-template-columns:200px minmax(0,1fr);gap:56px} }
+nav.toc{font-size:14px}
+@media (min-width:1000px){ nav.toc{position:sticky;top:32px;align-self:start;max-height:calc(100vh - 64px);overflow-y:auto} }
+nav.toc h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px;font-weight:600}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+@media (max-width:999px){ nav.toc ol{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))} }
+nav.toc a{display:block;padding:5px 10px;border-radius:6px;text-decoration:none;color:var(--ink-2);line-height:1.5;border-left:2px solid transparent}
+nav.toc a:hover{background:var(--surface-2);color:var(--ink)}
+nav.toc a .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-right:7px}
+
+main{min-width:0;max-width:74ch}
+section{padding-block:44px;border-top:1px solid var(--line)}
+section:first-child{border-top:none;padding-top:8px}
+h2{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3.6vw,29px);line-height:1.45;margin:0 0 6px;text-wrap:balance}
+.h2num{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.12em;display:block;margin-bottom:8px}
+h3{font-family:var(--sans);font-weight:700;font-size:17px;margin:34px 0 10px;color:var(--ink);letter-spacing:.01em}
+p{margin:0 0 18px;max-width:66ch}
+ul,ol.body{margin:0 0 18px;padding-left:1.35em;max-width:66ch}
+li{margin-bottom:7px}
+strong{font-weight:700}
+em{font-style:normal;background:linear-gradient(transparent 62%,var(--accent-soft) 62%);font-weight:500}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);padding:2px 6px;border-radius:4px;word-break:break-word}
+
+/* ---------- blocks ---------- */
+.lead{font-size:17.5px;color:var(--ink-2);max-width:64ch}
+.goals{list-style:none;padding:0;margin:0;display:grid;gap:10px;max-width:66ch}
+.goals li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;margin:0;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.goals .tick{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:4px}
+
+.note{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.note p:last-child{margin-bottom:0}
+.note .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
+.note.warn{border-left-color:var(--warn)} .note.warn .label{color:var(--warn)}
+
+.trap{background:var(--deny-soft);border:1px solid transparent;border-radius:8px;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.trap .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--deny);display:block;margin-bottom:6px;font-weight:600}
+.trap p:last-child{margin-bottom:0}
+
+/* ---------- code ---------- */
+.code{background:var(--inset);border:1px solid var(--line);border-radius:8px;overflow-x:auto;margin:0 0 20px}
+.code pre{margin:0;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.75;color:var(--ink)}
+.code .cap{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding:10px 20px 0}
+.k{color:var(--accent)} .s{color:var(--ink-2)} .c{color:var(--ink-3)} .d{color:var(--deny)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 22px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+th,td{text-align:left;padding:12px 15px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:none}
+td.yes{color:var(--allow);font-weight:600} td.no{color:var(--deny);font-weight:600}
+
+/* ---------- eval ladder ---------- */
+.ladder{display:grid;gap:0;margin:0 0 8px}
+.rung{display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.rung .no{font-family:var(--mono);font-size:12px;color:var(--ink-3);text-align:center}
+.rung .q{font-size:15px;line-height:1.6}
+.rung .q small{display:block;color:var(--ink-3);font-size:12.5px;line-height:1.6;margin-top:2px}
+.out{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.out.deny{background:var(--deny-soft);color:var(--deny)}
+.out.allow{background:var(--allow-soft);color:var(--allow)}
+.drop{height:14px;margin-left:33px;border-left:2px solid var(--line)}
+.terminal{margin-top:14px;padding:14px 16px;border-radius:8px;background:var(--allow-soft);color:var(--allow);font-weight:700;font-size:15px}
+
+/* ---------- svg figure ---------- */
+figure{margin:0 0 22px}
+.fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+figcaption{font-size:13px;color:var(--ink-3);margin-top:10px;line-height:1.7}
+svg text{font-family:var(--sans)}
+
+/* ---------- judgement list ---------- */
+.judge{display:grid;gap:8px;margin:0 0 22px}
+.judge .row{display:grid;grid-template-columns:1fr;gap:4px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+@media (min-width:640px){ .judge .row{grid-template-columns:1fr auto 1fr;gap:14px;align-items:center} }
+.judge .cue{font-size:14.5px;color:var(--ink-2)}
+.judge .arrow{font-family:var(--mono);color:var(--ink-3);font-size:13px}
+.judge .ans{font-size:14.5px;font-weight:700;color:var(--accent)}
+
+/* ---------- quiz ---------- */
+details.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin:0 0 12px;overflow:hidden}
+details.q summary{cursor:pointer;padding:16px 18px;font-weight:500;line-height:1.75;list-style:none;font-size:15.5px}
+details.q summary::-webkit-details-marker{display:none}
+details.q summary::after{content:"解答を見る";display:block;font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:10px;letter-spacing:.08em}
+details.q[open] summary::after{content:"閉じる";color:var(--ink-3)}
+details.q summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.q .a{padding:0 18px 18px;border-top:1px solid var(--line);margin-top:0;padding-top:16px}
+details.q .a p{margin-bottom:12px;font-size:15px}
+details.q .a p:last-child{margin-bottom:0}
+.qnum{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.1em;display:block;margin-bottom:7px}
+.correct{color:var(--allow);font-weight:700}
+.opts{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:5px}
+.opts li{font-size:14.5px;color:var(--ink-2);margin:0;padding-left:1.8em;text-indent:-1.8em}
+
+/* ---------- homework ---------- */
+.hw{display:grid;gap:10px;margin:0 0 22px}
+.hw .item{display:grid;grid-template-columns:auto 1fr;gap:13px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;align-items:start}
+.hw .box{width:15px;height:15px;border:1.5px solid var(--ink-3);border-radius:3px;margin-top:6px}
+.hw .t{font-size:15px;line-height:1.7}
+.hw .t small{display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+
+footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3);line-height:1.8}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">AWS SAA-C03 / W5 座学</p>
+  <h1>疎結合と監視 ―― 詰まらせない、見逃さない</h1>
+  <p class="standfirst">「アーキテクチャを疎結合にしたい」という一文が出たら、答えはほぼキューかイベントバスです。回復性ドメインの定番パターンであり、実務でも最初に効く設計です。後半の監視サービスは、CloudWatch と CloudTrail の役割の違いさえ押さえれば大半が解けます。</p>
+  <div class="meta"><span>所要 60-90分</span><span>前提 W4 読了</span><span>ドメイン2・3</span></div>
+</header>
+
+<div class="cols">
+
+<nav class="toc">
+  <h2>目次</h2>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
+    <li><a href="#s2"><span class="n">02</span>なぜ疎結合</a></li>
+    <li><a href="#s3"><span class="n">03</span>SQS の要点</a></li>
+    <li><a href="#s4"><span class="n">04</span>SNS とファンアウト</a></li>
+    <li><a href="#s5"><span class="n">05</span>EventBridge</a></li>
+    <li><a href="#s6"><span class="n">06</span>SFn と API GW</a></li>
+    <li><a href="#s7"><span class="n">07</span>監視の二本柱</a></li>
+    <li><a href="#s8"><span class="n">08</span>運用の道具</a></li>
+    <li><a href="#s9"><span class="n">09</span>試験での判断軸</a></li>
+    <li><a href="#s10"><span class="n">10</span>確認問題</a></li>
+    <li><a href="#s11"><span class="n">11</span>今日の宿題</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="s1" data-toc="ゴール">
+  
+  <span class="h2num">01</span>
+  <h2>この講義のゴール</h2>
+  <p class="lead">サービスの数だけ見ると多く感じますが、問われ方は驚くほど定型です。「どのサービスか」ではなく「どの性質が要るか」で切れば、選択肢は毎回2つに絞れます。今日終わったときに、次の3つができていれば合格です。</p>
+  <ul class="goals">
+    <li><span class="tick">01</span><div><strong>SQS・SNS・EventBridge を、設問の一文から選び分けられる。</strong><br>「バッファしたい」「同じイベントを複数に配りたい」「AWS の出来事に反応したい」――どれに当たるかを即断できる。</div></li>
+    <li><span class="tick">02</span><div><strong>可視性タイムアウトとデッドレターキューが何を防ぐか説明できる。</strong><br>「メッセージが二重に処理される」「同じメッセージが延々とリトライされる」の原因と対処を言える。</div></li>
+    <li><span class="tick">03</span><div><strong>CloudWatch と CloudTrail の境界線を引ける。</strong><br>「誰が消したのか」と「いつ落ちたのか」で、見るべきサービスが違うと即答できる。</div></li>
+  </ul>
+  <div class="note">
+    <span class="label">この講義の位置づけ</span>
+    <p>疎結合はドメイン2（回復性の高いアーキテクチャの設計、26%）の中心テーマ、監視と運用はドメイン3とドメイン1にまたがって顔を出します。しかもこの範囲は<strong>単独で問われるより、他分野の設問の中に部品として現れる</strong>のが特徴です。「S3 にファイルが置かれたら処理する」「RDS の負荷が上がったらスケールする」――こうした設問の接着剤が、今日扱うサービスです。</p>
+  </div>
+</section>
+
+<section id="s2" data-toc="なぜ疎結合">
+  
+  <span class="h2num">02</span>
+  <h2>なぜ疎結合にするのか</h2>
+  <p class="lead">先にサービスを覚えると失敗します。何が困っていて、キューを挟むと何が解決するのか。そこから入ります。</p>
+
+  <h3>同期呼び出しの何が問題なのか</h3>
+  <p>注文サービスが在庫サービスを HTTP で直接呼ぶ構成を思い浮かべてください。平常時は問題ありません。問題は平常時以外に出ます。</p>
+  <ol class="body">
+    <li><strong>送り手が受け手の処理能力に縛られる。</strong>セール開始の瞬間に秒間3,000件の注文が来たとします。在庫サービスが秒間500件しか捌けないなら、残りはタイムアウトかエラーです。送り手にできるのは、利用者に失敗を返すことだけ。<em>受け手の限界が、そのままサービス全体の限界になります。</em></li>
+    <li><strong>障害が伝播する。</strong>在庫サービスが落ちると注文サービスのスレッドが応答待ちで埋まり、やがて受付そのものが止まります。「在庫更新だけが遅れる」で済んだはずの障害が全体障害に育つ――カスケード障害です。</li>
+    <li><strong>スケールの単位が揃わない。</strong>注文の受付は軽く、在庫の更新は重い。同期だと重い側に合わせて全体を太らせるしかありません。</li>
+    <li><strong>相手を知ってしまう。</strong>エンドポイントを設定に持つ以上、受け手を1つ増やすたびに送り手のコードと設定が変わります。</li>
+  </ol>
+
+  <h3>間に1本挟むと何が変わるか</h3>
+  <p>あいだにキューを1本入れると、この4つが同時に消えます。送り手は投入した時点で成功を返せ、受け手は自分のペースで取りに行き、受け手が落ちていてもメッセージは残ります。効き方は3つです。</p>
+  <ul>
+    <li><strong>バッファリング。</strong>流入と処理の速度差を時間で吸収します。ピークの3,000件は消えず、キューに積まれて後から処理されます。</li>
+    <li><strong>隔離。</strong>受け手の障害が送り手に届きません。壊れる範囲を区切るのが回復性設計の基本です。</li>
+    <li><strong>抽象化。</strong>送り手は受け手が誰か、何台いるかを知りません。増やしても送り手は変わりません。</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>設問に「<strong>decouple / 疎結合 / コンポーネント間の依存を減らす</strong>」「<strong>ピーク時にリクエストが失われる</strong>」「<strong>処理が追いつかない</strong>」「<strong>下流サービスの障害が上流に影響しないように</strong>」という表現が出たら、答えは今日のサービス群です。逆に言えば、この表現がないのに無理にキューを挟む選択肢は、過剰設計として不正解になることがあります。</p>
+  </div>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「疎結合にするために ELB を挟む」という選択肢です。ELB はエンドポイントを抽象化しますが、<strong>同期のままなのでバッファになりません</strong>。受け手が捌けなければ 5xx を返します。ELB は「複数台に分散したい」、キューは「時間で吸収したい」です。</p>
+  </div>
+
+  <div class="note warn">
+    <span class="label">非同期は速くならない</span>
+    <p>非同期化すると<strong>送り手から見た応答時間</strong>は短くなりますが、<strong>エンドツーエンドの完了時間</strong>はむしろ伸びます。設問が「利用者への応答を速くしたい」なら非同期化は有効、「処理そのものを速く終わらせたい」なら並列化やスケールアウトの話です。ここを取り違えると、もっともらしい誤答を掴みます。</p>
+  </div>
+</section>
+
+<section id="s3" data-toc="SQS の要点">
+  
+  <span class="h2num">03</span>
+  <h2>SQS ―― 詰まりを時間で吸収する</h2>
+  <p class="lead">SQS はフルマネージドのメッセージキューです。性質は一言で「プル型で、1つのメッセージは1つのコンシューマが処理する」。この2点がすべての判断の起点です。</p>
+
+  <h3>標準キューと FIFO キュー</h3>
+  <p>SQS を選んだあと、必ず次に問われる選択です。既定は標準で、FIFO は「業務要件として順序か重複排除が必要なとき」だけ選びます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>標準キュー</th><th>FIFO キュー</th></tr></thead>
+    <tbody>
+      <tr><td><strong>順序</strong></td><td>ベストエフォート。基本は送った順だが保証はない</td><td class="yes">メッセージグループ内で厳密に保証</td></tr>
+      <tr><td><strong>配信</strong></td><td>少なくとも1回。<strong>重複しうる</strong></td><td class="yes">正確に1回の処理。重複排除ウィンドウは5分</td></tr>
+      <tr><td><strong>スループット</strong></td><td class="yes">ほぼ無制限</td><td>1つの API アクションあたり毎秒300件、バッチ（10件単位）なら毎秒3,000件。高スループットモードではこれがパーティションごとの値になる</td></tr>
+      <tr><td><strong>キュー名</strong></td><td>制約なし</td><td><code>.fifo</code> サフィックスが必須</td></tr>
+      <tr><td><strong>選ぶ場面</strong></td><td>非同期処理の大半。画像変換、通知、ログ取り込み</td><td>金融取引、在庫の増減、コマンドの適用順が意味を持つもの</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>誤解されやすいのが順序の粒度です。<em>FIFO が保証するのはキュー全体の順序ではなく、同じ MessageGroupId を持つメッセージどうしの順序です。</em>顧客IDをグループIDにすれば、顧客単位では順序が守られ、顧客間では並列に処理されます。逆にグループIDを1種類にすると順序は完全に守られますが並列度は1になります。<strong>並列度はメッセージグループの数で決まる</strong>と覚えてください。</p>
+
+  <p>重複排除は <code>MessageDeduplicationId</code> を明示するか、<code>ContentBasedDeduplication</code> で本文のハッシュを使います。判定ウィンドウはどちらも5分で、それを過ぎれば同じ内容でも別のメッセージとして通ります。</p>
+
+  <h3>可視性タイムアウト</h3>
+  <p>メッセージを受信しても、それはキューから消えるのではなく、<strong>一定時間だけ他のコンシューマから見えなくなります</strong>。これが可視性タイムアウトで、既定は30秒、0秒から最大12時間まで設定できます。処理を終えて <code>DeleteMessage</code> を呼べば、そこで初めて消えます。呼ばないまま可視性タイムアウトが切れると、メッセージは再び現れ、別のコンシューマが受け取ります。</p>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「メッセージが二重に処理されてしまう。原因は？」――<strong>可視性タイムアウトが処理時間より短い</strong>が答えです。処理に90秒かかるのに既定の30秒のままだと、処理中に再びメッセージが見えるようになり、2台目が同じ仕事を始めます。対処は、可視性タイムアウトを処理時間より長くするか、処理中に <code>ChangeMessageVisibility</code> で延長すること。「Lambda の関数タイムアウトを伸ばす」「コンシューマを増やす」は的外れです。</p>
+  </div>
+
+  <p>逆に長すぎても困ります。コンシューマが処理中に落ちると、可視性タイムアウトが切れるまでそのメッセージは誰も触れません。<strong>処理時間より少し長い、が正解</strong>です。Lambda をトリガーにする場合は、関数タイムアウトの6倍程度にするのが AWS の推奨です。</p>
+
+  <h3>デッドレターキュー</h3>
+  <p>処理に失敗し続ける毒メッセージを隔離する仕組みです。元のキューに <code>maxReceiveCount</code> を設定し、その回数を超えて受信されたメッセージを別のキュー（DLQ）に移します。</p>
+  <ul>
+    <li>DLQ がないと、壊れたメッセージが保持期間いっぱいリトライされ続け、<strong>正常なメッセージの処理を圧迫します</strong>。「1件の不正データでキュー全体が滞留している」と来たら DLQ です。</li>
+    <li>DLQ は<strong>元のキューと同じ種類</strong>でなければなりません。FIFO キューの DLQ は FIFO キューです。</li>
+    <li>原因を直したあとは、リドライブ機能で元のキューへ戻せます。DLQ は捨て場ではなく待避所です。経過時間は元のキューに入った時点から数えられるため、DLQ の保持期間は長めに取ります。</li>
+  </ul>
+
+  <h3>ロングポーリングとショートポーリング</h3>
+  <p>コンシューマは <code>ReceiveMessage</code> でキューを見に行きます。待ち時間をゼロにすると、キューが空でも即座に空の応答が返る――これがショートポーリング、既定の挙動です。空振りでも API 呼び出しは課金されるので、<strong>メッセージがまばらなキューでは空振りの料金が本体を上回る</strong>ことすらあります。</p>
+  <p>待ち時間（<code>ReceiveMessageWaitTimeSeconds</code>）を1秒以上、最大20秒に設定すると、メッセージが到着するまで接続を保持します。これがロングポーリングです。効果は2つ。<strong>空振りの API 呼び出しが減ってコストが下がり、メッセージ到着から受信までの遅延も小さくなります。</strong>設問で「SQS のコストを下げたい」「空のレスポンスが多い」と来たら、ほぼ確実にロングポーリングです。</p>
+
+  <h3>遅延キュー、メッセージタイマー、保持期間</h3>
+  <p>似た3つの時間設定を、何に効くかで切り分けます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>設定</th><th>効く範囲</th><th>値</th><th>使いどころ</th></tr></thead>
+    <tbody>
+      <tr><td><strong>遅延キュー</strong><br><span style="color:var(--ink-3);font-size:13px">Delay queue</span></td><td>そのキューに入るすべての新規メッセージ</td><td>0〜15分（既定0）</td><td>下流の準備が整うまで一律で待たせたい</td></tr>
+      <tr><td><strong>メッセージタイマー</strong><br><span style="color:var(--ink-3);font-size:13px">Message timer</span></td><td>個別のメッセージ1件</td><td>0〜15分</td><td>特定のメッセージだけ遅らせたい。キューの既定値を上書きする</td></tr>
+      <tr><td><strong>保持期間</strong><br><span style="color:var(--ink-3);font-size:13px">Retention period</span></td><td>キュー内のメッセージの寿命</td><td>60秒〜14日（既定4日）</td><td>消費が止まっても失いたくない場合は長く取る</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>可視性タイムアウトと遅延キューも混同されます。<strong>遅延キューは「入れてから見えるようになるまで」、可視性タイムアウトは「一度見せてから再び見えるようになるまで」</strong>です。配信前か配信後かで取り違えません。保持期間のほうは「メンテナンス中もメッセージを失いたくない」という形で問われ、既定4日では足りなければ最大14日まで延ばします。</p>
+
+  <h3>大きなメッセージの扱い</h3>
+  <p>メッセージ本文の上限は 1 MiB（1,048,576バイト）で、長く基準だった 256 KB から引き上げられました。<strong>問われ方は、上限を超えるペイロードをどう運ぶか、という形です。</strong>答えは常に同じです。</p>
+  <ul>
+    <li><strong>実体を S3 に置き、キューには参照（バケット名とキー）だけを流す。</strong>SQS Extended Client Library がこの置き換えを自動でやります（最大2 GB）。</li>
+    <li>「分割して複数に分けて送る」は、順序と再結合の責任がアプリ側に来るのでほぼ不正解です。</li>
+    <li>「FIFO にすれば大きなメッセージを送れる」は誤りです。サイズ上限はキューの種類と関係ありません。</li>
+  </ul>
+
+  <h3>キューの深さでスケールさせる</h3>
+  <p>SQS で最も出題されるパターンです。<strong>キューに溜まった件数をメトリクスにして、コンシューマ側の Auto Scaling グループを伸縮させます。</strong></p>
+  <ul>
+    <li>使うメトリクスは <code>ApproximateNumberOfMessagesVisible</code>（処理待ちの件数）。これが増えている＝処理が追いついていない、というサインです。</li>
+    <li>より精密にやるなら、<strong>インスタンス1台あたりのバックログ</strong>（件数 ÷ 実行中インスタンス数）をカスタムメトリクスにしてターゲット追跡します。件数そのものは台数に比例しないため、そのまま使うと振動しやすいからです。</li>
+    <li>スパイクが読めないなら、コンシューマを Lambda にするのも手です。SQS をイベントソースにすれば同時実行数が自動で追随します。</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">この構成が正解になる設問の型</span>
+    <p>「ピーク時の処理要求が平常時の10倍になる」「処理は多少遅れてもよいが、失われてはいけない」「コストを最小化したい」。この3つが揃っていたら、答えは<strong>「SQS + Auto Scaling するコンシューマ」</strong>です。さらに「コンシューマはいつ中断されてもよい」と書いてあれば、スポットインスタンスを組み合わせる選択肢が正解になります。</p>
+  </div>
+
+  <div class="note warn">
+    <span class="label">SQS でできないこと</span>
+    <p>SQS は<strong>1つのメッセージを複数のコンシューマに配れません</strong>。「同じイベントを在庫と請求と分析の3系統に届けたい」なら、SQS を3本並べるだけでは足りず、前段に SNS か EventBridge が必要です。次の節がその話です。</p>
+  </div>
+</section>
+
+<section id="s4" data-toc="SNS とファンアウト">
+  
+  <span class="h2num">04</span>
+  <h2>SNS ―― 同じ知らせを複数に配る</h2>
+  <p class="lead">SQS がプル型の1対1なら、SNS はプッシュ型の1対多です。トピックに1回発行するだけで、購読者全員にコピーが届きます。</p>
+
+  <h3>パブリッシュ／サブスクライブという形</h3>
+  <p>登場人物は3つだけです。<strong>トピック</strong>（宛先の器）、<strong>パブリッシャー</strong>、<strong>サブスクライバー</strong>。パブリッシャーはサブスクライバーが誰かを知りません。1つ増やしても発行側のコードは一行も変わらない――これが疎結合の「抽象化」そのものです。</p>
+  <p>サブスクライバーになれる先は次のとおりです。<strong>どれが選べるかは設問でそのまま問われます。</strong></p>
+  <ul>
+    <li><strong>SQS キュー</strong>――最も重要。ファンアウト構成の中核です。</li>
+    <li><strong>Lambda 関数</strong>――イベント駆動でコードを動かす。</li>
+    <li><strong>HTTP / HTTPS エンドポイント</strong>――外部のWebhookなど。</li>
+    <li><strong>Eメール、SMS、モバイルプッシュ通知</strong>――人への通知。運用アラートの定番。</li>
+    <li><strong>Amazon Data Firehose</strong>――S3 や OpenSearch へ流し込んで保管・分析する。</li>
+  </ul>
+
+  <h3>ファンアウト ―― SNS と SQS を組み合わせる</h3>
+  <p>SNS 単体には弱点があります。<em>プッシュ型なので、届けた瞬間に受け手が落ちているとそのメッセージは失われる可能性があります。</em>リトライはしますが永続的なバッファではありません。そこで SNS の下に SQS を並べます。</p>
+
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 860 330" width="860" height="330" role="img" aria-label="注文サービスがSNSトピックに1回発行し、在庫・請求・分析の3つのSQSキューにコピーが入り、それぞれのコンシューマが処理するファンアウト構成の図">
+        <rect x="16" y="132" width="152" height="66" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="92" y="160" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">注文サービス</text>
+        <text x="92" y="180" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">発行は1回だけ</text>
+
+        <line x1="174" y1="165" x2="238" y2="165" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M238 165 l-9 -5 v10 z" fill="var(--ink-3)"/>
+
+        <rect x="246" y="118" width="170" height="94" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="331" y="150" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">SNS トピック</text>
+        <text x="331" y="170" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">order-events</text>
+        <text x="331" y="192" font-size="11" fill="var(--accent)" text-anchor="middle">フィルタポリシーで絞れる</text>
+
+        <line x1="416" y1="165" x2="452" y2="165" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <line x1="452" y1="62" x2="452" y2="268" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <line x1="452" y1="62" x2="486" y2="62" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M486 62 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <line x1="452" y1="165" x2="486" y2="165" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M486 165 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <line x1="452" y1="268" x2="486" y2="268" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M486 268 l-9 -5 v10 z" fill="var(--ink-3)"/>
+
+        <rect x="490" y="36" width="152" height="52" rx="8" fill="var(--accent-soft)" stroke="var(--line)" stroke-width="1.2"/>
+        <text x="566" y="58" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">SQS 在庫キュー</text>
+        <text x="566" y="76" font-size="11" fill="var(--ink-3)" text-anchor="middle">落ちていても溜まる</text>
+        <rect x="490" y="139" width="152" height="52" rx="8" fill="var(--accent-soft)" stroke="var(--line)" stroke-width="1.2"/>
+        <text x="566" y="161" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">SQS 請求キュー</text>
+        <text x="566" y="179" font-size="11" fill="var(--ink-3)" text-anchor="middle">処理は自分のペース</text>
+        <rect x="490" y="242" width="152" height="52" rx="8" fill="var(--accent-soft)" stroke="var(--line)" stroke-width="1.2"/>
+        <text x="566" y="264" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">SQS 分析キュー</text>
+        <text x="566" y="282" font-size="11" fill="var(--ink-3)" text-anchor="middle">後から追加できる</text>
+
+        <line x1="648" y1="62" x2="700" y2="62" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M700 62 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <line x1="648" y1="165" x2="700" y2="165" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M700 165 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <line x1="648" y1="268" x2="700" y2="268" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M700 268 l-9 -5 v10 z" fill="var(--ink-3)"/>
+
+        <rect x="704" y="36" width="140" height="52" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="774" y="67" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">在庫サービス</text>
+        <rect x="704" y="139" width="140" height="52" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="774" y="170" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">請求サービス</text>
+        <rect x="704" y="242" width="140" height="52" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="774" y="273" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">データ基盤</text>
+      </svg>
+    </div>
+    <figcaption>SNS + SQS のファンアウト。発行は1回、コピーが各キューに入ります。<strong>キューが挟まっているので、受け手が停止していてもメッセージは失われません。</strong>受け手を4つ目に増やすときも、キューを作ってトピックに購読させるだけで、注文サービスには手を入れません。</figcaption>
+  </figure>
+
+  <p>これが「SNS + SQS ファンアウト」、SAA 最頻出のパターンの一つです。手がかりは<strong>「同じデータを複数のシステムが必要としている」「将来、処理を追加する予定がある」「一部のコンシューマが停止してもデータを失いたくない」。</strong>どれかが出たら、単体ではなく組み合わせを選びます。</p>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「複数のシステムに同じメッセージを届けたい」という設問で、<strong>SQS を3本並べて、アプリから3回送る</strong>という選択肢が用意されます。動きはしますが、送り手が受け手を知ってしまっているので疎結合になっていません。宛先が増えるたびに送り手を変更することになります。SNS を前段に置くのが正解です。</p>
+  </div>
+
+  <h3>フィルタポリシー</h3>
+  <p>サブスクリプションごとに<strong>フィルタポリシー</strong>を設定すると、条件に合うメッセージだけが配信されます。判定対象はメッセージ属性（既定）か本文（JSON）を選べます。</p>
+  <p>「<strong>特定の種類のイベントだけを受け取りたい</strong>」「<strong>コンシューマ側で不要なメッセージを捨てているのを無くしたい</strong>」と書かれていたら、答えはフィルタポリシーです。トピックを種類ごとに分ける選択肢も用意されますが、管理が煩雑になるため1トピック＋フィルタのほうが評価されます。</p>
+
+  <div class="code">
+    <div class="cap">サブスクリプションのフィルタポリシー（優先度 high の注文だけ受け取る）</div>
+<pre>{
+  <span class="k">"eventType"</span>: [<span class="s">"order.created"</span>],
+  <span class="k">"priority"</span>: [<span class="s">"high"</span>],
+  <span class="k">"amount"</span>: [{ <span class="k">"numeric"</span>: [<span class="s">"&gt;="</span>, 10000] }]
+}  <span class="c">// 属性がすべて一致したサブスクライバーにだけ配信される</span></pre>
+  </div>
+
+  <h3>SNS FIFO と、その他の押さえどころ</h3>
+  <ul>
+    <li><strong>SNS FIFO トピック</strong>は順序保証と重複排除を提供しますが、<strong>購読できるのは SQS FIFO キューだけ</strong>です。Lambda やメールを直接購読させることはできません。「順序を保ったままファンアウトしたい」という設問では、SNS FIFO + SQS FIFO の組み合わせになります。</li>
+    <li>サブスクリプション単位で<strong>再試行ポリシー</strong>と<strong>DLQ</strong>を設定できます。宛先が落ちていた場合の受け皿です。</li>
+    <li>サイズ上限を超えるペイロードは、SQS と同じく S3 に置いて参照を渡します。</li>
+    <li>VPC 内から NAT を通さずに発行したい場合は VPC エンドポイント（PrivateLink）を使います。</li>
+  </ul>
+</section>
+
+<section id="s5" data-toc="EventBridge">
+  
+  <span class="h2num">05</span>
+  <h2>EventBridge ―― AWS の出来事に反応する</h2>
+  <p class="lead">SNS が「自分のアプリが出した知らせを配る」ものなら、EventBridge は「AWS や SaaS で起きたことを受け止めて振り分ける」ものです。出自が違えば得意なことも違います。</p>
+
+  <h3>イベントバスとルール</h3>
+  <p>構造は3層です。<strong>イベントバス</strong>に流れ込み、<strong>ルール</strong>がイベントパターンで判定し、合致したものを<strong>ターゲット</strong>に送ります。バスは3種類です。</p>
+  <ul>
+    <li><strong>デフォルトバス</strong>――AWS サービスのイベントが自動で流れてきます。EC2 の状態変化、S3 のオブジェクト作成、Health のイベントなど。</li>
+    <li><strong>カスタムバス</strong>――自前のアプリが発行するイベント用。</li>
+    <li><strong>パートナーイベントバス</strong>――Datadog や Zendesk といった SaaS からのイベントを直接受けます。<strong>「SaaS からのイベントを AWS 側で処理したい」ならこれです。</strong></li>
+  </ul>
+
+  <p>ルールの肝はイベントパターンです。JSON の構造にマッチさせるので<strong>本文の中身で細かく絞り込めます</strong>。SNS のフィルタポリシーより表現力があると理解してください。</p>
+
+  <div class="code">
+    <div class="cap">EC2 が停止したときだけ動かすルール（イベントパターン）</div>
+<pre>{
+  <span class="k">"source"</span>: [<span class="s">"aws.ec2"</span>],
+  <span class="k">"detail-type"</span>: [<span class="s">"EC2 Instance State-change Notification"</span>],
+  <span class="k">"detail"</span>: {
+    <span class="k">"state"</span>: [<span class="s">"stopped"</span>, <span class="s">"terminated"</span>]
+  }
+}  <span class="c">// ターゲットに Lambda / SNS / SQS / Step Functions などを指定</span></pre>
+  </div>
+
+  <h3>スケジュール実行</h3>
+  <p>cron 式と rate 式によるスケジュール機能があります。<strong>「毎晩2時にバッチを動かしたい」「5分ごとにチェックしたい」の答えは、EC2 上の cron ではなく EventBridge です。</strong>サーバーが要らず、単一障害点になりません。専用機能の <strong>EventBridge Scheduler</strong> は、大量のスケジュールの一元管理、1回限りの実行、タイムゾーン指定に対応します。</p>
+
+  <h3>SNS との使い分け</h3>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>SNS</th><th>EventBridge</th></tr></thead>
+    <tbody>
+      <tr><td><strong>本来の役割</strong></td><td>通知の配信（パブサブ）</td><td>イベントのルーティング</td></tr>
+      <tr><td><strong>AWS サービスのイベント</strong></td><td>一部のサービスのみ直接発行できる</td><td class="yes">ほぼ全サービスのイベントが標準で流れてくる</td></tr>
+      <tr><td><strong>SaaS 連携</strong></td><td class="no">なし</td><td class="yes">パートナーイベントバス</td></tr>
+      <tr><td><strong>スケジュール</strong></td><td class="no">なし</td><td class="yes">cron / rate 式</td></tr>
+      <tr><td><strong>絞り込み</strong></td><td>フィルタポリシー（属性・本文）</td><td class="yes">イベントパターン（本文の構造で柔軟に）</td></tr>
+      <tr><td><strong>人への通知</strong></td><td class="yes">Eメール、SMS、モバイルプッシュ</td><td class="no">直接はできない（SNS をターゲットにする）</td></tr>
+      <tr><td><strong>再送・再現</strong></td><td>再試行と DLQ</td><td class="yes">アーカイブとリプレイ</td></tr>
+      <tr><td><strong>スループットとレイテンシ</strong></td><td class="yes">高スループット・低レイテンシ</td><td>ルール評価が入る分わずかに遅い</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>判断は単純です。<strong>人や外部システムに「知らせる」なら SNS、AWS の中で「起きたことに応じて処理を振り分ける」なら EventBridge。</strong>両者は競合しません。EventBridge のターゲットに SNS を指定し、人への通知は SNS に任せるのが実運用の定番です。</p>
+
+  <h3>三者の比較</h3>
+  <p>前半で最も重要な表です。設問を読んだら、どの列に当てはまるかを考えてください。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>SQS</th><th>SNS</th><th>EventBridge</th></tr></thead>
+    <tbody>
+      <tr><td><strong>モデル</strong></td><td>キュー（1対1）</td><td>パブサブ（1対多）</td><td>イベントバス（1対多＋振り分け）</td></tr>
+      <tr><td><strong>取得方法</strong></td><td>プル（コンシューマが取りに行く）</td><td>プッシュ</td><td>プッシュ</td></tr>
+      <tr><td><strong>メッセージの保持</strong></td><td class="yes">最大14日</td><td class="no">保持しない（再試行のみ）</td><td class="no">保持しない（アーカイブは別機能）</td></tr>
+      <tr><td><strong>受け手が落ちたら</strong></td><td class="yes">溜まって待つ</td><td>再試行後、DLQ がなければ失う</td><td>再試行後、DLQ がなければ失う</td></tr>
+      <tr><td><strong>順序保証</strong></td><td class="yes">FIFO キューで可能</td><td>SNS FIFO で可能（宛先は SQS FIFO のみ）</td><td class="no">なし</td></tr>
+      <tr><td><strong>典型的な一文</strong></td><td>「スパイクを吸収」「処理を失わない」「非同期のバックログ」</td><td>「複数の宛先に同報」「メールで通知」</td><td>「AWS の状態変化に反応」「SaaS 連携」「定期実行」</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>迷ったときの順番です。<strong>①「宛先は1つか、複数か」</strong>――1つなら SQS。<strong>②「発生源は AWS サービスか、自分のアプリか」</strong>――AWS サービスやスケジュールなら EventBridge。<strong>③「人に届けるのか、システムにか」</strong>――人なら SNS。この3問でほぼ振り分けられます。</p>
+  </div>
+</section>
+
+<section id="s6" data-toc="SFn と API GW">
+  
+  <span class="h2num">06</span>
+  <h2>Step Functions と API Gateway</h2>
+  <p class="lead">キューとイベントバスが「流す」仕組みなら、この2つは「束ねる」仕組みです。前者は処理の順番を、後者は入口を束ねます。</p>
+
+  <h3>Step Functions ―― 手順をコードの外に出す</h3>
+  <p>Lambda を5つ順番に呼ぶ処理を、1つ目が2つ目を呼ぶ形で素直に実装すると、どこまで進んだか分からず、リトライを各関数に書くことになり、手順の変更はコードの変更になります。Step Functions はこの手順をステートマシンとして<strong>コードの外に出します</strong>。各ステップの成否、リトライ、分岐、並列実行、待機を定義で表現し、実行の様子はコンソールで可視化されます。手がかりは明確です。<strong>「複数ステップの処理をオーケストレーションしたい」「エラー処理とリトライを一元管理したい」「進行状況を可視化したい」「人の承認を挟みたい」。</strong>どれかが出たら Step Functions です。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>標準ワークフロー<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Standard</span></th><th>Express ワークフロー<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Express</span></th></tr></thead>
+    <tbody>
+      <tr><td><strong>最大実行時間</strong></td><td class="yes">1年</td><td>5分</td></tr>
+      <tr><td><strong>実行セマンティクス</strong></td><td class="yes">正確に1回</td><td>非同期は少なくとも1回／同期は多くても1回</td></tr>
+      <tr><td><strong>実行履歴</strong></td><td class="yes">最大90日、コンソールとAPIで参照できる</td><td>自動では残らない。CloudWatch Logs に出す</td></tr>
+      <tr><td><strong>料金の考え方</strong></td><td>状態遷移の回数で課金</td><td class="yes">実行回数・実行時間・メモリで課金。大量実行では安い</td></tr>
+      <tr><td><strong>人の承認待ち（コールバック）</strong></td><td class="yes">対応（<code>.waitForTaskToken</code>）</td><td class="no">非対応</td></tr>
+      <tr><td><strong>選ぶ場面</strong></td><td>長時間の業務処理、監査が要る処理、非冪等な処理</td><td>大量のイベント処理、ストリーム変換、IoT の取り込み</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>選択は2問で終わります。<strong>「5分を超えるか」――超えるなら標準一択。「同じ処理が2回走ると困るか」――困るなら標準。</strong>「秒間数千件を短時間で処理」「処理は冪等」なら Express です。承認待ちやジョブ完了待ちが出てきたら、Express にその機能はないので標準になります。</p>
+
+  <div class="trap">
+    <span class="label">よくある誤解</span>
+    <p>「Lambda の15分制限を超えたいので Step Functions」――半分だけ正解です。全体は1年走らせられますが、<strong>個々の Lambda の15分制限は消えません</strong>。15分以内のステップに分割できる場合に有効、という条件付きで、1ステップ自体が長いなら Fargate や Batch が適切です。</p>
+  </div>
+
+  <h3>API Gateway ―― 入口を1つにする</h3>
+  <p>API Gateway はバックエンドの前に立つマネージドな受付で、認証・スロットリング・キャッシュ・変換といった横断的な関心事を肩代わりします。まず種類の選択から入ります。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>REST API</th><th>HTTP API</th><th>WebSocket API</th></tr></thead>
+    <tbody>
+      <tr><td><strong>通信の向き</strong></td><td>リクエスト・レスポンス</td><td>リクエスト・レスポンス</td><td class="yes">双方向。サーバーから送れる</td></tr>
+      <tr><td><strong>料金</strong></td><td>高い</td><td class="yes">安い（REST の半分以下）</td><td>接続時間とメッセージ数で課金</td></tr>
+      <tr><td><strong>レイテンシ</strong></td><td>標準</td><td class="yes">低い</td><td>―</td></tr>
+      <tr><td><strong>認可の選択肢</strong></td><td class="yes">IAM / Cognito / Lambda オーソライザー</td><td>IAM / JWT（Cognito・OIDC）/ Lambda オーソライザー</td><td>IAM / Lambda オーソライザー</td></tr>
+      <tr><td><strong>キャッシュ</strong></td><td class="yes">あり</td><td class="no">なし</td><td class="no">なし</td></tr>
+      <tr><td><strong>使用量プランと API キー</strong></td><td class="yes">あり</td><td class="no">なし</td><td>―</td></tr>
+      <tr><td><strong>プライベート API</strong></td><td class="yes">VPC 内限定で公開できる</td><td class="no">できない</td><td class="no">できない</td></tr>
+      <tr><td><strong>選ぶ場面</strong></td><td>キャッシュ・API キー・リクエスト検証・プライベート公開が要る</td><td>Lambda / HTTP への単純なプロキシで、コストと速度を優先</td><td>チャット、通知、リアルタイムのダッシュボード</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>切り分けはこうです。<strong>「コストを最小化」「シンプルなプロキシでよい」なら HTTP API。「キャッシュしたい」「API キーで顧客ごとに流量を制限したい」「VPC 内に閉じたい」なら REST API。「サーバーからクライアントに push したい」なら WebSocket API。</strong></p>
+
+  <h3>認可の3種類</h3>
+  <ul>
+    <li><strong>IAM 認可</strong>――呼び出し元が AWS のプリンシパルである場合。社内システム、他アカウント、SDK からの呼び出しに使い、SigV4 署名を検証します。</li>
+    <li><strong>Cognito オーソライザー</strong>――モバイル・Web アプリの一般利用者。ユーザープールが発行したトークンを検証します。<strong>「アプリの利用者を認証してAPIを守りたい」の定番解です。</strong></li>
+    <li><strong>Lambda オーソライザー</strong>――独自認証基盤やサードパーティIdPなど、上の2つに収まらない場合。<strong>「既存の認証システムと連携したい」ならこれです。</strong>判定結果はキャッシュできます。</li>
+  </ul>
+
+  <div class="trap">
+    <span class="label">API キーは認証ではない</span>
+    <p>API キーは<strong>使用量プランと結びつけて流量を測るための識別子</strong>であって、認証・認可の仕組みではありません。「APIを安全に保護したい」で API キーを選ぶと外します。「顧客ごとに1日あたりのリクエスト数を制限したい」なら正解です。<strong>目的が計量か保護かで分けてください。</strong></p>
+  </div>
+
+  <h3>スロットリング、キャッシュ、ステージ</h3>
+  <p><strong>スロットリング</strong>はバックエンドを守る仕組みです。既定ではアカウント単位・リージョン単位で毎秒10,000リクエスト、バースト5,000リクエスト（一部リージョンは低め）で、引き上げ申請ができます。加えてメソッド・ステージ・使用量プラン単位でも上限を設定でき、超過には <code>429 Too Many Requests</code> が返ります。「特定の利用者が大量に呼んで他に影響が出ている」なら、使用量プランによるスロットリングです。</p>
+  <p><strong>キャッシュ</strong>はステージ単位で有効化します。TTL の既定は300秒、最大3600秒、0で無効。「同じ問い合わせが繰り返される読み取り中心のAPIで、バックエンドの負荷を下げたい」ならこれです。時間課金なので、コスト最小化が主眼の設問では選ばれないこともあります。</p>
+  <p><strong>ステージ</strong>は <code>dev</code> / <code>prod</code> のようなデプロイ単位で、ステージ変数により同じ定義で接続先を切り替えられます。<strong>カナリアリリース</strong>を設定すれば、新しいデプロイに一定割合のトラフィックだけを流せます。「新バージョンを段階的に公開したい」の答えです。</p>
+</section>
+
+<section id="s7" data-toc="監視の二本柱">
+  
+  <span class="h2num">07</span>
+  <h2>CloudWatch と CloudTrail</h2>
+  <p class="lead">後半の主題はこの2つの違いです。名前が似ていてどちらもログを扱いますが、答える問いが違います。<em>CloudWatch は「どう動いているか」、CloudTrail は「誰が何をしたか」。</em>ここを外さなければ後半の大半は落とせません。</p>
+
+  <h3>CloudWatch メトリクス</h3>
+  <p>メトリクスは時系列の数値で、名前空間（<code>AWS/EC2</code> など）とディメンションで識別されます。押さえるべきは<strong>標準メトリクスとカスタムメトリクスの境界</strong>です。</p>
+  <ul>
+    <li><strong>標準メトリクス</strong>は AWS がハイパーバイザー側から取れるもの。EC2 なら CPU使用率、ネットワーク入出力、ディスクの読み書き、ステータスチェックで、設定不要・無料です。</li>
+    <li><strong>エージェントが必要なもの</strong>は、OS の内側を見ないと分からない値です。代表が<strong>メモリ使用率とディスク（ファイルシステム）使用率</strong>。スワップ、プロセス数、OS のログファイルも同様です。<strong>「メモリ使用率で Auto Scaling したい」「ディスクが埋まる前に気づきたい」なら、答えは必ず CloudWatch エージェントの導入を含みます。</strong></li>
+    <li>EC2 の<strong>基本モニタリング</strong>は5分間隔（無料）、<strong>詳細モニタリング</strong>は1分間隔（有料）。「もっと早くスケールアウトを検知したい」なら詳細モニタリングです。<strong>高解像度メトリクス</strong>なら1秒単位まで記録でき、アラームも10秒・30秒周期にできます。</li>
+  </ul>
+  <p>保持期間は、1分未満のデータが3時間、1分データが15日、5分データが63日、1時間データが455日（約15か月）。短い粒度から順に集約されていきます。<strong>「1年以上前と比較したい」なら、S3 への書き出しが必要</strong>という話になります。</p>
+
+  <h3>CloudWatch Logs とアラーム</h3>
+  <p>ログはロググループとログストリームの2階層です。保持期間はロググループ単位で、既定は「失効しない」――放っておくと課金が増え続けます。コスト最適化の設問では、<strong>保持期間の設定と、古いログの S3 へのエクスポート</strong>が答えです。</p>
+  <ul>
+    <li><strong>メトリクスフィルター</strong>――ログ中の特定のパターン（<code>ERROR</code> の行数、5xx の数など）を数えてメトリクスに変換します。<strong>「ログに特定の文字列が出たら通知したい」の答えは、これとアラームの組み合わせです。</strong>ログそのものにアラームは張れず、一度メトリクスにするのがポイントです。</li>
+    <li><strong>サブスクリプションフィルター</strong>――ログをほぼリアルタイムで Lambda、Data Firehose、OpenSearch などに流します。別の場所で加工・分析したい場合に使います。</li>
+    <li><strong>Logs Insights</strong>――専用のクエリ言語でログを対話的に検索・集計します。事前のインデックス作成は不要で、スキャン量で課金されます。「障害の原因を後から調査したい」「特定のリクエストIDの流れを追いたい」で出てきます。</li>
+  </ul>
+  <p><strong>アラーム</strong>の状態は <code>OK</code> / <code>ALARM</code> / <code>INSUFFICIENT_DATA</code> の3つ。評価期間と、そのうち何回閾値を超えたらアラームにするか（M out of N）、欠落データをどう扱うかを設定します。アクションは SNS への通知、Auto Scaling ポリシーの実行、EC2 のアクション（停止・終了・再起動・復旧）です。</p>
+  <p><strong>複合アラーム</strong>は複数のアラームを AND / OR / NOT で組み合わせます。目的はノイズの削減で、「CPU が高い」だけでなく「CPU が高い AND レスポンスタイムが悪化」なら本当に見るべき事象です。<strong>「誤検知が多い」「通知が多すぎる」と書いてあったら複合アラーム</strong>と覚えてください。</p>
+
+  <h3>CloudTrail</h3>
+  <p>CloudTrail は<strong>API 呼び出しの記録</strong>です。誰が、いつ、どこから、どのリソースに何をしたか。コンソール操作も CLI も SDK も、内部的にはすべて API 呼び出しなので記録されます。</p>
+  <ul>
+    <li><strong>イベント履歴</strong>は、追加設定なしで直近90日ぶんの<strong>管理イベント</strong>を閲覧できる機能です。無料ですが、90日を超えると消え、データイベントは含まれません。長く残したい、複数リージョンをまとめたい、データイベントも取りたいなら、<strong>証跡（Trail）</strong>を作って S3 に出力します。S3 に置けば保持は無期限です。</li>
+    <li><strong>管理イベント</strong>はコントロールプレーンの操作（インスタンスの起動、バケットの作成、ポリシーの変更など）。既定で記録され、証跡1本目の管理イベントは無料です。</li>
+    <li><strong>データイベント</strong>はデータプレーンの操作（S3 のオブジェクトの GET / PUT / DELETE、Lambda の関数実行など）。<strong>既定では記録されず、明示的に有効化する必要があり、有料です。</strong>量が桁違いに多いためです。</li>
+    <li><strong>組織証跡</strong>を管理アカウントで作ると、全アカウントのイベントを1つのバケットに集約でき、メンバーアカウント側からは削除できません。<strong>「全アカウントの操作ログを一元管理したい」の答えです。</strong></li>
+    <li><strong>ログファイル整合性検証</strong>を有効にすると、改ざんされていないことを後から検証できます。監査要件のある設問で登場します。</li>
+  </ul>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「S3 バケットの<strong>オブジェクトを誰が削除したか</strong>を追跡したい」――CloudTrail を有効にするだけでは足りません。オブジェクトレベルの操作はデータイベントなので、<strong>S3 のデータイベントを明示的に有効化する</strong>必要があります。「バケットを誰が削除したか」なら管理イベントなので既定で記録されます。<strong>バケットへの操作か、オブジェクトへの操作か</strong>で答えが変わります。</p>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>CloudWatch</th><th>CloudTrail</th></tr></thead>
+    <tbody>
+      <tr><td><strong>答える問い</strong></td><td>「どう動いているか」――性能、状態、量</td><td>「誰が何をしたか」――操作の主体と内容</td></tr>
+      <tr><td><strong>記録の単位</strong></td><td>メトリクス（数値の時系列）とログ（テキスト）</td><td>API 呼び出し1件ごとのイベント</td></tr>
+      <tr><td><strong>出どころ</strong></td><td>AWS サービス、エージェント、アプリケーション</td><td>AWS の API エンドポイント</td></tr>
+      <tr><td><strong>既定で有効か</strong></td><td class="yes">標準メトリクスは自動。ログは設定が要る</td><td class="yes">イベント履歴（90日・管理イベント）は自動</td></tr>
+      <tr><td><strong>代表的な用途</strong></td><td>アラーム、Auto Scaling のトリガー、ダッシュボード、障害調査</td><td>監査、コンプライアンス、セキュリティ調査、変更の犯人特定</td></tr>
+      <tr><td><strong>設問のキーワード</strong></td><td>「しきい値」「通知」「性能劣化」「使用率」</td><td>「監査」「誰が」「不正な操作」「コンプライアンス」</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="label">組み合わせて使う</span>
+    <p>2つは排他ではありません。CloudTrail のログを CloudWatch Logs にも送れば、<strong>メトリクスフィルター＋アラームで「特定の API 操作が行われたら即座に通知」</strong>できます。「ルートユーザーがログインしたら知らせたい」「セキュリティグループが変更されたら知らせたい」の答えがこれです。記録するのが CloudTrail、気づかせるのが CloudWatch です。</p>
+  </div>
+</section>
+
+<section id="s8" data-toc="運用の道具">
+  
+  <span class="h2num">08</span>
+  <h2>構成管理と運用の道具</h2>
+  <p class="lead">残りは記録と自動化を担うサービス群です。機能を網羅する必要はありません。「どれが答えになる要件か」だけを押さえます。</p>
+
+  <h3>AWS Config ―― 今どうなっているか</h3>
+  <p>Config はリソースの<strong>構成</strong>を継続的に記録し、あるべき姿から外れていないかを評価します。CloudTrail が「操作の記録」なら Config は「状態の記録」です。</p>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>CloudTrail</th><th>AWS Config</th></tr></thead>
+    <tbody>
+      <tr><td><strong>記録するもの</strong></td><td>誰がどの API を呼んだか</td><td>リソースの設定内容が時系列でどう変わったか</td></tr>
+      <tr><td><strong>答える問い</strong></td><td>「このセキュリティグループを開けたのは誰か」</td><td>「このセキュリティグループは今どうなっていて、いつからこうなのか」</td></tr>
+      <tr><td><strong>評価機能</strong></td><td class="no">なし</td><td class="yes">ルールで準拠・非準拠を判定し、自動修復もできる</td></tr>
+    </tbody>
+  </table></div>
+  <p>Config ルールは AWS 管理とカスタムがあり、複数をまとめた<strong>コンフォーマンスパック</strong>で組織に一括適用できます。非準拠を検知したら Systems Manager Automation で自動修復させるのが定番です。<strong>「準拠していない設定を検出したい」「設定変更の履歴を追いたい」なら Config</strong>、「操作した人を特定したい」なら CloudTrail です。</p>
+
+  <h3>Systems Manager</h3>
+  <ul>
+    <li><strong>Session Manager</strong>――踏み台も SSH キーも要らず、インバウンドポートを一切開けずにシェルに入れます。接続は SSM エージェントからのアウトバウンドのみで、操作は CloudTrail に記録され、セッションログを S3 や CloudWatch Logs に残せます。<strong>「踏み台をなくしたい」「22番ポートを閉じたい」「誰が入ったか記録したい」の答えです。</strong>プライベートサブネットからは VPC エンドポイント経由にします。</li>
+    <li><strong>Patch Manager</strong>――パッチ適用を、パッチベースラインとメンテナンスウィンドウに沿って自動化します。「多数のインスタンスに定期的にパッチを当てたい」の答えです。</li>
+    <li><strong>Parameter Store</strong>――設定値と機密情報の保管庫。標準パラメータは1件4 KB・10,000件まで無料、アドバンストは8 KB・100,000件で有料、有効期限などのポリシーが使えます。<strong>Secrets Manager との違いは自動ローテーションの有無</strong>で、「RDS の認証情報を定期的に自動ローテーションしたい」なら Secrets Manager、「単なる設定値をコストをかけずに置きたい」なら Parameter Store です。</li>
+  </ul>
+
+  <h3>CloudFormation</h3>
+  <p>インフラをテンプレートで定義し、スタックとして作成・更新・削除します。問われるのは4つです。</p>
+  <ul>
+    <li><strong>変更セット</strong>――適用前に、何が作成・変更・置換・削除されるかを確認します。<strong>「本番の更新で意図しない再作成を避けたい」の答え</strong>で、置換が起きるリソースをここで見つけます。</li>
+    <li><strong>StackSets</strong>――1つのテンプレートを<strong>複数アカウント・複数リージョンに一括展開</strong>します。「組織のすべてのアカウントに同じ設定を配りたい」の答えです。</li>
+    <li><strong>ドリフト検出</strong>――テンプレートの定義と実際のリソースのずれ（手作業の変更など）を検出します。「コンソールで直接変更されていないか確認したい」の答えです。</li>
+    <li><strong>DeletionPolicy</strong>――スタックを削除してもデータベースやバケットを残す（<code>Retain</code>）、スナップショットを取る（<code>Snapshot</code>）といった指定ができます。</li>
+  </ul>
+
+  <h3>Trusted Advisor と Health Dashboard</h3>
+  <p><strong>Trusted Advisor</strong>はアカウントをベストプラクティスに照らして点検します。カテゴリはコスト最適化、パフォーマンス、セキュリティ、フォールトトレランス、サービスクォータ、運用上の優秀性の6つ。<strong>出題の要は、すべてのチェックを使えるのがビジネスサポート以上の契約だという点です。</strong>基本・開発者サポートではサービスクォータと一部のチェックに限られます。</p>
+  <p><strong>AWS Health Dashboard</strong>は2面あります。<strong>サービス正常性</strong>は AWS 全体の障害情報、<strong>アカウント固有の正常性</strong>は自分のリソースに影響する事象（メンテナンス予定、廃止予定のインスタンスなど）です。後者は EventBridge に流せるので、<strong>「AWS 側のメンテナンス予定を自動で受け取って通知したい」の答えは、Health のイベントを EventBridge で捕まえて SNS に送る</strong>構成です。Organizations と組み合わせれば全アカウントぶんを集約できます。</p>
+</section>
+
+<section id="s9" data-toc="試験での判断軸">
+  
+  <span class="h2num">09</span>
+  <h2>試験での判断軸</h2>
+  <p class="lead">設問文にこの手がかりが出たら、この答えに寄せる――という対応表です。今日の範囲は特に対応がはっきりしています。</p>
+
+  <div class="judge">
+    <div class="row"><span class="cue">疎結合にしたい／スパイクを吸収したい</span><span class="arrow">→</span><span class="ans">SQS</span></div>
+    <div class="row"><span class="cue">同じメッセージを複数のシステムに届けたい</span><span class="arrow">→</span><span class="ans">SNS + SQS のファンアウト</span></div>
+    <div class="row"><span class="cue">順序が業務上重要／重複処理が許されない</span><span class="arrow">→</span><span class="ans">SQS FIFO（グループIDで並列度を確保）</span></div>
+    <div class="row"><span class="cue">同じメッセージが二重に処理される</span><span class="arrow">→</span><span class="ans">可視性タイムアウトを処理時間より長く</span></div>
+    <div class="row"><span class="cue">失敗するメッセージでキューが滞留</span><span class="arrow">→</span><span class="ans">デッドレターキュー</span></div>
+    <div class="row"><span class="cue">空のレスポンスが多くコストが高い</span><span class="arrow">→</span><span class="ans">ロングポーリング（最大20秒）</span></div>
+    <div class="row"><span class="cue">キューに溜まった量で処理能力を増やしたい</span><span class="arrow">→</span><span class="ans">キューの深さをメトリクスに Auto Scaling</span></div>
+    <div class="row"><span class="cue">AWS の状態変化に反応したい／定期実行したい</span><span class="arrow">→</span><span class="ans">EventBridge</span></div>
+    <div class="row"><span class="cue">複数ステップの処理を可視化・リトライ管理したい</span><span class="arrow">→</span><span class="ans">Step Functions 標準ワークフロー</span></div>
+    <div class="row"><span class="cue">メモリ使用率・ディスク使用率で判断したい</span><span class="arrow">→</span><span class="ans">CloudWatch エージェントの導入</span></div>
+    <div class="row"><span class="cue">ログに特定の文字列が出たら通知したい</span><span class="arrow">→</span><span class="ans">メトリクスフィルター + アラーム + SNS</span></div>
+    <div class="row"><span class="cue">誰がリソースを削除したのか特定したい</span><span class="arrow">→</span><span class="ans">CloudTrail（オブジェクトならデータイベント）</span></div>
+    <div class="row"><span class="cue">設定が基準から逸脱していないか継続評価したい</span><span class="arrow">→</span><span class="ans">AWS Config ルール</span></div>
+    <div class="row"><span class="cue">踏み台をなくし、ポートを開けずに接続したい</span><span class="arrow">→</span><span class="ans">Systems Manager Session Manager</span></div>
+  </div>
+</section>
+
+<section id="s10" data-toc="確認問題">
+  
+  <span class="h2num">10</span>
+  <h2>確認問題</h2>
+  <p class="lead">先に自分で答えを決めてから開いてください。当てずっぽうで開くと、この5分が無駄になります。</p>
+
+  <details class="q">
+    <summary><span class="qnum">Q1</span>注文処理システムで、セール開始時に通常の20倍のリクエストが集中し、在庫更新サービスがタイムアウトして注文の一部が失われている。注文を1件も失わずに処理するために最も適切な構成はどれか。
+      <ul class="opts">
+        <li>A. 在庫更新サービスの前に ALB を配置し、複数台に分散させる</li>
+        <li>B. 注文サービスと在庫更新サービスの間に SQS キューを挟み、キューの深さに基づいてコンシューマを Auto Scaling させる</li>
+        <li>C. 在庫更新サービスのインスタンスタイプをピークに合わせて常時大きくする</li>
+        <li>D. 注文サービスのリトライ回数を増やし、指数バックオフを実装する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>キューを挟めば流入と処理の速度差を時間で吸収できます。注文サービスは投入時点で成功を返せ、在庫更新は自分のペースで処理します。キューの深さでコンシューマを伸縮させれば、滞留も短時間で解消します。</p>
+      <p><strong>判断軸:</strong> A は同期のままなのでバッファになりません。C はピークに合わせた常時プロビジョニングでコストが無駄。D は根本解決にならず、リトライ中も送り手のリソースを消費します。<strong>「失われてはいけない」と書かれていたら、永続化される置き場、すなわちキューを探します。</strong></p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q2</span>SQS キューのメッセージを EC2 上のワーカーが処理している。1件あたりの処理に約3分かかる。運用開始後、同じ注文が2回処理される事象が頻発している。原因として最も可能性が高いのはどれか。
+      <ul class="opts">
+        <li>A. 標準キューを使っているため、重複配信が避けられない</li>
+        <li>B. 可視性タイムアウトが既定の30秒のままになっている</li>
+        <li>C. ロングポーリングが有効になっていない</li>
+        <li>D. メッセージ保持期間が短すぎる</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>処理に3分かかるのに可視性タイムアウトが30秒だと、1台目の処理中にメッセージが再び見えるようになり、2台目が同じものを取得します。可視性タイムアウトを処理時間より長くするか、<code>ChangeMessageVisibility</code> で延長します。</p>
+      <p><strong>判断軸:</strong> A も標準キューの性質としては正しいのですが、「頻発」と処理時間の情報が揃っているので設計ミスを問う設問だと読みます。<strong>処理時間が具体的に書かれていたら、可視性タイムアウトとの比較を疑ってください。</strong>C はコストと遅延、D は消失の話で、二重処理とは無関係です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q3</span>あるアプリケーションが注文イベントを発行している。現在は在庫システムと請求システムがこれを受け取っているが、来期には分析基盤も追加する予定である。また、いずれかのシステムがメンテナンスで停止していてもイベントを失いたくない。最も適した構成はどれか。
+      <ul class="opts">
+        <li>A. SNS トピックを作り、各システムを HTTPS エンドポイントとして直接サブスクライブさせる</li>
+        <li>B. SQS キューを2本作り、アプリケーションが両方に送信する</li>
+        <li>C. SNS トピックを作り、システムごとに SQS キューを用意してトピックにサブスクライブさせる</li>
+        <li>D. Kinesis Data Streams にイベントを流し、各システムがコンシューマとして読み取る</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: C</span></p>
+      <p>1回発行すればコピーが各キューに入り、キューがバッファになるので停止中でもイベントは残ります。分析基盤の追加もキューを作ってサブスクライブさせるだけで、発行側は変更不要です。</p>
+      <p><strong>判断軸:</strong> A はキューがないので停止中の配信を失う恐れがあります。B は宛先が増えるたびに送信側を改修することになり疎結合ではありません。D も要件は満たせますが、この規模ではオーバースペックです。<strong>「将来コンシューマを追加する」「一部が停止しても失わない」が並んだら SNS + SQS です。</strong></p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q4</span>セキュリティ監査で「S3 バケット内のオブジェクトを誰がいつ削除したかを、過去1年分たどれるようにせよ」と指摘された。適切な対応はどれか。
+      <ul class="opts">
+        <li>A. CloudTrail のイベント履歴をコンソールで確認する</li>
+        <li>B. CloudTrail で証跡を作成し、S3 のデータイベントを有効にして、ログを S3 バケットに保存する</li>
+        <li>C. AWS Config で S3 バケットの構成変更を記録する</li>
+        <li>D. CloudWatch でバケットのオブジェクト数メトリクスにアラームを設定する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>オブジェクトへの操作はデータイベントで、既定では記録されません。明示的に有効化して S3 に出力すれば、保持期間の制約なく1年分を残せます。</p>
+      <p><strong>判断軸:</strong> A のイベント履歴は90日ぶんかつ管理イベントのみなので、両方の要件を満たしません。C はバケットの設定変更の記録で、オブジェクト単位の操作は追えません。D は増減が分かるだけで、誰がやったかは分かりません。<strong>「オブジェクト」か「バケット」かで、必要な設定が変わります。</strong></p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q5</span>EC2 上の Java アプリケーションがメモリ不足で不定期に停止する。事前に検知して通知したい。最小の運用負荷で実現する方法はどれか。
+      <ul class="opts">
+        <li>A. CloudWatch の標準メトリクス MemoryUtilization にアラームを設定する</li>
+        <li>B. EC2 の詳細モニタリングを有効にし、1分間隔でメモリ使用率を取得する</li>
+        <li>C. CloudWatch エージェントを導入してメモリ使用率をカスタムメトリクスとして発行し、アラームから SNS に通知する</li>
+        <li>D. アプリケーションのログを CloudWatch Logs に送り、Logs Insights で定期的に検索する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: C</span></p>
+      <p>メモリ使用率はハイパーバイザー側から見えないため、標準メトリクスには存在しません。CloudWatch エージェントを入れて OS の内側から取得し、カスタムメトリクスとして発行します。</p>
+      <p><strong>判断軸:</strong> A の <code>MemoryUtilization</code> という標準メトリクスは存在しません。この「あるように見えて存在しないメトリクス」は頻出の誤答です。B の詳細モニタリングは既存メトリクスの粒度を5分から1分に上げるだけで、項目は増えません。D は事後の調査であって事前の検知になっていません。<strong>メモリとディスク使用率が出たらエージェント、と即答してください。</strong></p>
+    </div>
+  </details>
+</section>
+
+<section id="s11" data-toc="今日の宿題">
+  
+  <span class="h2num">11</span>
+  <h2>今日の宿題</h2>
+  <p>読んだだけでは残りません。25分でここまでやってください。</p>
+
+  <div class="hw">
+    <div class="item"><span class="box"></span><span class="t"><code>notes/integration/</code> の README チェックリストを埋める<small>SQS・SNS・EventBridge の3ファイル。機能の網羅ではなく「どの一文が来たらこれを選ぶか」だけを書く</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>notes/ops/</code> の README チェックリストを埋める<small>CloudWatch・CloudTrail・Config・SSM。CloudTrail と Config の違いは自分の言葉で1行にする</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d2-resilient.md</code> に判断軸を追記<small>09の表から、自分が知らなかったものだけを写す。全部写すと意味がない</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">W5 Issue のチェック項目を埋める<small>「SQS/SNS/EventBridge の使い分け」「Step Functions と API Gateway」「CloudWatch と CloudTrail」の3つ</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>plan/log.md</code> に1行残す<small>時間と、今日いちばん腑に落ちなかったこと</small></span></div>
+  </div>
+
+  <div class="note">
+    <span class="label">次回から模試に入ります</span>
+    <p>この講義で <strong>Phase 1 のインプットは終わりです。</strong>W1 の IAM と VPC から、W5 の疎結合と監視まで、SAA-C03 の4ドメインをひととおり通しました。来週からは Phase 2、模擬試験に入ります。ここからは「知らないことを覚える」から「知っているつもりを潰す」に切り替わります。マイルストーン M1 の達成条件は <code>notes/</code> のチェックリストが8割埋まっていること。<strong>今週末のうちに、埋まっていない箇所を確認してください。</strong>模試で初めて気づくより、今のうちに気づいたほうが安上がりです。</p>
+  </div>
+</section>
+
+<footer>
+  AWS SAA-C03 / W5 座学<br>
+  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
+</footer>
+
+</main>
+</div>
+</div>
+</body>
+</html>

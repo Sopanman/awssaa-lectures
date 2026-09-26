@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;font:14px system-ui,-apple-system,sans-serif;background:#fafaf9}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>データベースの選び方</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#F6F8F7; --surface:#FFFFFF; --surface-2:#EDF1F0; --inset:#F0F4F3;
+  --ink:#13201E; --ink-2:#485855; --ink-3:#74847F; --line:#D5DEDB;
+  --accent:#0E6B68; --accent-soft:#DCEAE8;
+  --allow:#2B7448; --allow-soft:#DEEFE4;
+  --deny:#AE3729; --deny-soft:#F6E1DD;
+  --warn:#8E5B06; --warn-soft:#F6EAD1;
+  --serif:'Shippori Mincho',"Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:'Zen Kaku Gothic New',"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+    --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+    --accent:#52B2AD; --accent-soft:#14302E;
+    --allow:#6FC38B; --allow-soft:#142E1E;
+    --deny:#E4877A; --deny-soft:#331A16;
+    --warn:#D3A44E; --warn-soft:#2E2510;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+  --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+  --accent:#52B2AD; --accent-soft:#14302E;
+  --allow:#6FC38B; --allow-soft:#142E1E;
+  --deny:#E4877A; --deny-soft:#331A16;
+  --warn:#D3A44E; --warn-soft:#2E2510;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:0 96px}
+a{color:var(--accent)}
+
+/* ---------- header ---------- */
+.masthead{padding-block:56px 40px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,6vw,46px);line-height:1.3;margin:0 0 18px;text-wrap:balance;letter-spacing:.01em}
+.standfirst{margin:0;max-width:62ch;color:var(--ink-2);font-size:17px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.meta span{font-family:var(--mono);font-size:12px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);background:var(--surface)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:1fr;gap:40px;margin-top:40px}
+@media (min-width:1000px){ .cols{grid-template-columns:200px minmax(0,1fr);gap:56px} }
+nav.toc{font-size:14px}
+@media (min-width:1000px){ nav.toc{position:sticky;top:32px;align-self:start;max-height:calc(100vh - 64px);overflow-y:auto} }
+nav.toc h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px;font-weight:600}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+@media (max-width:999px){ nav.toc ol{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))} }
+nav.toc a{display:block;padding:5px 10px;border-radius:6px;text-decoration:none;color:var(--ink-2);line-height:1.5;border-left:2px solid transparent}
+nav.toc a:hover{background:var(--surface-2);color:var(--ink)}
+nav.toc a .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-right:7px}
+
+main{min-width:0;max-width:74ch}
+section{padding-block:44px;border-top:1px solid var(--line)}
+section:first-child{border-top:none;padding-top:8px}
+h2{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3.6vw,29px);line-height:1.45;margin:0 0 6px;text-wrap:balance}
+.h2num{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.12em;display:block;margin-bottom:8px}
+h3{font-family:var(--sans);font-weight:700;font-size:17px;margin:34px 0 10px;color:var(--ink);letter-spacing:.01em}
+p{margin:0 0 18px;max-width:66ch}
+ul,ol.body{margin:0 0 18px;padding-left:1.35em;max-width:66ch}
+li{margin-bottom:7px}
+strong{font-weight:700}
+em{font-style:normal;background:linear-gradient(transparent 62%,var(--accent-soft) 62%);font-weight:500}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);padding:2px 6px;border-radius:4px;word-break:break-word}
+
+/* ---------- blocks ---------- */
+.lead{font-size:17.5px;color:var(--ink-2);max-width:64ch}
+.goals{list-style:none;padding:0;margin:0;display:grid;gap:10px;max-width:66ch}
+.goals li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;margin:0;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.goals .tick{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:4px}
+
+.note{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.note p:last-child{margin-bottom:0}
+.note .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
+.note.warn{border-left-color:var(--warn)} .note.warn .label{color:var(--warn)}
+
+.trap{background:var(--deny-soft);border:1px solid transparent;border-radius:8px;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.trap .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--deny);display:block;margin-bottom:6px;font-weight:600}
+.trap p:last-child{margin-bottom:0}
+
+/* ---------- code ---------- */
+.code{background:var(--inset);border:1px solid var(--line);border-radius:8px;overflow-x:auto;margin:0 0 20px}
+.code pre{margin:0;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.75;color:var(--ink)}
+.code .cap{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding:10px 20px 0}
+.k{color:var(--accent)} .s{color:var(--ink-2)} .c{color:var(--ink-3)} .d{color:var(--deny)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 22px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+th,td{text-align:left;padding:12px 15px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:none}
+td.yes{color:var(--allow);font-weight:600} td.no{color:var(--deny);font-weight:600}
+
+/* ---------- eval ladder ---------- */
+.ladder{display:grid;gap:0;margin:0 0 8px}
+.rung{display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.rung .no{font-family:var(--mono);font-size:12px;color:var(--ink-3);text-align:center}
+.rung .q{font-size:15px;line-height:1.6}
+.rung .q small{display:block;color:var(--ink-3);font-size:12.5px;line-height:1.6;margin-top:2px}
+.out{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.out.deny{background:var(--deny-soft);color:var(--deny)}
+.out.allow{background:var(--allow-soft);color:var(--allow)}
+.drop{height:14px;margin-left:33px;border-left:2px solid var(--line)}
+.terminal{margin-top:14px;padding:14px 16px;border-radius:8px;background:var(--allow-soft);color:var(--allow);font-weight:700;font-size:15px}
+
+/* ---------- svg figure ---------- */
+figure{margin:0 0 22px}
+.fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+figcaption{font-size:13px;color:var(--ink-3);margin-top:10px;line-height:1.7}
+svg text{font-family:var(--sans)}
+
+/* ---------- judgement list ---------- */
+.judge{display:grid;gap:8px;margin:0 0 22px}
+.judge .row{display:grid;grid-template-columns:1fr;gap:4px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+@media (min-width:640px){ .judge .row{grid-template-columns:1fr auto 1fr;gap:14px;align-items:center} }
+.judge .cue{font-size:14.5px;color:var(--ink-2)}
+.judge .arrow{font-family:var(--mono);color:var(--ink-3);font-size:13px}
+.judge .ans{font-size:14.5px;font-weight:700;color:var(--accent)}
+
+/* ---------- quiz ---------- */
+details.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin:0 0 12px;overflow:hidden}
+details.q summary{cursor:pointer;padding:16px 18px;font-weight:500;line-height:1.75;list-style:none;font-size:15.5px}
+details.q summary::-webkit-details-marker{display:none}
+details.q summary::after{content:"解答を見る";display:block;font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:10px;letter-spacing:.08em}
+details.q[open] summary::after{content:"閉じる";color:var(--ink-3)}
+details.q summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.q .a{padding:0 18px 18px;border-top:1px solid var(--line);margin-top:0;padding-top:16px}
+details.q .a p{margin-bottom:12px;font-size:15px}
+details.q .a p:last-child{margin-bottom:0}
+.qnum{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.1em;display:block;margin-bottom:7px}
+.correct{color:var(--allow);font-weight:700}
+.opts{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:5px}
+.opts li{font-size:14.5px;color:var(--ink-2);margin:0;padding-left:1.8em;text-indent:-1.8em}
+
+/* ---------- homework ---------- */
+.hw{display:grid;gap:10px;margin:0 0 22px}
+.hw .item{display:grid;grid-template-columns:auto 1fr;gap:13px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;align-items:start}
+.hw .box{width:15px;height:15px;border:1.5px solid var(--ink-3);border-radius:3px;margin-top:6px}
+.hw .t{font-size:15px;line-height:1.7}
+.hw .t small{display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+
+footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3);line-height:1.8}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">AWS SAA-C03 / W4 座学</p>
+  <h1>データベース ―― 可用性のためか、性能のためか</h1>
+  <p class="standfirst">この分野で最も多い失点は、Multi-AZ とリードレプリカの混同です。前者は可用性のため、後者は読み取り性能のため。目的が違うものを同じ「複製」として覚えていると、設問文の要件を読み違えます。今日はその区別を軸に、RDS・Aurora・DynamoDB・ElastiCache を整理します。</p>
+  <div class="meta"><span>所要 60-90分</span><span>前提 W3 読了</span><span>ドメイン2・3</span></div>
+</header>
+
+<div class="cols">
+
+<nav class="toc">
+  <h2>目次</h2>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
+    <li><a href="#s2"><span class="n">02</span>まず何を選ぶか</a></li>
+    <li><a href="#s3"><span class="n">03</span>RDS</a></li>
+    <li><a href="#s4"><span class="n">04</span>Aurora</a></li>
+    <li><a href="#s5"><span class="n">05</span>DynamoDB</a></li>
+    <li><a href="#s6"><span class="n">06</span>ElastiCache</a></li>
+    <li><a href="#s7"><span class="n">07</span>分析とその他</a></li>
+    <li><a href="#s8"><span class="n">08</span>試験での判断軸</a></li>
+    <li><a href="#s9"><span class="n">09</span>確認問題</a></li>
+    <li><a href="#s10"><span class="n">10</span>今日の宿題</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="s1" data-toc="ゴール">
+
+  <span class="h2num">01</span>
+  <h2>この講義のゴール</h2>
+  <p class="lead">データベースの設問は、サービス名を知っているかを問うものではありません。要件の一文を読んで、どの軸で切るかを問われます。今日終わったときに、次の3つができていれば合格です。</p>
+  <ul class="goals">
+    <li><span class="tick">01</span><div><strong>Multi-AZ とリードレプリカを、目的から即座に切り分けられる。</strong><br>設問に「可用性」と書いてあるか「読み取り負荷」と書いてあるかで、迷わず一方を選べる。</div></li>
+    <li><span class="tick">02</span><div><strong>リレーショナルか DynamoDB かを、設問の言葉から判断できる。</strong><br>「複雑な結合」「ミリ秒未満」「スキーマが頻繁に変わる」といった語を手がかりにできる。</div></li>
+    <li><span class="tick">03</span><div><strong>GSI と LSI、Redis と Memcached の使い分けを説明できる。</strong><br>どちらでも動く場面ではなく、片方しか成立しない条件を言える。</div></li>
+  </ul>
+  <div class="note">
+    <span class="label">この分野の位置づけ</span>
+    <p>データベースはドメイン2（回復力のあるアーキテクチャ）とドメイン3（高性能なアーキテクチャ）の両方にまたがります。同じ RDS の設問でも、ドメイン2では「AZ障害で落ちないか」を、ドメイン3では「読み取りが詰まらないか」を聞いてきます。<strong>同じサービスが、問われる観点によって別の答えを要求する</strong>――これがデータベース分野の難しさであり、逆に言えば、観点さえ読み取れれば選択肢は一気に2つに絞れます。</p>
+  </div></section>
+
+<section id="s2" data-toc="まず何を選ぶか">
+
+  <span class="h2num">02</span>
+  <h2>選択はワークロードの言葉から始まる</h2>
+  <p class="lead">AWSのデータベースは十数種類あります。しかしSAAで問われる選択は、ほとんどの場合「リレーショナルか、キーバリューか、それ以外か」の三択に還元できます。設問文に現れる言葉から逆引きしてください。</p>
+
+  <h3>三つの家族</h3>
+  <div class="tw"><table>
+    <thead><tr><th>家族</th><th>設問に現れる言葉</th><th>第一候補</th></tr></thead>
+    <tbody>
+      <tr><td><strong>リレーショナル</strong><br><span style="color:var(--ink-3);font-size:13px">RDS / Aurora</span></td><td>トランザクション、ACID、複雑な結合、集計クエリ、既存のスキーマ、レポート、既存のOracle／SQL Serverからの移行、正規化</td><td>Aurora（MySQL／PostgreSQL互換で済むなら）、それ以外は RDS</td></tr>
+      <tr><td><strong>キーバリュー／ドキュメント</strong><br><span style="color:var(--ink-3);font-size:13px">DynamoDB</span></td><td>ミリ秒未満、一桁ミリ秒、サーバーレス、スキーマレス、キーで一意に引く、予測不能なトラフィック、無制限にスケール、運用管理をなくしたい</td><td>DynamoDB</td></tr>
+      <tr><td><strong>専用型</strong><br><span style="color:var(--ink-3);font-size:13px">Redshift ほか</span></td><td>分析、BI、データウェアハウス、ペタバイト、列指向、時系列、グラフ、関係性の探索</td><td>用途ごとの専用サービス</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>「速い」には二種類ある</h3>
+  <p>設問で最も紛らわしいのが速度の表現です。ここを取り違えると、DynamoDB と ElastiCache のどちらを選ぶかで間違えます。</p>
+  <ul>
+    <li><strong>一桁ミリ秒（single-digit millisecond）</strong>――DynamoDB の標準的な応答です。この語が出たら DynamoDB を疑ってください。</li>
+    <li><strong>マイクロ秒（microsecond）</strong>――キャッシュ層の世界です。DynamoDB の前段なら DAX、リレーショナルの前段なら ElastiCache。<em>「マイクロ秒」と書いてあるのに DynamoDB 単体を選ぶのは不正解</em>です。</li>
+    <li><strong>クエリが数秒〜数分かかってよい代わりに巨大</strong>――分析系です。Redshift か Athena の領域で、RDS に押し込む選択肢は不正解になります。</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>「<strong>アクセスパターンが決まっているか</strong>」が、リレーショナルと DynamoDB を分ける本質です。リレーショナルは「どう問い合わせるかを後で決められる」代わりに、スケールに上限があります。DynamoDB は「どう問い合わせるかを先に決める」代わりに、規模に事実上の上限がありません。設問に「新しい分析要件が次々に出てくる」とあればリレーショナル、「決まった画面から決まったキーで引くだけ」とあれば DynamoDB です。</p>
+  </div>
+
+  <div class="trap">
+    <span class="label">よくある誤解</span>
+    <p>「DynamoDB は NoSQL だからスキーマを考えなくてよい」――逆です。<strong>DynamoDB こそ設計を先にしなければならない</strong>データベースです。テーブルを作ったあとにパーティションキーを変更することはできません。リレーショナルなら後から索引を足せますが、DynamoDB では前提が崩れるとテーブルを作り直すことになります。この非対称性が、後の GSI／LSI の設問に直結します。</p>
+  </div></section>
+
+<section id="s3" data-toc="RDS">
+
+  <span class="h2num">03</span>
+  <h2>RDS ―― 複製が二種類ある理由</h2>
+  <p class="lead">RDS の設問は、ほぼ Multi-AZ とリードレプリカの区別に集約されます。どちらも「データベースが増える」ように見えますが、作られる理由がまったく違います。ここを一度で固めます。</p>
+
+  <h3>目的から入る</h3>
+  <p>Multi-AZ は<strong>壊れたときのため</strong>の仕組みです。別のアベイラビリティゾーンに待機系を置き、プライマリが死んだら自動的に切り替えます。待機系は普段なにもしません。読み取りにも使えません。「無駄では」と思うかもしれませんが、待機系に仕事をさせない<em>から</em>、切り替えたときに遅れがゼロで済むのです。</p>
+  <p>リードレプリカは<strong>混んできたときのため</strong>の仕組みです。読み取り専用の複製を増やし、参照系のクエリを逃がします。こちらは非同期複製なので、わずかに古いデータが返ることがあります。その代わり、同じリージョンにも別リージョンにも置けますし、数も増やせます。</p>
+
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 860 330" width="860" height="330" role="img" aria-label="左にMulti-AZの同期複製とスタンバイ、右にリードレプリカの非同期複製と読み取り分散を並べた対比図">
+        <rect x="16" y="34" width="400" height="278" rx="10" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="32" y="60" font-size="12.5" fill="var(--ink-3)" font-weight="600">Multi-AZ ／ 目的は可用性</text>
+
+        <rect x="46" y="86" width="150" height="56" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="121" y="110" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">プライマリ</text>
+        <text x="121" y="128" font-size="11" fill="var(--ink-3)" text-anchor="middle">AZ-a / 読み書き</text>
+
+        <line x1="196" y1="114" x2="252" y2="114" stroke="var(--ink-3)" stroke-width="2"/>
+        <path d="M252 114 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <text x="224" y="104" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">同期</text>
+
+        <rect x="262" y="86" width="132" height="56" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="328" y="110" font-size="13.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">スタンバイ</text>
+        <text x="328" y="128" font-size="11" fill="var(--ink-3)" text-anchor="middle">AZ-c / 接続不可</text>
+
+        <rect x="46" y="166" width="348" height="40" rx="6" fill="var(--allow-soft)"/>
+        <text x="220" y="191" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">エンドポイントは1つ。障害時に向き先が自動で入れ替わる</text>
+
+        <rect x="46" y="222" width="348" height="68" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/>
+        <text x="62" y="245" font-size="11.5" fill="var(--ink-2)" font-weight="700">得られるもの</text>
+        <text x="62" y="264" font-size="11.5" fill="var(--ink-3)">データ損失なしの自動フェイルオーバー</text>
+        <text x="62" y="281" font-size="11.5" fill="var(--ink-3)">得られないもの ： 読み取り性能</text>
+
+        <rect x="444" y="34" width="400" height="278" rx="10" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="460" y="60" font-size="12.5" fill="var(--ink-3)" font-weight="600">リードレプリカ ／ 目的は読み取り性能</text>
+
+        <rect x="474" y="86" width="150" height="56" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="549" y="110" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">プライマリ</text>
+        <text x="549" y="128" font-size="11" fill="var(--ink-3)" text-anchor="middle">読み書き</text>
+
+        <line x1="624" y1="114" x2="680" y2="114" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="4 3"/>
+        <path d="M680 114 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <text x="652" y="104" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">非同期</text>
+
+        <rect x="690" y="80" width="132" height="32" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="756" y="101" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">レプリカ 1</text>
+        <rect x="690" y="118" width="132" height="32" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="756" y="139" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">レプリカ 2 …</text>
+
+        <rect x="474" y="166" width="348" height="40" rx="6" fill="var(--warn-soft)"/>
+        <text x="648" y="191" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">エンドポイントは別。アプリが読み先を振り分ける</text>
+
+        <rect x="474" y="222" width="348" height="68" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/>
+        <text x="490" y="245" font-size="11.5" fill="var(--ink-2)" font-weight="700">得られるもの</text>
+        <text x="490" y="264" font-size="11.5" fill="var(--ink-3)">読み取りのスケールアウト、別リージョンへの複製</text>
+        <text x="490" y="281" font-size="11.5" fill="var(--ink-3)">得られないもの ： 自動フェイルオーバー</text>
+      </svg>
+    </div>
+    <figcaption>左右で「同期か非同期か」「エンドポイントが1つか複数か」が対になっています。<strong>設問が可用性を問うているのか、性能を問うているのかを先に読み取れば、この図のどちら側かは自動的に決まります。</strong></figcaption>
+  </figure>
+
+  <h3>比較表で固める</h3>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>Multi-AZ 配置</th><th>リードレプリカ</th></tr></thead>
+    <tbody>
+      <tr><td><strong>目的</strong></td><td>可用性・耐障害性</td><td>読み取り性能のスケールアウト</td></tr>
+      <tr><td><strong>複製方式</strong></td><td>同期</td><td>非同期</td></tr>
+      <tr><td><strong>複製先</strong></td><td>同一リージョンの別AZ</td><td>同一AZ・別AZ・<strong>別リージョン</strong>のいずれも可</td></tr>
+      <tr><td><strong>普段の読み取り</strong></td><td class="no">できない（スタンバイには接続不可）</td><td class="yes">できる（これが存在理由）</td></tr>
+      <tr><td><strong>自動フェイルオーバー</strong></td><td class="yes">あり</td><td class="no">なし（手動で昇格させる）</td></tr>
+      <tr><td><strong>エンドポイント</strong></td><td>1つ。DNSの向き先が切り替わるのでアプリの変更は不要</td><td>レプリカごとに別。アプリ側で読み書きを振り分ける</td></tr>
+      <tr><td><strong>データの鮮度</strong></td><td>プライマリと完全に一致</td><td>レプリケーションラグの分だけ遅れる</td></tr>
+      <tr><td><strong>バックアップ時の影響</strong></td><td>スタンバイから取得するのでI/O停止が起きない</td><td>―</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>数について。RDS for MySQL／MariaDB／PostgreSQL では、1つのプライマリあたり<strong>最大15個</strong>のリードレプリカを作成できます。ただし設問で個数が焦点になることは稀で、問われるのはほぼ上の表の行です。</p>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「読み取りが重いのでレポート用のクエリを逃がしたい。<strong>Multi-AZ を有効にする</strong>」――不正解です。スタンバイには接続できないので、読み取り負荷は1ミリも減りません。逆に「AZ障害時にダウンタイムを最小化したい。<strong>リードレプリカを作る</strong>」も不正解です。レプリカは自動では昇格しません。この2つを入れ替えた選択肢は、ほぼ毎回どこかの設問に紛れています。</p>
+  </div>
+
+  <div class="note">
+    <span class="label">Multi-AZ DB クラスター</span>
+    <p>近年は Multi-AZ の派生形として「Multi-AZ DB クラスター」があります。こちらはライター1台と<strong>読み取り可能なスタンバイ2台</strong>の計3台を3つのAZに置く構成で、従来の Multi-AZ より速いフェイルオーバーと、スタンバイの読み取り活用を両立します。設問で「Multi-AZ なのに読める」と読めるときは、この構成を指しています。ただし従来型の「スタンバイは読めない」が原則であることは変わりません。</p>
+  </div>
+
+  <h3>バックアップとスナップショットは別物</h3>
+  <p>ここも混同されます。呼び名が似ているだけで、管理の主体も寿命も違います。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>自動バックアップ</th><th>手動スナップショット</th></tr></thead>
+    <tbody>
+      <tr><td><strong>取得</strong></td><td>AWSが日次で自動取得。加えてトランザクションログを継続的に保存</td><td>人またはスクリプトが任意のタイミングで取得</td></tr>
+      <tr><td><strong>保持期間</strong></td><td>0〜35日。0は自動バックアップの無効化を意味する</td><td>明示的に削除するまで無期限</td></tr>
+      <tr><td><strong>できる復元</strong></td><td class="yes">ポイントインタイムリカバリ（任意の時点へ）</td><td>そのスナップショットの時点へ</td></tr>
+      <tr><td><strong>DB削除時</strong></td><td class="no">原則として一緒に削除される</td><td class="yes">残る</td></tr>
+      <tr><td><strong>別リージョンへ</strong></td><td>クロスリージョン自動バックアップの設定が必要</td><td class="yes">コピーするだけ</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>復元の挙動にも注意が必要です。<strong>バックアップからの復元は、常に新しいDBインスタンスの作成になります。</strong>既存のインスタンスに上書きすることはできません。復元後にエンドポイントが変わるため、アプリの向き先を切り替える作業が発生します。設問で「復元にかかる時間を最小化したい」と問われたとき、この作り直しが必要な点が答えの分かれ目になることがあります。</p>
+
+  <h3>暗号化は最初に決める</h3>
+  <p>RDS の保管時暗号化は KMS で行いますが、<em>後から有効化することができません。</em>これが設問の題材になります。既存の暗号化されていないDBを暗号化するには、次の手順を踏みます。</p>
+
+  <ol class="body">
+    <li>暗号化されていないDBのスナップショットを取得する。</li>
+    <li><strong>そのスナップショットをコピーする。コピーの操作の中で暗号化を指定する。</strong></li>
+    <li>暗号化されたコピーから新しいDBインスタンスを復元する。</li>
+    <li>アプリの接続先を新しいエンドポイントに切り替える。</li>
+  </ol>
+
+  <p>要点は2番です。スナップショット自体に後から暗号化をかけることはできず、<strong>コピーという操作が暗号化の入口になっている</strong>――ここを知っているかどうかだけで一問取れます。なお、暗号化されたDBのリードレプリカやスナップショットは自動的に暗号化され、暗号化を外すことはできません。</p>
+
+  <div class="note warn">
+    <span class="label">停止しても課金は続く</span>
+    <p>RDS インスタンスは停止できますが、停止していても<strong>プロビジョニング済みストレージとバックアップストレージの課金は続きます</strong>。止まるのはインスタンス時間（コンピュート）の課金だけです。さらに、停止状態は<strong>最大7日間</strong>で、それを過ぎるとAWSが自動的に起動します。「週末は止めておけば無料」ではありません。学習用に作ったものは、止めるのではなく削除してください。</p>
+  </div>
+
+  <h3>RDS Proxy ―― コネクションが枯れるとき</h3>
+  <p>RDS Proxy は、アプリとDBの間に入るフルマネージドのコネクションプールです。SAAで問われる使いどころは、ほぼ次の2つです。</p>
+  <ul>
+    <li><strong>Lambda など、同時実行数が急増する構成。</strong>Lambda は呼び出しごとに実行環境が増えるため、それぞれがDB接続を張ると容易に上限に達します。Proxy が接続を束ねて再利用することで、DB側の接続数を抑えます。設問に「Lambda」「コネクション枯渇」「too many connections」が出たら Proxy です。</li>
+    <li><strong>フェイルオーバー時のダウンタイムを短くしたい。</strong>Proxy はアプリからの接続を維持したまま、裏側で新しいプライマリへ張り替えます。アプリから見た切り替え時間が短くなります。</li>
+  </ul>
+  <p>あわせて、DBの資格情報を Secrets Manager で管理し、アプリからは IAM 認証で Proxy に接続する構成が取れます。<strong>「認証情報をアプリに持たせたくない」という要件と組み合わせて出題されます</strong>――W1でやったIAMの原則がそのまま効いてくる場面です。</p></section>
+
+<section id="s4" data-toc="Aurora">
+
+  <span class="h2num">04</span>
+  <h2>Aurora ―― ストレージが分離されている意味</h2>
+  <p class="lead">Aurora を「速いRDS」と覚えていると、設問の半分を落とします。Aurora の特徴はほぼすべて、コンピュートとストレージが分離されているという一点から導かれます。そこを押さえれば、個別の機能は暗記せずに説明できます。</p>
+
+  <h3>構成を先に理解する</h3>
+  <p>Aurora のクラスターは、<strong>1つの共有ストレージ層</strong>と、そこにぶら下がる<strong>複数のDBインスタンス</strong>でできています。ストレージ層は3つのAZにまたがって<strong>データを6重に保持</strong>し、10GB単位で自動的に拡張します。上限は Aurora のバージョンによって 128 TiB または 256 TiB です。</p>
+  <p>この構造から、次のことが自動的に導かれます。</p>
+  <ul>
+    <li><strong>レプリカを追加してもデータのコピーは発生しない。</strong>同じストレージを見るだけなので、追加が速く、レプリケーションラグも小さくなります。RDS のリードレプリカが「別のDBにデータを流し込む」のとは仕組みが違います。</li>
+    <li><strong>ストレージの容量設計が不要。</strong>事前に何GBと決める必要がなく、使った分だけ増えます。RDS では割り当てた容量に対して課金されるのとは対照的です。</li>
+    <li><strong>ライターが死んでもデータは無事。</strong>インスタンスとストレージが別なので、リーダーの1台を昇格させれば復旧します。</li>
+  </ul>
+
+  <h3>エンドポイントを使い分ける</h3>
+  <div class="tw"><table>
+    <thead><tr><th>エンドポイント</th><th>向き先</th><th>使う場面</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ライターエンドポイント</strong></td><td>常に現在のプライマリ1台</td><td>書き込み。フェイルオーバー時は自動で新しいプライマリを指す</td></tr>
+      <tr><td><strong>リーダーエンドポイント</strong></td><td>レプリカ群に負荷分散</td><td>読み取り。レプリカを増減しても<strong>アプリの設定変更が不要</strong></td></tr>
+      <tr><td><strong>カスタムエンドポイント</strong></td><td>指定したインスタンスの集合</td><td>「分析クエリは大きいインスタンスだけに送る」といった振り分け</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>リーダーエンドポイントは、RDS のリードレプリカとの決定的な差です。RDS ではレプリカを1台足すたびにアプリの接続先リストを更新する必要がありますが、Aurora ではエンドポイントが勝手に面倒を見ます。<strong>設問に「レプリカを追加してもアプリケーションを変更したくない」とあれば Aurora のリーダーエンドポイント</strong>です。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>Aurora レプリカ</th><th>RDS リードレプリカ</th></tr></thead>
+    <tbody>
+      <tr><td><strong>データの持ち方</strong></td><td>共有ストレージを参照（コピーを持たない）</td><td>自分専用のコピーを持つ</td></tr>
+      <tr><td><strong>フェイルオーバー</strong></td><td class="yes">自動。優先順位に従ってレプリカが昇格する</td><td class="no">手動で昇格させる必要がある</td></tr>
+      <tr><td><strong>ラグ</strong></td><td>通常はごく小さい</td><td>負荷や距離に応じて大きくなりうる</td></tr>
+      <tr><td><strong>読み取りの分散</strong></td><td class="yes">リーダーエンドポイントが自動で行う</td><td>アプリが自分で振り分ける</td></tr>
+      <tr><td><strong>台数</strong></td><td>最大15</td><td>最大15（MySQL／MariaDB／PostgreSQL）</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>台数は同じでも、<strong>「自動で昇格するか」と「エンドポイントが面倒を見るか」が違う</strong>――ここが答えの分かれ目になります。</p>
+
+  <h3>Auto Scaling とサーバーレス</h3>
+  <p>Aurora のレプリカには Auto Scaling を設定できます。CPU使用率や接続数をトリガーに、リーダーを自動で増減させる仕組みです。読み取り負荷が日中だけ跳ねるような設問では、「リードレプリカを固定台数用意する」よりこちらが正解になります。</p>
+  <p>もう一段進んだのが <strong>Aurora Serverless v2</strong> です。インスタンスクラスを選ぶ代わりに、ACU（Aurora Capacity Unit）の下限と上限を指定し、負荷に応じて0.5 ACU刻みで自動的に容量が変わります。上限は最大256 ACU、対応バージョンでは下限を0にして未使用時に一時停止させることもできます。</p>
+  <ul>
+    <li><strong>使いどころ</strong>――開発環境、負荷が予測できないアプリ、断続的にしか使われないワークロード。「ピークが読めない」「使わない時間が長い」と書いてあれば候補です。</li>
+    <li><strong>使わないところ</strong>――負荷が安定しているシステム。常時動いているなら、プロビジョンドのほうが費用対効果は高くなります。</li>
+  </ul>
+
+  <h3>Global Database</h3>
+  <p>Aurora Global Database は、プライマリリージョンのクラスターから<strong>最大10のセカンダリリージョン</strong>へ、専用の基盤で複製する仕組みです。複製の遅延は通常1秒未満で、セカンダリ側は読み取りに使えます。</p>
+  <p>設問での使われ方は2つです。ひとつは<strong>災害対策</strong>――リージョン丸ごとの障害に備え、別リージョンへ昇格させる。もうひとつは<strong>グローバルな読み取り</strong>――世界各地の利用者に、近いリージョンから低遅延で読ませる。「リージョン障害からの復旧を分単位で」「複数大陸にまたがる読み取り」といった語が手がかりです。クロスリージョンのリードレプリカでも似たことはできますが、遅延と昇格の速さで Global Database が選ばれます。</p>
+
+  <h3>Backtrack</h3>
+  <p>Backtrack は、クラスターを<strong>過去の時点まで巻き戻す</strong>機能です。スナップショットからの復元と違い、新しいクラスターを作らずに、その場で時間を戻します。復元より格段に速く、誤って <code>DELETE</code> を流してしまったといった事故から短時間で回復できます。</p>
+  <p>ただし制約が多く、そこが出題されます。</p>
+  <ul>
+    <li><strong>Aurora MySQL 互換でのみ利用可能。</strong>PostgreSQL 互換では使えません。</li>
+    <li>巻き戻せる幅は<strong>最大72時間</strong>です。</li>
+    <li><strong>クラスターの作成時に有効化しておく必要があります。</strong>後から既存のクラスターに追加することはできません。</li>
+    <li>巻き戻しの間、データベースは短時間停止します。無停止ではありません。</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>「<strong>誤操作からの高速な復旧</strong>」が要件で、エンジンが Aurora MySQL なら Backtrack。PostgreSQL だったり、72時間より前に戻したければポイントインタイムリカバリ。両方とも成立しない書き方（たとえば「別リージョンに退避したい」）ならスナップショットのコピーです。要件の時間軸と、エンジンの2つを見てください。</p>
+  </div></section>
+
+<section id="s5" data-toc="DynamoDB">
+
+  <span class="h2num">05</span>
+  <h2>DynamoDB ―― キーで設計がほぼ決まる</h2>
+  <p class="lead">DynamoDB の設問は、性能でもコストでも、最後はキー設計に帰着します。パーティションキーが何かを決めた時点で、そのテーブルにできることの大半が決まってしまうからです。</p>
+
+  <h3>2種類の主キー</h3>
+  <p>DynamoDB の主キーには2つの形があります。</p>
+  <ul>
+    <li><strong>パーティションキーのみ</strong>――値が一意に1アイテムを指します。ユーザーIDで引くだけのテーブルなど。</li>
+    <li><strong>パーティションキー + ソートキー（複合キー）</strong>――同じパーティションキーの中に複数のアイテムが並び、ソートキーで順序が決まります。「ユーザーIDごとの注文履歴を日時順に」といった構造がこれです。</li>
+  </ul>
+  <p>パーティションキーはデータの物理的な置き場所を決めるハッシュの元になります。だから<strong>値が広く散らばっていることが重要</strong>です。「国名」のように偏りのある属性をパーティションキーにすると、特定のパーティションにアクセスが集中します。これがホットパーティションで、設問では「一部のキーだけスロットリングされる」という形で現れます。対処は、キーに接尾辞を付けて分散させるか、より散らばる属性を選び直すことです。</p>
+  <p>ソートキーが効くのは<strong>範囲の問い合わせ</strong>です。「この日付以降」「この接頭辞で始まるもの」をQueryで一発で取れます。逆に、ソートキーにない条件で絞りたい場合は、全件を舐めるScanになってしまいます。<em>設問に「Scanを使う」選択肢があれば、まず疑ってください。</em>効率が悪く、たいてい不正解側に置かれます。</p>
+
+  <h3>GSI と LSI</h3>
+  <p>主キー以外の属性で引きたくなったときに使うのがセカンダリインデックスです。2種類あり、違いがそのまま出題されます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>GSI<br><span style="font-weight:400;text-transform:none;letter-spacing:0">グローバルセカンダリインデックス</span></th><th>LSI<br><span style="font-weight:400;text-transform:none;letter-spacing:0">ローカルセカンダリインデックス</span></th></tr></thead>
+    <tbody>
+      <tr><td><strong>パーティションキー</strong></td><td class="yes">別の属性にできる</td><td class="no">ベーステーブルと同じもの固定</td></tr>
+      <tr><td><strong>ソートキー</strong></td><td>任意</td><td>別の属性にできる</td></tr>
+      <tr><td><strong>作成のタイミング</strong></td><td class="yes">テーブル作成後でも追加・削除できる</td><td class="no">テーブル作成時のみ。後から追加できない</td></tr>
+      <tr><td><strong>整合性</strong></td><td class="no">結果整合性の読み取りのみ</td><td class="yes">強い整合性の読み取りも可能</td></tr>
+      <tr><td><strong>キャパシティ</strong></td><td>インデックス専用に持つ</td><td>ベーステーブルのものを消費する</td></tr>
+      <tr><td><strong>個数の上限</strong></td><td>1テーブルあたり20（既定のクォータ）</td><td>1テーブルあたり5</td></tr>
+      <tr><td><strong>サイズ制約</strong></td><td>特になし</td><td class="no">同一パーティションキーのアイテムコレクションが10GBを超えられない</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>実務でも試験でも、<strong>迷ったら GSI</strong> です。LSI は強い整合性が必要な場合に限って選ぶもので、後から追加できず10GB制約も抱えるため、使いどころが狭い。設問で LSI が正解になるのは、ほぼ「<strong>強い整合性で、別のソート順が欲しい</strong>」という書き方をされたときだけです。逆に「<strong>運用中のテーブルに新しい検索条件を足したい</strong>」と来たら、LSI は後から作れないので自動的に GSI になります。</p>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「本番稼働中のテーブルに、新しい属性での検索を追加したい。<strong>LSI を作成する</strong>」――不正解です。LSI はテーブル作成時にしか作れません。この選択肢は、LSI という語を知っているだけの受験者を落とすために置かれています。「後から」「既存のテーブルに」という語を見たら、その時点で LSI は消えます。</p>
+  </div>
+
+  <h3>キャパシティモード</h3>
+  <p>DynamoDB の課金と性能を決めるのがキャパシティモードです。</p>
+  <ul>
+    <li><strong>プロビジョンドモード</strong>――読み書きのキャパシティユニットを事前に指定します。1 WCU は1KBまでのアイテムを毎秒1回書き込む能力、1 RCU は4KBまでのアイテムを毎秒1回<strong>強く整合性のある読み取り</strong>、または毎秒2回の結果整合性のある読み取りをする能力です。トランザクションを使う場合はこの2倍を消費します。負荷が予測できるなら最も安くなります。Auto Scaling を併用すれば、指定した範囲内で自動的に増減します。</li>
+    <li><strong>オンデマンドモード</strong>――事前の指定が不要で、来たリクエストの分だけ課金されます。単価はプロビジョンドより高いものの、容量の見積もりが要りません。<strong>負荷が予測できない、急峻なスパイクがある、新規サービスで実績がない</strong>――このいずれかが設問に書かれていればオンデマンドです。</li>
+  </ul>
+  <p>切り分けは単純です。<em>「予測できるか」だけを見てください。</em>予測できるならプロビジョンド + Auto Scaling、予測できないならオンデマンド。「コストを最適化したい」という語だけでは決まらず、その前に負荷の性質が書かれているはずです。</p>
+
+  <h3>整合性</h3>
+  <p>DynamoDB の読み取りは既定で<strong>結果整合性</strong>です。書き込み直後に読むと、まだ反映前の値が返ることがあります。パラメータで<strong>強い整合性</strong>の読み取りを要求でき、その場合は必ず最新の値が返りますが、消費するキャパシティが2倍になり、レイテンシもやや増えます。</p>
+  <p>設問では「書き込んだ直後に必ず最新を読む必要がある」と明記されているかどうかで判断します。<strong>GSI からの読み取りは常に結果整合性</strong>であることも忘れないでください――「強い整合性が必要」かつ「主キー以外で引く」という要件が並んだら、GSI では成立せず LSI が答えになります。</p>
+
+  <h3>周辺の機能を目的から引く</h3>
+  <div class="tw"><table>
+    <thead><tr><th>要件</th><th>使うもの</th><th>押さえる点</th></tr></thead>
+    <tbody>
+      <tr><td>マイクロ秒の読み取り、同じアイテムを何度も読む</td><td><strong>DAX</strong></td><td>DynamoDB 専用のキャッシュ。アプリのコード変更がほぼ不要。<strong>書き込みが多いワークロードには効かない</strong></td></tr>
+      <tr><td>テーブルの変更を契機に処理を走らせたい</td><td><strong>DynamoDB Streams</strong></td><td>変更履歴を24時間保持。Lambda を紐づけるのが定番。新旧どちらのイメージを流すかを選べる</td></tr>
+      <tr><td>古いデータを自動的に消してコストを下げたい</td><td><strong>TTL</strong></td><td>属性に失効時刻（エポック秒）を入れておくと自動削除。削除は即時ではなく、<strong>削除にキャパシティを消費しない</strong>のが利点</td></tr>
+      <tr><td>複数リージョンで読み書きしたい</td><td><strong>Global Tables</strong></td><td>マルチリージョン・マルチアクティブ。各リージョンで書ける。競合は最終書き込み優先で解決される</td></tr>
+      <tr><td>複数アイテムをまとめて成功/失敗させたい</td><td><strong>トランザクション</strong></td><td>1回のトランザクションで最大100アイテム。キャパシティ消費は2倍</td></tr>
+      <tr><td>誤削除からの復旧</td><td><strong>PITR</strong></td><td>ポイントインタイムリカバリ。有効化すると過去の任意の時点に復元できる</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>なお、DynamoDB の1アイテムは<strong>最大400KB</strong>です。画像や大きな文書を直接入れることはできません。設問で「大きなオブジェクトを扱う」と来たら、<strong>実体はS3に置き、DynamoDBにはそのキーだけを入れる</strong>というパターンが答えになります。これはSAAで繰り返し出る構成です。</p>
+
+  <div class="note">
+    <span class="label">Global Tables とクロスリージョンレプリカの違い</span>
+    <p>Aurora の Global Database は<strong>セカンダリが読み取り専用</strong>ですが、DynamoDB の Global Tables は<strong>どのリージョンでも書き込めます</strong>。「複数リージョンで書き込みたい」という要件が出たら、リレーショナルでは難しく、DynamoDB Global Tables が素直な答えになる――この非対称性が設問の題材になります。</p>
+  </div></section>
+
+<section id="s6" data-toc="ElastiCache">
+
+  <span class="h2num">06</span>
+  <h2>ElastiCache ―― 前に置くか、状態を持たせるか</h2>
+  <p class="lead">キャッシュは「データベースが遅いから前に置く」だけのものではありません。SAAでは、セッション管理という別の用途でも頻繁に問われます。まずエンジンの選択から整理します。</p>
+
+  <h3>Redis と Memcached</h3>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>Redis（Valkey を含む）</th><th>Memcached</th></tr></thead>
+    <tbody>
+      <tr><td><strong>データ構造</strong></td><td>リスト、セット、ソート済みセット、ハッシュなど</td><td>単純な文字列・オブジェクトのみ</td></tr>
+      <tr><td><strong>レプリケーション</strong></td><td class="yes">あり</td><td class="no">なし</td></tr>
+      <tr><td><strong>Multi-AZ と自動フェイルオーバー</strong></td><td class="yes">あり</td><td class="no">なし</td></tr>
+      <tr><td><strong>永続化・バックアップ</strong></td><td class="yes">あり（スナップショットから復元できる）</td><td class="no">なし（ノードが落ちればデータは消える）</td></tr>
+      <tr><td><strong>Pub/Sub</strong></td><td class="yes">あり</td><td class="no">なし</td></tr>
+      <tr><td><strong>マルチスレッド</strong></td><td class="no">なし</td><td class="yes">あり（コアを使い切れる）</td></tr>
+      <tr><td><strong>水平分割</strong></td><td>クラスターモード有効時にシャーディング可能</td><td class="yes">ノード間でデータを分散できる</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>試験での切り分けは、実はこの表の全部を覚える必要はありません。<strong>「消えたら困るか」で決まります。</strong></p>
+  <ul>
+    <li><strong>消えたら困る／高可用性が要る／複雑なデータ構造が要る</strong> → Redis。設問に「フェイルオーバー」「永続化」「リーダーボード」「Pub/Sub」「セッション」のいずれかが出たら Redis です。</li>
+    <li><strong>消えても作り直せる単純なキャッシュで、とにかく安く速く、水平に足していきたい</strong> → Memcached。「シンプルなキャッシュ」「スケールアウトしたいだけ」という書き方をされます。</li>
+  </ul>
+  <p>迷ったときは Redis が無難です。Memcached が正解になるのは、設問が明示的に「機能は不要」「シンプルで十分」と言っているときに限られます。</p>
+
+  <h3>キャッシュ戦略</h3>
+  <p>どう入れてどう読むかにも定石があり、それぞれ短所が設問の題材になります。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>遅延読み込み<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Lazy Loading</span></th><th>ライトスルー<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Write-Through</span></th></tr></thead>
+    <tbody>
+      <tr><td><strong>入れるタイミング</strong></td><td>読み取りで見つからなかったとき（キャッシュミス時）</td><td>データベースに書き込むのと同時に</td></tr>
+      <tr><td><strong>キャッシュの中身</strong></td><td>実際に読まれたデータだけ。無駄が少ない</td><td>書かれたデータすべて。読まれないデータも載る</td></tr>
+      <tr><td><strong>初回アクセス</strong></td><td class="no">必ずミスするので遅い</td><td class="yes">すでに載っているので速い</td></tr>
+      <tr><td><strong>データの鮮度</strong></td><td class="no">古くなりうる（TTLで緩和する）</td><td class="yes">常に最新</td></tr>
+      <tr><td><strong>弱点</strong></td><td>ミス時に3回の往復が発生する</td><td>書き込みのたびに遅延が増え、キャッシュが肥大する</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>実務では両方を組み合わせ、さらにTTLを設定して古いデータを追い出すのが定番です。設問では「<strong>キャッシュに古いデータが残ってしまう</strong>」という症状が出たら TTL の設定かライトスルーの導入、「<strong>初回アクセスだけ極端に遅い</strong>」なら遅延読み込みが原因でウォームアップかライトスルーが答え、という形で問われます。</p>
+
+  <h3>セッションストアとしてのキャッシュ</h3>
+  <p>これはキャッシュとは別の用途ですが、SAAでは頻出です。EC2を複数台に増やしてロードバランサーの後ろに置くと、ユーザーが毎回同じサーバーに当たるとは限りません。セッション情報をサーバーのメモリに持っていると、リクエストのたびにログイン状態が失われます。</p>
+  <p>解決は2つあります。</p>
+  <ul>
+    <li><strong>スティッキーセッション</strong>――ロードバランサーが同じ利用者を同じサーバーに送り続ける。手軽ですが、そのサーバーが落ちるとセッションが消え、負荷も偏ります。</li>
+    <li><strong>外部のセッションストア</strong>――ElastiCache for Redis か DynamoDB にセッションを置き、アプリケーションサーバーをステートレスにする。<em>これがSAAの推す答えです。</em></li>
+  </ul>
+  <p>「Auto Scaling でインスタンスが入れ替わるとログアウトしてしまう」という設問を見たら、外部セッションストアを選んでください。<strong>「ステートレスにする」はSAA全体を貫く設計思想</strong>で、この分野でも同じ原則が効きます。</p></section>
+
+<section id="s7" data-toc="分析とその他">
+
+  <span class="h2num">07</span>
+  <h2>分析系・専用DB・移行</h2>
+  <p class="lead">ここからは、深く覚える必要はないものの、選択肢に並んだときに「これではない」と切れるだけの知識が要る領域です。一行ずつの対応で押さえます。</p>
+
+  <h3>Redshift ―― 分析はRDSでやらない</h3>
+  <p>Redshift は列指向のデータウェアハウスです。行単位で読み書きするOLTPではなく、<strong>多数の行にまたがる集計（OLAP）</strong>に最適化されています。RDS が「注文を1件登録する」ためのものなら、Redshift は「過去3年の売上を製品カテゴリ別に集計する」ためのものです。</p>
+  <p>設問で Redshift が答えになるのは、次の語が出たときです。データウェアハウス、BI、ダッシュボード、ペタバイト規模、複雑な集計クエリ、複数のデータソースを統合した分析。逆に、「ミリ秒で応答」「1件ずつ大量に更新」と書かれていたら Redshift は不正解側です。</p>
+  <p><strong>Redshift Spectrum</strong> は、S3 に置いたままのデータに対して、Redshift から直接クエリを投げる機能です。ロードの手間と保管コストを避けたいときに使います。「S3のデータをRedshiftにロードせずに分析したい」と来たら Spectrum。なお、Redshift クラスターを持たずにS3を直接クエリしたいだけなら Athena が選択肢に入ります。<strong>クラスターの有無が両者の分かれ目</strong>です。</p>
+
+  <h3>専用データベースの一行対応</h3>
+  <ul>
+    <li><strong>DocumentDB</strong>――MongoDB互換が要件に書いてあるとき。JSON文書をそのまま格納し、既存のMongoDBアプリを載せ替える移行先です。</li>
+    <li><strong>Neptune</strong>――「関係性」「つながり」を辿るクエリが主題のとき。ソーシャルグラフ、レコメンデーション、不正検知、ナレッジグラフ。</li>
+    <li><strong>Timestream</strong>――時系列が主題のとき。IoTセンサー、メトリクス、時間軸での集計。時系列を無理にRDSに入れる選択肢は不正解です。</li>
+    <li><strong>Keyspaces</strong>――Apache Cassandra 互換が要件に書いてあるとき。CQLをそのまま使いたい場合の移行先です。</li>
+  </ul>
+  <p>これらは<strong>設問に固有名詞（MongoDB、Cassandra）か、固有の構造（グラフ、時系列）が明記されているときだけ</strong>正解になります。書かれていないのに選ぶと外れます。</p>
+
+  <h3>移行 ―― DMS と SCT の分担</h3>
+  <p>データベース移行の設問では、2つのサービスの役割分担を問われます。</p>
+  <ul>
+    <li><strong>DMS（Database Migration Service）</strong>――<em>データを運ぶ</em>役です。移行元と移行先をつなぎ、データを転送します。移行中も移行元を稼働させたまま継続的に変更を反映（CDC）できるため、ダウンタイムを最小化できます。</li>
+    <li><strong>SCT（Schema Conversion Tool）</strong>――<em>形を変える</em>役です。テーブル定義、ストアドプロシージャ、関数などを移行先のエンジンの文法に書き換えます。</li>
+  </ul>
+  <p>判断は単純です。<strong>エンジンが変わるなら SCT が要る。変わらないなら DMS だけでよい。</strong>Oracle から Aurora PostgreSQL への移行なら異種間なので SCT + DMS、オンプレミスのMySQLから RDS for MySQL への移行なら同種間なので DMS のみ。設問はこの区別をそのまま聞いてきます。</p>
+
+  <div class="note">
+    <span class="label">ダウンタイムの扱い</span>
+    <p>移行の設問では、ほぼ必ず「ダウンタイムを最小化したい」という条件が付きます。そのとき答えになるのは <strong>DMS の継続的レプリケーション（CDC）</strong>です。「一度エクスポートして、深夜にインポートする」という選択肢はもっともらしく見えますが、停止時間が長くなるため要件を満たしません。</p>
+  </div></section>
+
+<section id="s8" data-toc="試験での判断軸">
+
+  <span class="h2num">08</span>
+  <h2>試験での判断軸</h2>
+  <p class="lead">データベース分野は、設問文の一語が答えを決めることが多い分野です。手がかりと答えの対応を頭に入れてください。</p>
+
+  <div class="judge">
+    <div class="row"><span class="cue">AZ障害でも止めたくない／可用性</span><span class="arrow">→</span><span class="ans">RDS Multi-AZ</span></div>
+    <div class="row"><span class="cue">読み取りが重い／レポートを逃がしたい</span><span class="arrow">→</span><span class="ans">リードレプリカ</span></div>
+    <div class="row"><span class="cue">レプリカを増やしてもアプリを変更したくない</span><span class="arrow">→</span><span class="ans">Aurora リーダーエンドポイント</span></div>
+    <div class="row"><span class="cue">既存の暗号化していないDBを暗号化したい</span><span class="arrow">→</span><span class="ans">スナップショットをコピーする際に暗号化</span></div>
+    <div class="row"><span class="cue">Lambda が多重起動して接続が枯渇する</span><span class="arrow">→</span><span class="ans">RDS Proxy</span></div>
+    <div class="row"><span class="cue">誤った更新を72時間以内に巻き戻したい</span><span class="arrow">→</span><span class="ans">Aurora Backtrack（MySQL互換）</span></div>
+    <div class="row"><span class="cue">リージョン障害からの復旧／グローバルな低遅延読み取り</span><span class="arrow">→</span><span class="ans">Aurora Global Database</span></div>
+    <div class="row"><span class="cue">一桁ミリ秒／サーバーレス／無制限のスケール</span><span class="arrow">→</span><span class="ans">DynamoDB</span></div>
+    <div class="row"><span class="cue">運用中のテーブルに検索条件を追加したい</span><span class="arrow">→</span><span class="ans">GSI（LSIは後から作れない）</span></div>
+    <div class="row"><span class="cue">主キー以外で強い整合性の読み取りが要る</span><span class="arrow">→</span><span class="ans">LSI</span></div>
+    <div class="row"><span class="cue">トラフィックが予測できない／急なスパイク</span><span class="arrow">→</span><span class="ans">DynamoDB オンデマンドモード</span></div>
+    <div class="row"><span class="cue">DynamoDB をマイクロ秒で読みたい</span><span class="arrow">→</span><span class="ans">DAX</span></div>
+    <div class="row"><span class="cue">テーブルの変更を契機に処理を走らせたい</span><span class="arrow">→</span><span class="ans">DynamoDB Streams + Lambda</span></div>
+    <div class="row"><span class="cue">複数リージョンで書き込みたい</span><span class="arrow">→</span><span class="ans">DynamoDB Global Tables</span></div>
+    <div class="row"><span class="cue">スケールアウトでセッションが失われる</span><span class="arrow">→</span><span class="ans">ElastiCache for Redis をセッションストアに</span></div>
+    <div class="row"><span class="cue">ペタバイト規模の集計・BI</span><span class="arrow">→</span><span class="ans">Redshift（S3のままなら Spectrum）</span></div>
+    <div class="row"><span class="cue">異種エンジン間の移行でダウンタイムを最小化</span><span class="arrow">→</span><span class="ans">SCT でスキーマ変換 + DMS の CDC</span></div>
+  </div>
+
+  <div class="note warn">
+    <span class="label">「複製」という語に引っかからない</span>
+    <p>設問はしばしば「データベースを複製する」とだけ書き、目的を別の文に隠します。<strong>複製という語を見たら、その前後で「可用性」と「性能」のどちらが語られているかを探してください。</strong>可用性なら Multi-AZ、性能ならリードレプリカ。これだけでこの分野の失点は大きく減ります。</p>
+  </div></section>
+
+<section id="s9" data-toc="確認問題">
+
+  <span class="h2num">09</span>
+  <h2>確認問題</h2>
+  <p class="lead">先に自分で答えを決めてから開いてください。当てずっぽうで開くと、この5分が無駄になります。</p>
+
+  <details class="q">
+    <summary><span class="qnum">Q1</span>RDS for PostgreSQL で稼働する業務システムがある。日中、経理部門が実行するレポートクエリによってアプリケーションの応答が悪化する。加えて、AZ障害時のダウンタイムも最小化したい。適切な構成はどれか。
+      <ul class="opts">
+        <li>A. Multi-AZ 配置を有効にし、レポートクエリはスタンバイに向ける</li>
+        <li>B. リードレプリカを2台作成し、障害時はそのうち1台を手動で昇格させる</li>
+        <li>C. Multi-AZ 配置を有効にしたうえで、リードレプリカを作成してレポートクエリを向ける</li>
+        <li>D. インスタンスクラスを2段階大きいものに変更する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: C</span></p>
+      <p>要件が2つあります。「レポートで応答が悪化する」は読み取り性能の問題、「AZ障害時のダウンタイム」は可用性の問題です。前者にはリードレプリカ、後者には Multi-AZ。<strong>両方が書かれているなら両方を使います。</strong>この2つは排他ではなく、併用できます。</p>
+      <p><strong>判断軸:</strong> A はスタンバイに接続できないので成立しません。B は自動フェイルオーバーがなく可用性の要件を満たしません。D はスケールアップで一時的に楽にはなりますが、可用性の要件に何も答えていません。<strong>要件が2つ書かれている設問では、片方しか解いていない選択肢を落とす</strong>のが定石です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q2</span>DynamoDB のテーブルが本番稼働中である。新しい画面の要件として、これまで主キーに使っていなかった「ステータス」属性で絞り込む検索を追加する必要が出た。結果整合性の読み取りで問題ない。最も適切な対応はどれか。
+      <ul class="opts">
+        <li>A. LSI を作成し、ステータスをソートキーにする</li>
+        <li>B. GSI を作成し、ステータスをパーティションキーにする</li>
+        <li>C. Scan に FilterExpression を付けてステータスで絞り込む</li>
+        <li>D. テーブルを作り直し、パーティションキーをステータスに変更する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>GSI はテーブル作成後でも追加でき、パーティションキーを自由に選べます。結果整合性で問題ないという条件も GSI の制約と合致しています。</p>
+      <p><strong>判断軸:</strong> A は LSI がテーブル作成時にしか作れないため不可能です。C は動作しますが、Scan は全アイテムを読んでから絞り込むためキャパシティを浪費し、テーブルが育つほど悪化します。D は既存データの移行が必要で、既存の検索も壊れます。<strong>「稼働中」「後から」という語を見た瞬間に LSI と作り直しが消える</strong>――これがこの型の設問の解き方です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q3</span>暗号化されていない RDS for MySQL のインスタンスが本番で稼働している。監査要件により、保管時の暗号化が必須になった。実施すべき手順はどれか。
+      <ul class="opts">
+        <li>A. インスタンスを変更し、暗号化オプションを有効にする</li>
+        <li>B. スナップショットを取得し、そのスナップショットを暗号化を指定してコピーし、コピーから新しいインスタンスを復元する</li>
+        <li>C. 暗号化されたリードレプリカを作成し、それを昇格させる</li>
+        <li>D. EBS ボリュームを直接暗号化する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>RDS の暗号化は作成時にしか設定できません。既存インスタンスを暗号化する唯一の経路が、<strong>スナップショットのコピー操作で暗号化を指定する</strong>この手順です。復元後にエンドポイントが変わるため、アプリの切り替えが伴います。</p>
+      <p><strong>判断軸:</strong> A は「後から有効化できない」という制約に反します。C は、暗号化されていないインスタンスから暗号化されたリードレプリカを作ることはできません（逆に、暗号化されたDBのレプリカは必ず暗号化されます）。D は RDS がマネージドサービスであり、基盤のボリュームに直接触れないため不可能です。<strong>「後から変えられない設定」はSAAの頻出テーマ</strong>で、暗号化はその代表です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q4</span>EC2 の Auto Scaling グループで動く Web アプリケーションがある。スケールインでインスタンスが終了すると、そのインスタンスに接続していた利用者がログアウトしてしまう。今後はリージョン障害にも備えたい。最も適切な対応はどれか。
+      <ul class="opts">
+        <li>A. ロードバランサーでスティッキーセッションを有効にする</li>
+        <li>B. セッション情報を各インスタンスのローカルディスクに書き出す</li>
+        <li>C. セッション情報を ElastiCache for Redis または DynamoDB に外部化する</li>
+        <li>D. スケールインを無効にし、インスタンス数を固定する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: C</span></p>
+      <p>アプリケーションサーバーをステートレスにし、セッションを外部のストアに持たせるのが正攻法です。インスタンスが入れ替わっても、どのインスタンスに当たってもセッションが維持されます。リージョン障害への備えという点でも、Redis のレプリケーションや DynamoDB Global Tables で複製先を持てます。</p>
+      <p><strong>判断軸:</strong> A はインスタンスが終了すれば結局セッションが失われ、根本解決になりません。B はローカルディスクがインスタンスと運命をともにするため意味がありません。D は Auto Scaling の利点を捨てており、そもそも要件（スケールさせたい）に反します。<strong>「状態をどこに置くか」を問う設問では、インスタンスの外に出す選択肢が正解</strong>です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q5</span>オンプレミスの Oracle データベースを AWS へ移行する。移行先は Aurora PostgreSQL とし、移行中も業務は止められない。必要な作業の組み合わせはどれか。
+      <ul class="opts">
+        <li>A. DMS のみを使い、継続的レプリケーションで移行する</li>
+        <li>B. SCT でスキーマを変換し、DMS の継続的レプリケーションでデータを移行する</li>
+        <li>C. Oracle の物理バックアップを S3 に置き、Aurora に復元する</li>
+        <li>D. 深夜にデータをエクスポートし、翌朝までにインポートを完了させる</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>Oracle から PostgreSQL は<strong>異種エンジン間の移行</strong>です。テーブル定義やストアドプロシージャの文法が違うため、SCT による変換が必要になります。そのうえで、業務を止められないという条件があるので DMS の継続的レプリケーション（CDC）を使い、切り替え直前まで差分を反映し続けます。</p>
+      <p><strong>判断軸:</strong> A は同種エンジン間なら成立しますが、今回はスキーマ変換が抜けています。C は Oracle の物理バックアップを異なるエンジンに復元することはできません。D は停止時間が発生し、「止められない」という条件に反します。<strong>移行の設問は「エンジンが変わるか」と「止められるか」の2軸で切る</strong>と、ほぼ一意に決まります。</p>
+    </div>
+  </details></section>
+
+<section id="s10" data-toc="今日の宿題">
+
+  <span class="h2num">10</span>
+  <h2>今日の宿題</h2>
+  <p>読んだだけでは残りません。20分でここまでやってください。</p>
+
+  <div class="hw">
+    <div class="item"><span class="box"></span><span class="t"><code>notes/database/</code> の README チェックリストを埋める<small>RDS / Aurora / DynamoDB / ElastiCache の4項目。各サービスの機能一覧ではなく、「どんな要件のときに選ぶか」を1行ずつ</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">Multi-AZ とリードレプリカの比較表を、資料を見ずに書く<small>同期／非同期、フェイルオーバーの有無、エンドポイント、目的の4行。書けなければ03に戻る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d2-resilient.md</code> に判断軸を追記<small>08の表から、可用性に関わる行だけを写す。Multi-AZ、Aurora Global Database、Global Tables、DMSのCDC</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">W4のIssueのチェックボックスを2つ埋める<small>「RDS: Multi-AZ とリードレプリカ、バックアップと暗号化」と「DynamoDB: キー設計、GSI/LSI、キャパシティモード」</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>plan/log.md</code> に1行残す<small>時間と、今日いちばん腑に落ちなかったこと。次回それを最初に潰します</small></span></div>
+  </div>
+
+  <div class="note">
+    <span class="label">週末のハンズオン</span>
+    <p>2本やります。ひとつは<strong>RDS を Multi-AZ で作り、意図的にフェイルオーバーを起こす</strong>――コンソールから再起動時にフェイルオーバーを指定し、エンドポイントが変わらないまま向き先だけが切り替わることを自分の目で確認します。もうひとつは<strong>DynamoDB のキー設計を試す</strong>――複合キーのテーブルを作り、Query と Scan で消費キャパシティがどれだけ違うかを見ます。手を動かすと、今日の表が腑に落ちます。</p>
+  </div>
+
+  <div class="note warn">
+    <span class="label">課金の注意</span>
+    <p>ハンズオンの前に一度だけ念を押します。<strong>RDS は「停止」しても課金が止まりません。</strong>止まるのはインスタンス時間だけで、ストレージとバックアップの課金は続きます。しかも停止できるのは最大7日間で、それを過ぎるとAWSが勝手に起動します。Multi-AZ にすると台数分のストレージ課金がかかる点も併せて頭に入れてください。<strong>学習用に作ったものは、停止ではなく削除で終わらせる。</strong>削除時に「最終スナップショットを作成」を選ぶとそのスナップショットの保管料が残るので、不要なら作らない設定にしてください。</p>
+  </div>
+
+  <div class="note">
+    <span class="label">次回</span>
+    <p>W5はストレージと配信です。S3のストレージクラスとライフサイクル、EBSのボリュームタイプの選び方、EFSとFSxの違い、そしてCloudFront。今日やった「同じように見えるものを目的で切り分ける」という読み方は、そのまま次回にも効きます。</p>
+  </div></section>
+
+<footer>
+  AWS SAA-C03 / W4 座学<br>
+  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
+</footer>
+
+</main>
+</div>
+</div>
+</body>
+</html>

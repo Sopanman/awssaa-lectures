@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;font:14px system-ui,-apple-system,sans-serif;background:#fafaf9}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>暗号化と脅威検知</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#F6F8F7; --surface:#FFFFFF; --surface-2:#EDF1F0; --inset:#F0F4F3;
+  --ink:#13201E; --ink-2:#485855; --ink-3:#74847F; --line:#D5DEDB;
+  --accent:#0E6B68; --accent-soft:#DCEAE8;
+  --allow:#2B7448; --allow-soft:#DEEFE4;
+  --deny:#AE3729; --deny-soft:#F6E1DD;
+  --warn:#8E5B06; --warn-soft:#F6EAD1;
+  --serif:'Shippori Mincho',"Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:'Zen Kaku Gothic New',"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+    --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+    --accent:#52B2AD; --accent-soft:#14302E;
+    --allow:#6FC38B; --allow-soft:#142E1E;
+    --deny:#E4877A; --deny-soft:#331A16;
+    --warn:#D3A44E; --warn-soft:#2E2510;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+  --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+  --accent:#52B2AD; --accent-soft:#14302E;
+  --allow:#6FC38B; --allow-soft:#142E1E;
+  --deny:#E4877A; --deny-soft:#331A16;
+  --warn:#D3A44E; --warn-soft:#2E2510;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:0 96px}
+a{color:var(--accent)}
+
+/* ---------- header ---------- */
+.masthead{padding-block:56px 40px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,6vw,46px);line-height:1.3;margin:0 0 18px;text-wrap:balance;letter-spacing:.01em}
+.standfirst{margin:0;max-width:62ch;color:var(--ink-2);font-size:17px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.meta span{font-family:var(--mono);font-size:12px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);background:var(--surface)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:1fr;gap:40px;margin-top:40px}
+@media (min-width:1000px){ .cols{grid-template-columns:200px minmax(0,1fr);gap:56px} }
+nav.toc{font-size:14px}
+@media (min-width:1000px){ nav.toc{position:sticky;top:32px;align-self:start;max-height:calc(100vh - 64px);overflow-y:auto} }
+nav.toc h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px;font-weight:600}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+@media (max-width:999px){ nav.toc ol{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))} }
+nav.toc a{display:block;padding:5px 10px;border-radius:6px;text-decoration:none;color:var(--ink-2);line-height:1.5;border-left:2px solid transparent}
+nav.toc a:hover{background:var(--surface-2);color:var(--ink)}
+nav.toc a .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-right:7px}
+
+main{min-width:0;max-width:74ch}
+section{padding-block:44px;border-top:1px solid var(--line)}
+section:first-child{border-top:none;padding-top:8px}
+h2{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3.6vw,29px);line-height:1.45;margin:0 0 6px;text-wrap:balance}
+.h2num{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.12em;display:block;margin-bottom:8px}
+h3{font-family:var(--sans);font-weight:700;font-size:17px;margin:34px 0 10px;color:var(--ink);letter-spacing:.01em}
+p{margin:0 0 18px;max-width:66ch}
+ul,ol.body{margin:0 0 18px;padding-left:1.35em;max-width:66ch}
+li{margin-bottom:7px}
+strong{font-weight:700}
+em{font-style:normal;background:linear-gradient(transparent 62%,var(--accent-soft) 62%);font-weight:500}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);padding:2px 6px;border-radius:4px;word-break:break-word}
+
+/* ---------- blocks ---------- */
+.lead{font-size:17.5px;color:var(--ink-2);max-width:64ch}
+.goals{list-style:none;padding:0;margin:0;display:grid;gap:10px;max-width:66ch}
+.goals li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;margin:0;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.goals .tick{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:4px}
+
+.note{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.note p:last-child{margin-bottom:0}
+.note .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
+.note.warn{border-left-color:var(--warn)} .note.warn .label{color:var(--warn)}
+
+.trap{background:var(--deny-soft);border:1px solid transparent;border-radius:8px;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.trap .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--deny);display:block;margin-bottom:6px;font-weight:600}
+.trap p:last-child{margin-bottom:0}
+
+/* ---------- code ---------- */
+.code{background:var(--inset);border:1px solid var(--line);border-radius:8px;overflow-x:auto;margin:0 0 20px}
+.code pre{margin:0;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.75;color:var(--ink)}
+.code .cap{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding:10px 20px 0}
+.k{color:var(--accent)} .s{color:var(--ink-2)} .c{color:var(--ink-3)} .d{color:var(--deny)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 22px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+th,td{text-align:left;padding:12px 15px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:none}
+td.yes{color:var(--allow);font-weight:600} td.no{color:var(--deny);font-weight:600}
+
+/* ---------- eval ladder ---------- */
+.ladder{display:grid;gap:0;margin:0 0 8px}
+.rung{display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.rung .no{font-family:var(--mono);font-size:12px;color:var(--ink-3);text-align:center}
+.rung .q{font-size:15px;line-height:1.6}
+.rung .q small{display:block;color:var(--ink-3);font-size:12.5px;line-height:1.6;margin-top:2px}
+.out{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.out.deny{background:var(--deny-soft);color:var(--deny)}
+.out.allow{background:var(--allow-soft);color:var(--allow)}
+.drop{height:14px;margin-left:33px;border-left:2px solid var(--line)}
+.terminal{margin-top:14px;padding:14px 16px;border-radius:8px;background:var(--allow-soft);color:var(--allow);font-weight:700;font-size:15px}
+
+/* ---------- svg figure ---------- */
+figure{margin:0 0 22px}
+.fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+figcaption{font-size:13px;color:var(--ink-3);margin-top:10px;line-height:1.7}
+svg text{font-family:var(--sans)}
+
+/* ---------- judgement list ---------- */
+.judge{display:grid;gap:8px;margin:0 0 22px}
+.judge .row{display:grid;grid-template-columns:1fr;gap:4px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+@media (min-width:640px){ .judge .row{grid-template-columns:1fr auto 1fr;gap:14px;align-items:center} }
+.judge .cue{font-size:14.5px;color:var(--ink-2)}
+.judge .arrow{font-family:var(--mono);color:var(--ink-3);font-size:13px}
+.judge .ans{font-size:14.5px;font-weight:700;color:var(--accent)}
+
+/* ---------- quiz ---------- */
+details.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin:0 0 12px;overflow:hidden}
+details.q summary{cursor:pointer;padding:16px 18px;font-weight:500;line-height:1.75;list-style:none;font-size:15.5px}
+details.q summary::-webkit-details-marker{display:none}
+details.q summary::after{content:"解答を見る";display:block;font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:10px;letter-spacing:.08em}
+details.q[open] summary::after{content:"閉じる";color:var(--ink-3)}
+details.q summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.q .a{padding:0 18px 18px;border-top:1px solid var(--line);margin-top:0;padding-top:16px}
+details.q .a p{margin-bottom:12px;font-size:15px}
+details.q .a p:last-child{margin-bottom:0}
+.qnum{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.1em;display:block;margin-bottom:7px}
+.correct{color:var(--allow);font-weight:700}
+.opts{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:5px}
+.opts li{font-size:14.5px;color:var(--ink-2);margin:0;padding-left:1.8em;text-indent:-1.8em}
+
+/* ---------- homework ---------- */
+.hw{display:grid;gap:10px;margin:0 0 22px}
+.hw .item{display:grid;grid-template-columns:auto 1fr;gap:13px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;align-items:start}
+.hw .box{width:15px;height:15px;border:1.5px solid var(--ink-3);border-radius:3px;margin-top:6px}
+.hw .t{font-size:15px;line-height:1.7}
+.hw .t small{display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+
+footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3);line-height:1.8}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">AWS SAA-C03 / W5 座学</p>
+  <h1>セキュリティサービス ―― 守るのか、見張るのか</h1>
+  <p class="standfirst">ドメイン1の残り半分です。IAMが「誰が何をできるか」なら、こちらは「データをどう守り、異常をどう見つけるか」。AWSのセキュリティサービスは名前が似ていて役割が重なって見えますが、実際には守る層がそれぞれ違います。どの層を担当するサービスなのかで整理すれば、設問で迷わなくなります。</p>
+  <div class="meta"><span>所要 60-90分</span><span>前提 IAM 講義を読了</span><span>ドメイン1 (30%)</span></div>
+</header>
+
+<div class="cols">
+
+<nav class="toc">
+  <h2>目次</h2>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
+    <li><a href="#s2"><span class="n">02</span>2つの軸</a></li>
+    <li><a href="#s3"><span class="n">03</span>KMSのキー</a></li>
+    <li><a href="#s4"><span class="n">04</span>エンベロープ</a></li>
+    <li><a href="#s5"><span class="n">05</span>シークレット</a></li>
+    <li><a href="#s6"><span class="n">06</span>ACM</a></li>
+    <li><a href="#s7"><span class="n">07</span>守る層</a></li>
+    <li><a href="#s8"><span class="n">08</span>脅威検知</a></li>
+    <li><a href="#s9"><span class="n">09</span>Cognito</a></li>
+    <li><a href="#s10"><span class="n">10</span>試験での判断軸</a></li>
+    <li><a href="#s11"><span class="n">11</span>確認問題</a></li>
+    <li><a href="#s12"><span class="n">12</span>今日の宿題</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="s1" data-toc="ゴール">
+
+  <span class="h2num">01</span>
+  <h2>この講義のゴール</h2>
+  <p class="lead">セキュリティサービスは数が多く、暗記しようとすると必ず崩れます。狙うのは名前の暗記ではなく、設問の一文から「これは守る側の話か、見張る側の話か」を切り分けられる状態です。今日終わったときに、次の3つができていれば合格です。</p>
+  <ul class="goals">
+    <li><span class="tick">01</span><div><strong>設問が保管時の暗号化を問うているのか、転送時の暗号化を問うているのかを即座に判別できる。</strong><br>そのうえで、KMS・ACM・CloudHSM のどれが答えの中心になるかを言える。</div></li>
+    <li><span class="tick">02</span><div><strong>エンベロープ暗号化を、図を見ずに順を追って説明できる。</strong><br>なぜ2段階にするのか、KMSが何を持っていて何を持っていないのかを、自分の言葉で言える。</div></li>
+    <li><span class="tick">03</span><div><strong>WAF・GuardDuty・Inspector・Macie・Config を、担当する層で並べられる。</strong><br>「攻撃を止める」「侵害の兆候を見つける」「弱点を洗い出す」「置いてはいけないデータを探す」「設定が規則どおりか確かめる」の対応を間違えない。</div></li>
+  </ul>
+  <div class="note">
+    <span class="label">IAM 講義との関係</span>
+    <p>IAMは<strong>アクセスの可否</strong>を決める仕組みでした。今日扱うのは、そのアクセス制御をすり抜けられた場合や、そもそもアクセス制御では守れない領域――物理的な媒体の盗難、通信経路の盗聴、アプリケーション層への攻撃、設定ミスの放置――に対する備えです。この2つは代替関係ではなく、積み重ねる関係にあります。設問で「多層防御（defense in depth）」という語が出たら、それは「一つの対策だけを選ぶ選択肢は不正解」という合図です。</p>
+  </div></section>
+
+<section id="s2" data-toc="2つの軸">
+
+  <span class="h2num">02</span>
+  <h2>暗号化の2つの軸と、責任の境目</h2>
+  <p class="lead">暗号化の設問は、ほぼすべてが2つの軸のどちらかに属します。<em>保管時（at rest）</em>か、<em>転送時（in transit）</em>か。この判別を最初にやると、選択肢が半分に落ちます。</p>
+
+  <h3>設問文のどこを見るか</h3>
+  <p>設問は「データを暗号化したい」とだけ書いてくれることは少なく、状況の描写のなかに軸のヒントを埋め込んできます。ディスク・バケット・スナップショット・バックアップ・アーカイブといった<strong>置き場所を指す語</strong>が出てきたら保管時。ネットワーク・通信・クライアントとサーバーの間・盗聴・中間者といった<strong>経路を指す語</strong>が出てきたら転送時です。両方を要求する設問もあり、その場合は「KMSで保管時を、ACMとHTTPSで転送時を」という二段構えの選択肢が正解になります。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>軸</th><th>守る対象</th><th>中心になるサービス</th><th>設問に出る語</th></tr></thead>
+    <tbody>
+      <tr><td><strong>保管時</strong><br><span style="color:var(--ink-3);font-size:13px">at rest</span></td><td>ディスク、オブジェクト、バックアップ、ログ</td><td>KMS（と各サービスの暗号化オプション）、CloudHSM</td><td>スナップショット、バケット、アーカイブ、媒体の廃棄、鍵の管理</td></tr>
+      <tr><td><strong>転送時</strong><br><span style="color:var(--ink-3);font-size:13px">in transit</span></td><td>クライアントとサービスの間、サービス同士の間</td><td>ACM（証明書）、TLS終端、VPN、PrivateLink</td><td>HTTPS、TLS、盗聴、傍受、公衆インターネットを経由させたくない</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>「インターネットを経由させたくない」は、厳密には暗号化ではなく<strong>経路の話</strong>です。ここで正解になるのは VPC エンドポイントや PrivateLink であって、暗号化サービスではありません。「暗号化したい」のか「経路を閉じたい」のかを読み分けてください。</p>
+  </div>
+
+  <h3>責任共有モデルの読み方</h3>
+  <p>責任共有モデルは、CLFでは「AWSはクラウド<em>の</em>セキュリティ、顧客はクラウド<em>内の</em>セキュリティ」という標語で覚えたはずです。SAAでは標語そのものは問われず、<strong>具体的な作業がどちら側に落ちるか</strong>という形で問われます。判定のコツは一つで、<strong>そのサービスがマネージドである度合いが上がるほど、AWS側の責任範囲が広がる</strong>という一本の軸で考えることです。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>作業</th><th>EC2</th><th>RDS</th><th>S3 / DynamoDB / Lambda</th></tr></thead>
+    <tbody>
+      <tr><td>物理施設、ハイパーバイザー、ネットワーク基盤</td><td class="yes">AWS</td><td class="yes">AWS</td><td class="yes">AWS</td></tr>
+      <tr><td>ゲストOSのパッチ適用</td><td class="no">顧客</td><td class="yes">AWS（メンテナンスウィンドウで適用）</td><td class="yes">AWS</td></tr>
+      <tr><td>データベースエンジンのパッチ適用</td><td class="no">顧客</td><td class="yes">AWS</td><td class="yes">AWS</td></tr>
+      <tr><td>アプリケーションコードの脆弱性</td><td class="no">顧客</td><td class="no">顧客</td><td class="no">顧客</td></tr>
+      <tr><td>暗号化を有効にするかどうかの判断</td><td class="no">顧客</td><td class="no">顧客</td><td class="no">顧客</td></tr>
+      <tr><td>IAMポリシー、バケットポリシー、SGの設定</td><td class="no">顧客</td><td class="no">顧客</td><td class="no">顧客</td></tr>
+      <tr><td>ディスク媒体の廃棄・消去</td><td class="yes">AWS</td><td class="yes">AWS</td><td class="yes">AWS</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「RDSを使っているので、認証情報の管理もAWSの責任である」――違います。<strong>マネージドサービスでも、アクセス制御と設定は常に顧客側です。</strong>AWSが肩代わりするのはインフラとソフトウェアの保守までです。責任共有モデルの設問で、アクセス制御・暗号化の有効化・データ分類のいずれかがAWS側に振られている選択肢は、読んだ瞬間に消せます。</p>
+  </div></section>
+
+<section id="s3" data-toc="KMSのキー">
+
+  <span class="h2num">03</span>
+  <h2>KMS ―― キーの種類とポリシーの二重構造</h2>
+  <p class="lead">KMSは保管時暗号化の中心にあり、S3・EBS・RDS・DynamoDB・Secrets Manager・SNS・SQS など、ほぼすべてのサービスがKMSを呼んでいます。まず<strong>キーの種類</strong>を3つに分けることから始めます。この分け方が、料金・ローテーション・クロスアカウントの設問すべてに効きます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>AWS所有キー<br><span style="font-weight:400;text-transform:none;letter-spacing:0">AWS owned</span></th><th>AWSマネージドキー<br><span style="font-weight:400;text-transform:none;letter-spacing:0">AWS managed</span></th><th>カスタマー管理キー<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Customer managed</span></th></tr></thead>
+    <tbody>
+      <tr><td><strong>誰が作るか</strong></td><td>AWSがサービス横断で用意</td><td>サービスを使うと自動生成（<code>aws/s3</code> のような別名）</td><td>自分で作る</td></tr>
+      <tr><td><strong>アカウントから見えるか</strong></td><td class="no">見えない</td><td class="yes">見える（一覧に出る）</td><td class="yes">見える</td></tr>
+      <tr><td><strong>キーポリシーの編集</strong></td><td class="no">不可</td><td class="no">不可</td><td class="yes">自由に編集できる</td></tr>
+      <tr><td><strong>ローテーション</strong></td><td>AWSが管理（設定不可）</td><td>年1回、強制（止められない）</td><td class="yes">任意。既定365日、90〜2560日で指定可</td></tr>
+      <tr><td><strong>クロスアカウント共有</strong></td><td class="no">不可</td><td class="no">不可</td><td class="yes">キーポリシーで可能</td></tr>
+      <tr><td><strong>削除</strong></td><td class="no">不可</td><td class="no">不可</td><td class="yes">待機期間つきで可能</td></tr>
+      <tr><td><strong>料金</strong></td><td>無料</td><td>キー自体は無料、API呼び出しは課金</td><td>1キーあたり月額1USD＋API呼び出し</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>設問に<strong>「鍵の使用を監査したい」「特定のロールだけに復号を許したい」「別アカウントと共有したい」「独自のローテーション周期にしたい」「鍵を無効化して即座にアクセスを遮断したい」</strong>のどれか一つでも出てきたら、答えは<strong>カスタマー管理キー</strong>です。AWSマネージドキーはキーポリシーを触れないので、これらの要件を一つも満たせません。逆に「特別な要件はなく、とにかく暗号化されていればよい」「運用負荷を最小にしたい」ならAWSマネージドキーで十分、という書き分けになります。</p>
+  </div>
+
+  <h3>キーポリシーとIAMポリシーの関係</h3>
+  <p>ここがKMSで最も間違えやすい部分です。<strong>KMSキーは、必ずリソースベースポリシー（キーポリシー）を持ちます。</strong>しかも、S3バケットのように「リソースポリシーを付けない」という選択肢がありません。キーを作った時点で既定のキーポリシーが付き、これを空にすることはできません。</p>
+  <p>そして評価の仕方が独特です。IAMポリシーで <code>kms:Decrypt</code> を許可しても、<strong>キーポリシー側がそのプリンシパルに権限を委ねていなければアクセスできません。</strong>既定のキーポリシーには「このアカウントのIAMポリシーによる権限委任を有効にする」という一文が入っていて、これがあるおかげで普段はIAMポリシーだけで話が済んでいます。この一文を外したり、狭い条件に書き換えたりすると、管理者権限を持っていてもキーを使えなくなります。</p>
+
+  <div class="code">
+    <div class="cap">既定のキーポリシーに入っている「委任を有効にする」ステートメント</div>
+<pre>{
+  <span class="k">"Sid"</span>: <span class="s">"Enable IAM User Permissions"</span>,
+  <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
+  <span class="k">"Principal"</span>: { <span class="k">"AWS"</span>: <span class="s">"arn:aws:iam::111122223333:root"</span> },
+  <span class="c">// ↑ rootユーザーに許すという意味ではなく、</span>
+  <span class="c">//   「このアカウントのIAMポリシーに判断を委ねる」という定型句</span>
+  <span class="k">"Action"</span>: <span class="s">"kms:*"</span>,
+  <span class="k">"Resource"</span>: <span class="s">"*"</span>
+}</pre>
+  </div>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「IAMポリシーで <code>kms:Decrypt</code> を許可したのに、暗号化されたS3オブジェクトが読めない。原因は？」――答えは<strong>キーポリシーでそのプリンシパルが許可されていない</strong>です。S3のバケットポリシーを疑う選択肢、IAMポリシーの記述ミスを疑う選択肢が並びますが、KMSが絡む「読めない」系の設問では、まずキーポリシーを見ます。<strong>暗号化されたオブジェクトを読むには、S3側の権限とKMS側の権限の両方が要る</strong>という構造を押さえてください。</p>
+  </div>
+
+  <div class="note warn">
+    <span class="label">クロスアカウントでは3か所</span>
+    <p>別アカウントから暗号化されたリソースを使う場合、必要なのは3か所です。①キーポリシーに相手アカウントを書く、②相手アカウント側のIAMポリシーで <code>kms:Decrypt</code> 等を許可する、③リソース側のアクセスも許可する。<strong>キーポリシーだけでは相手アカウントのプリンシパルに権限が届きません。</strong>IAM講義でやった「クロスアカウントは両側の合意」が、KMSでも同じ形で出てきます。</p>
+  </div></section>
+
+<section id="s4" data-toc="エンベロープ">
+
+  <span class="h2num">04</span>
+  <h2>エンベロープ暗号化と、鍵の運用</h2>
+  <p class="lead">KMSが実際に何をしているかを理解すると、S3の暗号化オプションもEBSの暗号化も、同じ一つの仕組みの応用だと分かります。その仕組みが<strong>エンベロープ暗号化</strong>です。</p>
+
+  <h3>なぜ2段階にするのか</h3>
+  <p>KMSのキー素材は、KMSの外に出ません。強い性質ですが不便でもあり、暗号化するにはデータをKMSに送る必要があります。実際、<strong>KMSのAPIで直接暗号化できるのは4KBまで</strong>です。数GBのEBSボリュームやS3の動画ファイルをKMSに送ることは、性能面でもコスト面でも成立しません。</p>
+  <p>そこで、鍵を二階建てにします。<strong>データを暗号化するのは、その場で生成した使い捨ての「データキー」。</strong>そして、そのデータキー自体をKMSのキー（CMK）で暗号化して、暗号文と一緒に保存します。手紙を封筒に入れて、封筒に鍵をかけるイメージから「エンベロープ（封筒）暗号化」と呼ばれます。</p>
+
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 860 330" width="860" height="330" role="img" aria-label="エンベロープ暗号化の流れ。上段は暗号化、GenerateDataKeyで平文データキーと暗号化データキーを受け取り、平文キーでデータを暗号化して破棄し、暗号文と暗号化データキーを並べて保存する。下段は復号、暗号化データキーをKMSに送って平文データキーを得て暗号文を復号する。">
+        <text x="24" y="30" font-size="12.5" fill="var(--ink-3)" font-weight="600">暗号化するとき</text>
+
+        <rect x="24" y="42" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="112" y="72" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">① 鍵を要求</text>
+        <text x="112" y="92" font-size="11" fill="var(--ink-3)" text-anchor="middle">GenerateDataKey</text>
+        <text x="112" y="110" font-size="11" fill="var(--ink-3)" text-anchor="middle">CMK を指定して呼ぶ</text>
+
+        <line x1="204" y1="85" x2="230" y2="85" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M232 85 l-9 -5 v10 z" fill="var(--ink-3)"/>
+
+        <rect x="236" y="42" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="324" y="70" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">② KMS が2つ返す</text>
+        <text x="324" y="92" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">平文データキー</text>
+        <text x="324" y="110" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">暗号化データキー</text>
+
+        <line x1="416" y1="85" x2="442" y2="85" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M444 85 l-9 -5 v10 z" fill="var(--ink-3)"/>
+
+        <rect x="448" y="42" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="536" y="70" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">③ 手元で暗号化</text>
+        <text x="536" y="92" font-size="11" fill="var(--ink-3)" text-anchor="middle">平文キーでデータを暗号化</text>
+        <text x="536" y="110" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">直後に平文キーを破棄</text>
+
+        <line x1="628" y1="85" x2="654" y2="85" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M656 85 l-9 -5 v10 z" fill="var(--ink-3)"/>
+
+        <rect x="660" y="42" width="176" height="86" rx="8" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="748" y="70" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">④ 並べて保存</text>
+        <text x="748" y="92" font-size="11" fill="var(--ink-3)" text-anchor="middle">暗号文</text>
+        <text x="748" y="110" font-size="11" fill="var(--ink-3)" text-anchor="middle">＋ 暗号化データキー</text>
+
+        <text x="24" y="176" font-size="12.5" fill="var(--ink-3)" font-weight="600">復号するとき</text>
+
+        <rect x="660" y="188" width="176" height="86" rx="8" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="748" y="218" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">⑤ 取り出す</text>
+        <text x="748" y="240" font-size="11" fill="var(--ink-3)" text-anchor="middle">添えてある</text>
+        <text x="748" y="256" font-size="11" fill="var(--ink-3)" text-anchor="middle">暗号化データキー</text>
+
+        <line x1="656" y1="231" x2="630" y2="231" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M628 231 l9 -5 v10 z" fill="var(--ink-3)"/>
+
+        <rect x="448" y="188" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="536" y="218" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">⑥ KMS に渡す</text>
+        <text x="536" y="240" font-size="11" fill="var(--ink-3)" text-anchor="middle">Decrypt</text>
+        <text x="536" y="256" font-size="11" fill="var(--ink-3)" text-anchor="middle">CMK の使用権限が要る</text>
+
+        <line x1="444" y1="231" x2="418" y2="231" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M416 231 l9 -5 v10 z" fill="var(--ink-3)"/>
+
+        <rect x="236" y="188" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="324" y="218" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">⑦ 平文キーが戻る</text>
+        <text x="324" y="240" font-size="11" fill="var(--ink-3)" text-anchor="middle">メモリ上だけに置く</text>
+
+        <line x1="232" y1="231" x2="206" y2="231" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M204 231 l9 -5 v10 z" fill="var(--ink-3)"/>
+
+        <rect x="24" y="188" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="112" y="218" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">⑧ 復号完了</text>
+        <text x="112" y="240" font-size="11" fill="var(--ink-3)" text-anchor="middle">使い終えたら</text>
+        <text x="112" y="256" font-size="11" fill="var(--ink-3)" text-anchor="middle">平文キーを再び破棄</text>
+
+        <rect x="24" y="292" width="812" height="26" rx="6" fill="var(--accent-soft)"/>
+        <text x="430" y="309" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">KMS が直接暗号化できるのは 4 KB まで。大きなデータはこの往復で扱う。</text>
+      </svg>
+    </div>
+    <figcaption>エンベロープ暗号化。KMSを往復するのは<strong>データキーだけ</strong>で、データ本体はKMSに送られません。だから数GBのボリュームでも成立します。復号時にKMSへのアクセス権を失えば――キーを無効化する、キーポリシーから外す――暗号文が手元にあっても読めなくなります。<strong>これが「鍵を無効化してアクセスを遮断する」という設問の正体です。</strong></figcaption>
+  </figure>
+
+  <div class="note">
+    <span class="label">S3 バケットキー</span>
+    <p>S3でSSE-KMSを使うと、既定ではオブジェクトごとにKMSへのリクエストが発生し、オブジェクト数が多いと呼び出し料金が無視できなくなります。<strong>S3バケットキー</strong>はバケット単位の短期キーを再利用してこのリクエスト数を大幅に削減します。「SSE-KMSを使いたいが、KMSのリクエスト料金を抑えたい」の答えはこれです。暗号化をやめる選択肢やSSE-S3への切り替えは、要件を満たしていません。</p>
+  </div>
+
+  <h3>自動ローテーション</h3>
+  <p>カスタマー管理キーの自動ローテーションは、有効にすると<strong>既定で365日ごと</strong>に新しい鍵素材が生成されます。周期は<strong>90日から2560日</strong>の範囲で指定できます。AWSマネージドキーは年1回のローテーションが強制で、こちらは設定を変えられません。</p>
+  <p>押さえるべきは、<strong>ローテーションしてもキーIDもARNもエイリアスも変わらない</strong>点です。古い鍵素材はKMSに保持され続けるため、ローテーション前に暗号化したデータもそのまま復号でき、アプリ側の書き換えも不要です。「過去のデータが読めなくなるのでは」と心配させる選択肢は不正解です。</p>
+
+  <div class="note warn">
+    <span class="label">自動ローテーションできないキー</span>
+    <p>自動ローテーションが使えるのは、<strong>KMSが鍵素材を生成した対称暗号化キー</strong>だけです。自分で鍵素材をインポートしたキー（オリジンがEXTERNAL）、非対称キー、HMACキー、カスタムキーストア上のキーは対象外です。これらを回したい場合は、新しいキーを作ってエイリアスを付け替える<strong>手動ローテーション</strong>になります。設問に「オンプレミスで生成した鍵素材を使う」と書いてあれば、自動ローテーションを答えにする選択肢は消えます。</p>
+  </div>
+
+  <h3>マルチリージョンキー</h3>
+  <p>KMSキーは通常リージョンに閉じていて、東京で暗号化したデータを大阪で復号することはできません。これを越えるのが<strong>マルチリージョンキー</strong>です。プライマリキーを作り、それを別リージョンにレプリカとして複製すると、<strong>同じ鍵素材とキーIDを持つキー</strong>が両方のリージョンに存在します。片方で暗号化した暗号文を、もう片方でKMSを跨がずに復号できます。</p>
+  <ul>
+    <li>典型的な用途は、<strong>S3のクロスリージョンレプリケーション</strong>、<strong>DynamoDBグローバルテーブル</strong>、そして<strong>ディザスタリカバリ</strong>です。暗号化されたデータを別リージョンに運ぶ設計で出てきます。</li>
+    <li><strong>キーポリシーはリージョンごとに独立</strong>です。複製したからといって権限まで同じになるわけではありません。</li>
+    <li><strong>作成時に決める必要があります。</strong>すでにある単一リージョンキーを、後からマルチリージョンキーに変換することはできません。設問で「既存のキーをマルチリージョン化する」という選択肢が出たら不正解です。</li>
+    <li>レプリカもそれぞれ1キーとして課金されます。無条件にマルチリージョンにするのはコスト面で不利です。</li>
+  </ul>
+
+  <h3>キーの削除</h3>
+  <p>KMSキーは即座に削除できません。<strong>削除をスケジュールすると、7日から30日の待機期間が始まり、既定は30日</strong>です。この間キーは「削除保留中」になり暗号化にも復号にも使えませんが、待機期間中ならキャンセルできます。鍵を消すことはその鍵で暗号化された全データを永久に読めなくすることなので、猶予が設けられています。</p>
+  <p>設問では「不要になったキーを削除したいが、まだどこかで使われているかもしれない」という文脈で出ます。<strong>正解は多くの場合「まずキーを無効化（disable）して、影響が出ないことを確認してから削除をスケジュールする」</strong>です。無効化は即時に効き、即時に戻せます。なお、マルチリージョンのプライマリキーは、すべてのレプリカを削除し終えてからでないと待機期間が始まりません。</p>
+
+  <h3>CloudHSM との使い分け</h3>
+  <p>CloudHSMは、KMSと同じ「鍵を守るサービス」ですが、位置づけが違います。KMSがマネージドな共有基盤なのに対し、CloudHSMは<strong>自分専用のハードウェアセキュリティモジュール</strong>をVPC内に立てるサービスです。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>AWS KMS</th><th>AWS CloudHSM</th></tr></thead>
+    <tbody>
+      <tr><td><strong>テナンシー</strong></td><td>AWSが運用するマルチテナントのHSM</td><td class="yes">自分専用のシングルテナントHSM</td></tr>
+      <tr><td><strong>鍵の管理主体</strong></td><td>AWSが運用。AWSは鍵素材を取り出せない設計だが、サービス自体はAWSが管理</td><td class="yes">顧客が完全に管理。AWSはHSM内の鍵にアクセスできない</td></tr>
+      <tr><td><strong>認証・規格</strong></td><td>AWSのマネージド基準</td><td>FIPS 140-3 レベル3 認証のHSM</td></tr>
+      <tr><td><strong>AWSサービスとの統合</strong></td><td class="yes">S3・EBS・RDSなど広範に統合済み</td><td class="no">直接の統合は限定的（KMSカスタムキーストア経由で橋渡し）</td></tr>
+      <tr><td><strong>運用負荷</strong></td><td class="yes">ほぼゼロ。可用性もAWS任せ</td><td class="no">クラスタ構成、ユーザー管理、バックアップを自分で設計</td></tr>
+      <tr><td><strong>非対称・特殊用途</strong></td><td>対称・非対称の一般的な用途</td><td class="yes">SQL Server / Oracle の TDE、独自PKI、コード署名、SSLオフロード</td></tr>
+      <tr><td><strong>料金</strong></td><td>1キー月額1USD規模</td><td class="no">HSMインスタンス単位の時間課金。桁が上がる</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>設問に<strong>「専用のハードウェアセキュリティモジュール」「FIPS 140-3 レベル3」「鍵素材にAWSが一切アクセスできないこと」「規制当局から鍵の単独管理を求められている」</strong>のいずれかが書いてあればCloudHSM。<strong>書いていなければKMS</strong>です。CloudHSMは運用負荷とコストが跳ね上がるので、要件に明示がない限り正解にはなりません。「KMSのカスタムキーストア」は、CloudHSMのクラスタをKMSの裏側に置く構成で、AWSサービスとの統合を保ちながら鍵をHSMに置きたい、という両取りの要件に対する答えです。</p>
+  </div></section>
+
+<section id="s5" data-toc="シークレット">
+
+  <span class="h2num">05</span>
+  <h2>シークレット管理 ―― Secrets Manager と Parameter Store</h2>
+  <p class="lead">データベースのパスワード、APIキー、サードパーティのトークン。これらを環境変数やコードに直書きしないための選択肢が2つあり、その使い分けは頻出です。<strong>分岐は3点――自動ローテーションが要るか、コストを重視するか、階層構造が要るか。</strong></p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>Secrets Manager</th><th>Parameter Store（標準）</th><th>Parameter Store（アドバンスト）</th></tr></thead>
+    <tbody>
+      <tr><td><strong>自動ローテーション</strong></td><td class="yes">組み込み。RDS・Aurora・Redshift・DocumentDB はマネージドローテーション、それ以外はLambdaで実装</td><td class="no">機能なし（EventBridge＋Lambdaで自作）</td><td class="no">機能なし</td></tr>
+      <tr><td><strong>料金</strong></td><td class="no">1シークレットあたり月額0.40USD＋1万API呼び出しあたり0.05USD</td><td class="yes">追加料金なし</td><td>パラメータ単位の月額課金＋API課金</td></tr>
+      <tr><td><strong>保存数の上限</strong></td><td>アカウント・リージョンあたり多数</td><td>1万パラメータ</td><td class="yes">10万パラメータ</td></tr>
+      <tr><td><strong>値のサイズ上限</strong></td><td>64 KB</td><td>4 KB</td><td>8 KB</td></tr>
+      <tr><td><strong>階層パス</strong></td><td>スラッシュ区切りの命名は可能だが機能としての階層取得はない</td><td class="yes"><code>/app/prod/db/password</code> のような階層。<code>GetParametersByPath</code> でまとめて取得</td><td class="yes">同左</td></tr>
+      <tr><td><strong>暗号化</strong></td><td class="yes">常にKMSで暗号化</td><td>SecureString 型を選んだときだけKMS。String / StringList は平文</td><td>同左</td></tr>
+      <tr><td><strong>クロスアカウント共有</strong></td><td class="yes">リソースベースポリシーで可能</td><td class="no">不可</td><td class="yes">共有可能</td></tr>
+      <tr><td><strong>クロスリージョン複製</strong></td><td class="yes">レプリカを作れる</td><td class="no">なし</td><td class="no">なし</td></tr>
+      <tr><td><strong>パラメータポリシー</strong></td><td>ローテーション設定として持つ</td><td class="no">なし</td><td class="yes">有効期限・通知を設定できる</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>設問での切り分け</h3>
+  <ul>
+    <li><strong>「認証情報を定期的に自動でローテーションしたい」「RDSのマスターパスワードを90日ごとに変更」</strong>――Secrets Manager。ここは迷う余地がありません。Parameter Store にはローテーション機能そのものがないので、「Parameter Store＋Lambdaで実装する」という選択肢があっても、標準機能で満たせるSecrets Managerが正解になります。</li>
+    <li><strong>「コストを最小限に抑えたい」「追加費用なしで」「大量の設定値を管理したい」</strong>――Parameter Store。ローテーションの要件が書かれていないのに Secrets Manager を選ぶと、コスト面で減点される作りの設問が多いです。</li>
+    <li><strong>「環境ごと・アプリごとに設定を整理してまとめて取得したい」</strong>――Parameter Store の階層パス。<code>GetParametersByPath</code> で <code>/myapp/prod/</code> 配下を一括取得できます。</li>
+    <li><strong>「AMIのIDやエンドポイントURLのような、秘密ではない設定値」</strong>――Parameter Store。</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">RDS のマネージドマスターパスワード</span>
+    <p>RDSとAuroraには、マスターユーザーのパスワードをSecrets Managerに自動で作らせ、ローテーションまで任せる設定があります。設問で「データベースの認証情報を人手を介さずに管理し、定期的にローテーションしたい。運用負荷は最小に」と来たら、<strong>Secrets Managerと統合したRDSのマネージドパスワード</strong>が正解です。Lambdaローテーション関数を自分で書く選択肢は、要件は満たしますが運用負荷の面で劣ります。SAAは「要件を満たす最も運用負荷の低い方法」を問うので、この差がそのまま正誤になります。</p>
+  </div>
+
+  <div class="trap">
+    <span class="label">よくある誤解</span>
+    <p>「Parameter Store は暗号化できない」――できます。<code>SecureString</code> 型を選べばKMSで暗号化されます。両者の差はローテーションとコストと共有機能であって、暗号化の可否ではありません。逆に、<strong>Parameter Store で <code>String</code> 型を選ぶと平文で保存される</strong>点は押さえてください。「Parameter Store にパスワードを保存したが平文だった」という設問は、型の選び間違いが原因です。なお Parameter Store からは <code>/aws/reference/secretsmanager/</code> というパスでSecrets Managerのシークレットを参照でき、アプリ側のコードをParameter Store一本に寄せたまま、秘密だけSecrets Managerに置くこともできます。</p>
+  </div></section>
+
+<section id="s6" data-toc="ACM">
+
+  <span class="h2num">06</span>
+  <h2>ACM ―― 証明書はどこに置けるか</h2>
+  <p class="lead">転送時の暗号化の主役はTLSで、TLSの主役は証明書です。ACMはパブリック証明書を<strong>無料で発行し、自動で更新する</strong>サービスですが、設問で問われるのは機能そのものより<strong>置ける場所の制約</strong>です。</p>
+
+  <h3>置ける場所と、置けない場所</h3>
+  <p>ACMの証明書は、<strong>AWSのマネージドな終端点に紐づけて使う</strong>のが基本形です。ALB、NLB、CloudFront、API Gateway あたりが代表です。ここで重要なのは、<strong>ACMが発行したパブリック証明書は秘密鍵をエクスポートできない</strong>という点です。EC2インスタンス上のNginxやApacheに証明書ファイルを置く、という使い方は成立しません。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>置き先</th><th>ACMのパブリック証明書</th><th>証明書を用意するリージョン</th></tr></thead>
+    <tbody>
+      <tr><td><strong>CloudFront</strong></td><td class="yes">使える</td><td class="no"><strong>us-east-1（バージニア北部）固定</strong></td></tr>
+      <tr><td><strong>ALB / NLB</strong></td><td class="yes">使える</td><td>ロードバランサーと同じリージョン</td></tr>
+      <tr><td><strong>API Gateway（リージョナル）</strong></td><td class="yes">使える</td><td>APIと同じリージョン</td></tr>
+      <tr><td><strong>API Gateway（エッジ最適化）</strong></td><td class="yes">使える</td><td class="no">us-east-1 固定</td></tr>
+      <tr><td><strong>EC2 上のWebサーバー</strong></td><td class="no">直接は置けない（秘密鍵を取り出せない）</td><td>―</td></tr>
+      <tr><td><strong>オンプレミスの機器</strong></td><td class="no">置けない</td><td>―</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「CloudFrontディストリビューションにカスタムドメインのHTTPSを設定しようとしたが、コンソールの証明書の一覧に目的の証明書が出てこない。」――原因は<strong>証明書を us-east-1 以外のリージョンで発行した</strong>ことです。CloudFrontはグローバルサービスですが、証明書だけは us-east-1 のACMを参照します。東京リージョンで作った証明書は、どれだけ正しく発行されていても選べません。この設問は表現を変えて繰り返し出ます。</p>
+  </div>
+
+  <div class="note">
+    <span class="label">EC2にTLSが必要なとき</span>
+    <p>「EC2上のアプリでHTTPSを終端したい」という要件が出たら、SAAの答えは基本的に<strong>「ALBやCloudFrontでTLSを終端し、EC2は背後に置く」</strong>です。それでもEC2自身に証明書が要る場合は、AWS Private CA のプライベート証明書か、持ち込みの証明書になります。<strong>Private CA は内部通信用</strong>で、ブラウザには信頼されません。「社内システム間の相互TLS」と書いてあれば Private CA です。</p>
+  </div>
+
+  <h3>自動更新が働く条件</h3>
+  <p>ACMの「自動更新」は無条件ではありません。条件を外すと更新されず、期限切れで障害になります。設問でも「証明書が期限切れになった。なぜか」という形で問われます。</p>
+  <ul>
+    <li><strong>ACMが発行した証明書であること。</strong>持ち込んだ（インポートした）証明書は自動更新の対象外です。期限が来る前に自分で入れ替える必要があります。</li>
+    <li><strong>使われていること。</strong>ACMに置いてあるだけで、どのAWSサービスにも紐づいていない証明書は、更新の対象になりません。</li>
+    <li><strong>DNS検証であること。</strong>DNS検証（Route 53などにCNAMEレコードを置く方式）なら、レコードが残っている限り人手を介さずに更新されます。Eメール検証の場合は、更新のたびに承認メールへの対応が必要です。<strong>「証明書の更新を完全に自動化したい」と書いてあればDNS検証</strong>が答えです。</li>
+  </ul>
+
+  <div class="note warn">
+    <span class="label">インポート証明書の見張り方</span>
+    <p>インポートした証明書は自動更新されませんが、ACMは有効期限が近づくとイベントを発行します。EventBridge でこれを受けて通知する、あるいは AWS Config のマネージドルールで期限切れ間近の証明書を非準拠として検出する、という構成が「期限切れを防ぎたい」型の設問の正解になります。<strong>手動でカレンダーに入れる、という選択肢は常に不正解です。</strong></p>
+  </div></section>
+
+<section id="s7" data-toc="守る層">
+
+  <span class="h2num">07</span>
+  <h2>守る層で並べる ―― SG・NACL・WAF・Network Firewall</h2>
+  <p class="lead">防御サービスが混乱するのは、全部が「通信を止めるもの」に見えるからです。<strong>止める場所と、見ている情報の深さ</strong>で並べると、設問の手がかりと一対一で対応します。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>どこに効くか</th><th>見ている情報</th><th>拒否ルール</th><th>状態管理</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Shield</strong></td><td>AWSのエッジ全体</td><td>パケット量・トラフィックパターン（L3/L4）</td><td>AWSが自動で緩和</td><td>―</td></tr>
+      <tr><td><strong>WAF</strong></td><td>CloudFront、ALB、API Gateway、AppSync など</td><td class="yes">HTTPリクエストの中身（L7）。URL、ヘッダー、ボディ、クエリ文字列</td><td class="yes">許可も拒否も書ける</td><td>―</td></tr>
+      <tr><td><strong>Network Firewall</strong></td><td>VPC（専用サブネットに置いたエンドポイント）</td><td>パケットとセッション。<strong>ドメイン名でのフィルタリングも可能</strong></td><td class="yes">許可も拒否も書ける</td><td>ステートフル／ステートレス両方のルールグループ</td></tr>
+      <tr><td><strong>ネットワークACL</strong></td><td>サブネットの出入口</td><td>送信元／宛先IP、ポート、プロトコル（L3/L4）</td><td class="yes">許可と拒否の両方。番号の小さい順に評価</td><td class="no">ステートレス。戻りの通信も明示的に許可が要る</td></tr>
+      <tr><td><strong>セキュリティグループ</strong></td><td>ENI（インスタンス単位）</td><td>送信元／宛先、ポート、プロトコル（L3/L4）</td><td class="no">許可しか書けない</td><td class="yes">ステートフル。戻りは自動で通る</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>WAF が担当するもの</h3>
+  <p>WAFはHTTPリクエストの中身を読むので、IPとポートしか見ないSGやNACLでは絶対に止められない攻撃を扱えます。<strong>SQLインジェクション、クロスサイトスクリプティング（XSS）、既知の悪性ボット</strong>――これらが設問に出たらWAFです。</p>
+  <ul>
+    <li><strong>マネージドルールグループ</strong>――AWSやマーケットプレイスのベンダーが用意した既製のルール集。OWASP Top 10 相当の防御を、自分でルールを書かずに有効化できます。「迅速に、運用負荷を抑えて一般的な攻撃を防ぎたい」ならこれです。</li>
+    <li><strong>レートベースルール</strong>――5分間のウィンドウで、送信元IPごとのリクエスト数を数え、閾値を超えたIPをブロックします。<strong>「単一のIPから大量のリクエストが来ている」「ログインエンドポイントへの総当たり攻撃」</strong>と書いてあればこれです。</li>
+    <li><strong>地理的一致ルール</strong>――国単位で許可／拒否。「サービス提供国以外からのアクセスを遮断したい」に対応します。CloudFrontの地理的制限機能でも似たことができますが、WAFのほうが細かい条件と組み合わせられます。</li>
+    <li><strong>IPセット</strong>――特定のIPレンジの許可リスト・拒否リスト。</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>「<strong>止めたい対象がHTTPリクエストの中身で決まる</strong>ならWAF、<strong>IPとポートで決まる</strong>ならSGかNACL、<strong>宛先ドメインで決まる</strong>なら Network Firewall（またはRoute 53 Resolver DNS Firewall）」。この3分岐で大半が片付きます。加えて、<strong>SGは拒否を書けない</strong>という一点だけは確実に。「特定のIPアドレスからのアクセスだけをブロックしたい」という設問でSGを選ぶ選択肢は、必ず不正解です。答えはネットワークACLの拒否ルール、あるいはWAFのIPセットです。</p>
+  </div>
+
+  <h3>Shield Standard と Advanced</h3>
+  <p>Shield Standard は<strong>すべてのAWS利用者に自動で適用され、追加料金はかかりません。</strong>SYNフラッドのようなL3/L4の一般的なDDoSを自動で緩和します。「最低限のDDoS対策は何か」の答えは「もう有効になっている」です。</p>
+  <p>Shield Advanced は<strong>月額3,000USD・1年契約</strong>の有償サービスで、差分は次の点です。</p>
+  <ul>
+    <li><strong>DDoSレスポンスチーム（SRT）</strong>への連絡と、攻撃中の支援。</li>
+    <li><strong>コスト保護</strong>――DDoSによってスケールアウトやデータ転送が急増した分の請求が還付されます。設問で「攻撃による予期しない課金を避けたい」と書いてあればこれです。</li>
+    <li>WAFのルール料金が含まれ、SRTによるWAFルールの代理作成が受けられる。</li>
+    <li>L7も含めた高度な検出と、攻撃の可視化。</li>
+  </ul>
+
+  <div class="trap">
+    <span class="label">よくある誤解</span>
+    <p>「DDoS対策と書いてあれば Shield Advanced」――これは半分だけ正しいです。設問に<strong>コストの制約が書かれている</strong>場合、月額3,000USDのサービスは選べません。その場合は「CloudFront と Route 53 の前段に置く」「WAFのレートベースルール」「Auto Scaling で吸収する」といった、Shield Standard を前提にした設計が正解になります。<strong>Advanced が正解になるのは、SRTの支援・コスト保護・専用のSLAといった Advanced 固有の機能が要件に書かれているとき</strong>です。</p>
+  </div></section>
+
+<section id="s8" data-toc="脅威検知">
+
+  <span class="h2num">08</span>
+  <h2>脅威検知と監査 ―― 誰が何を見張るのか</h2>
+  <p class="lead">ここが今日いちばん混乱しやすい領域です。名前からは役割が読み取れないサービスが並びます。<strong>入力（何を材料にするか）と出力（何を教えてくれるか）</strong>の2点だけで表にすると、設問の手がかりと直結します。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>サービス</th><th>何を材料にするか</th><th>何を教えてくれるか</th><th>設問に出たらこの語</th></tr></thead>
+    <tbody>
+      <tr><td><strong>WAF</strong></td><td>HTTPリクエストそのもの</td><td>――（検知ではなく<strong>遮断</strong>する）</td><td>SQLインジェクション、XSS、レート制限、特定の国をブロック</td></tr>
+      <tr><td><strong>Shield Standard / Advanced</strong></td><td>ネットワークトラフィック</td><td>――（DDoSを<strong>緩和</strong>する）</td><td>DDoS、SYNフラッド、攻撃時のコスト還付（Advanced）</td></tr>
+      <tr><td><strong>GuardDuty</strong></td><td class="yes">CloudTrail管理イベント、VPCフローログ、Route 53 Resolver DNSクエリログ<br><span style="color:var(--ink-3);font-size:13px">自分で有効化する必要はない。独立したコピーを読む</span></td><td><strong>侵害の兆候</strong>。仮想通貨マイニング、既知の悪性IPとの通信、異常なAPI呼び出し</td><td>脅威検出、機械学習、エージェント不要ですぐ有効化、既知の脅威インテリジェンス</td></tr>
+      <tr><td><strong>Inspector</strong></td><td>EC2・ECRのコンテナイメージ・Lambda関数の中身</td><td><strong>脆弱性</strong>。既知のCVE、ネットワーク到達可能性</td><td>脆弱性スキャン、パッチ未適用、CVE、コンテナイメージの検査</td></tr>
+      <tr><td><strong>Macie</strong></td><td class="yes">S3 のオブジェクト</td><td><strong>機密データの所在</strong>。個人情報、クレジットカード番号、認証情報</td><td>PII、個人情報、機密データがどこにあるか分からない、S3</td></tr>
+      <tr><td><strong>Detective</strong></td><td>GuardDutyの検出結果、CloudTrail、VPCフローログを<strong>グラフ化したもの</strong></td><td><strong>根本原因</strong>。いつ始まり、何が連鎖したか</td><td>調査、根本原因分析、なぜ起きたのかを掘り下げる</td></tr>
+      <tr><td><strong>Security Hub</strong></td><td class="yes">GuardDuty・Inspector・Macie・Config などの<strong>検出結果</strong></td><td><strong>集約されたダッシュボード</strong>とセキュリティ基準への準拠スコア</td><td>一元管理、複数アカウント、単一のビュー、CISベンチマーク</td></tr>
+      <tr><td><strong>AWS Config</strong></td><td>リソースの<strong>構成</strong>とその変更履歴</td><td><strong>ルールへの準拠／非準拠</strong>と構成の履歴</td><td>コンプライアンス、設定が規則どおりか、いつ誰が変えたか、自動修復</td></tr>
+      <tr><td><strong>CloudTrail</strong></td><td>APIコールそのもの</td><td><strong>誰が何をしたかの記録</strong></td><td>監査ログ、操作の追跡、証跡</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>予防的統制か、発見的統制か</h3>
+  <p>この表を上から2行と、それ以降で切ると性格が変わります。WAFとShieldは<strong>予防的統制</strong>――起きる前に止めます。GuardDuty以降は<strong>発見的統制</strong>――起きたことや今ある弱点を教えますが、それ自体は何も止めません。</p>
+  <p>設問が<strong>「防ぎたい」「ブロックしたい」</strong>と言っているのに検知系を選ぶ、<strong>「検出したい」「可視化したい」</strong>と言っているのに遮断系を選ぶ、というのが典型的な失点です。<strong>要件の動詞を読む</strong>――セキュリティ設問全体に効く技術です。</p>
+
+  <h3>GuardDuty をもう少し詳しく</h3>
+  <p>GuardDutyの設問での強みは、<strong>準備が要らない</strong>ことです。エージェントもログの有効化も保存先の設計も不要で、有効にすれば数分で分析が始まります。VPCフローログを自分で有効化していなくても、独立したストリームとして読み取ります。「最小の運用負荷で、すぐに脅威検知を始めたい」はほぼGuardDutyです。</p>
+  <p>検出結果（Findings）には重要度が付き、EventBridge に流せます。<strong>「脅威を検出したら自動で対応したい」という設問の正解は、GuardDuty → EventBridge → Lambda（またはSNS通知、Systems Manager Automation）</strong>という連鎖です。GuardDutyが単独で何かを遮断するわけではない、という点を押さえてください。</p>
+
+  <div class="note">
+    <span class="label">Config と GuardDuty の分かれ目</span>
+    <p>両者は「見張る」という点では同じに見えますが、見ているものが違います。<strong>Configはリソースの構成</strong>――「このEBSボリュームは暗号化されているか」「このセキュリティグループは0.0.0.0/0で22番を開けていないか」。<strong>GuardDutyは振る舞い</strong>――「このインスタンスが既知のマルウェアのC2サーバーと通信している」「普段使わないリージョンでIAMユーザーが作られた」。</p>
+    <p>設問の言葉で言えば、<strong>「設定が基準を満たしているか確認したい」ならConfig、「攻撃されていないか知りたい」ならGuardDuty</strong>です。Config は非準拠を見つけたときに Systems Manager Automation で自動修復までできるので、「非準拠のリソースを自動的に是正したい」という設問もConfigです。</p>
+  </div>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「S3バケットに個人情報が保存されていないか確認したい」でGuardDutyを選ぶ――不正解です。<strong>中身を見て機密データを探すのはMacieだけ</strong>です。GuardDutyのS3保護は「S3へのアクセスが不審かどうか」を見るもので、オブジェクトの中身は分類しません。同様に「EC2に未適用のパッチがないか」はInspectorで、GuardDutyではありません。<strong>GuardDutyは中身を見ず、Inspectorは振る舞いを見ず、Macieは S3 の外を見ない。</strong>この3行を覚えておけば、この系統の設問はまず落としません。</p>
+  </div>
+
+  <div class="note warn">
+    <span class="label">Security Hub と Detective の違い</span>
+    <p>どちらも「複数のサービスの情報をまとめる」サービスに見えますが、目的が逆方向です。<strong>Security Hubは広く浅く</strong>――組織全体・複数アカウントの検出結果を一画面に集め、CISベンチマークやAWS基礎セキュリティベストプラクティスへの準拠状況をスコアで示します。日常的に見るダッシュボードです。<strong>Detectiveは狭く深く</strong>――一件のインシデントについて、関係するリソースとイベントをグラフでたどり、いつ始まったのか、何が連鎖したのかを突き止めます。インシデント発生後に開くツールです。設問に「調査」「根本原因」「時系列で追う」とあればDetective、「一元的に把握」「複数アカウント」「準拠状況」とあればSecurity Hubです。</p>
+  </div></section>
+
+<section id="s9" data-toc="Cognito">
+
+  <span class="h2num">09</span>
+  <h2>Cognito ―― 2つのプールを確定させる</h2>
+  <p class="lead">IAM講義でも触れましたが、ここで決着をつけます。Cognitoの2つのプールは、<em>認証</em>と<em>AWSへの認可</em>という別々の仕事をしていて、名前が似ているだけです。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>ユーザープール<br><span style="font-weight:400;text-transform:none;letter-spacing:0">User Pool</span></th><th>IDプール<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Identity Pool</span></th></tr></thead>
+    <tbody>
+      <tr><td><strong>答える問い</strong></td><td>この人は誰か（認証）</td><td>この人にAWSの何を触らせるか（認可）</td></tr>
+      <tr><td><strong>持っているもの</strong></td><td class="yes">ユーザーディレクトリ。サインアップ、サインイン、パスワードリセット、MFA</td><td class="no">ユーザーは持たない。外部の認証結果を受け取るだけ</td></tr>
+      <tr><td><strong>返すもの</strong></td><td>JWT（IDトークン、アクセストークン、更新トークン）</td><td class="yes">STSの一時認証情報（アクセスキー・シークレット・セッショントークン）</td></tr>
+      <tr><td><strong>受け付ける認証元</strong></td><td>自前のユーザー、Google・Apple・Facebook、SAML、OIDC</td><td>ユーザープール、外部IdP、そして<strong>未認証（ゲスト）</strong></td></tr>
+      <tr><td><strong>AWSリソースへの直接アクセス</strong></td><td class="no">できない</td><td class="yes">できる。ロールを割り当てる</td></tr>
+      <tr><td><strong>使いどころ</strong></td><td>ALB / API Gateway のオーソライザー、アプリのログイン画面</td><td>モバイルアプリから S3 に直接アップロード、DynamoDB を直接読む</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>実務での典型構成は両方の組み合わせです。<strong>ユーザープールでサインインさせてトークンを得る → そのトークンをIDプールに渡す → 一時認証情報を受け取る → その資格でS3にアップロードする。</strong>この流れが書けるかどうかが問われます。</p>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>設問に<strong>「アプリの利用者が直接S3にファイルをアップロードする」「モバイルアプリからDynamoDBを読む」</strong>と書いてあれば、必ず<strong>IDプール</strong>が絡みます。<strong>「ログイン機能を実装したい」「既存のGoogleアカウントでサインインさせたい」「API Gatewayで認証を強制したい」</strong>なら<strong>ユーザープール</strong>です。そして<strong>「未ログインの利用者にも限定的にアクセスさせたい」はIDプールのゲストロール</strong>――これはユーザープールでは実現できません。なお、社内の従業員の認証は Cognito ではなく IAM Identity Center です。<strong>Cognitoは社外の一般利用者向け</strong>という線引きを忘れないでください。</p>
+  </div></section>
+
+<section id="s10" data-toc="試験での判断軸">
+
+  <span class="h2num">10</span>
+  <h2>試験での判断軸</h2>
+  <p class="lead">設問文にこの手がかりが出たら、この答えに寄せる――という対応表です。今日の内容は、最終的にこの表に圧縮されます。</p>
+
+  <div class="judge">
+    <div class="row"><span class="cue">鍵の使用を監査したい／特定ロールだけに復号を許す</span><span class="arrow">→</span><span class="ans">カスタマー管理キー（CMK）</span></div>
+    <div class="row"><span class="cue">専用HSM／FIPS 140-3 レベル3／鍵素材をAWSに触らせない</span><span class="arrow">→</span><span class="ans">CloudHSM</span></div>
+    <div class="row"><span class="cue">暗号化データを別リージョンでも復号したい</span><span class="arrow">→</span><span class="ans">マルチリージョンキー</span></div>
+    <div class="row"><span class="cue">鍵を消したいが影響が読めない</span><span class="arrow">→</span><span class="ans">まず無効化、その後に削除をスケジュール</span></div>
+    <div class="row"><span class="cue">DB認証情報を自動でローテーション</span><span class="arrow">→</span><span class="ans">Secrets Manager</span></div>
+    <div class="row"><span class="cue">追加コストなしで設定値を階層管理</span><span class="arrow">→</span><span class="ans">Parameter Store（標準）</span></div>
+    <div class="row"><span class="cue">CloudFront に証明書が出てこない／更新を自動にしたい</span><span class="arrow">→</span><span class="ans">us-east-1 で発行、ACM発行＋DNS検証</span></div>
+    <div class="row"><span class="cue">SQLインジェクション／XSS／総当たり</span><span class="arrow">→</span><span class="ans">WAF（レートベースルールを含む）</span></div>
+    <div class="row"><span class="cue">外向き通信を宛先ドメインで制限</span><span class="arrow">→</span><span class="ans">Network Firewall / Route 53 Resolver DNS Firewall</span></div>
+    <div class="row"><span class="cue">DDoS時の想定外課金を避けたい</span><span class="arrow">→</span><span class="ans">Shield Advanced（コスト保護）</span></div>
+    <div class="row"><span class="cue">エージェント不要ですぐ脅威検知を始めたい</span><span class="arrow">→</span><span class="ans">GuardDuty</span></div>
+    <div class="row"><span class="cue">EC2／コンテナイメージの脆弱性を洗い出す</span><span class="arrow">→</span><span class="ans">Inspector</span></div>
+    <div class="row"><span class="cue">S3 のどこに個人情報があるか分からない</span><span class="arrow">→</span><span class="ans">Macie</span></div>
+    <div class="row"><span class="cue">複数アカウントで一元管理／根本原因を時系列で追う</span><span class="arrow">→</span><span class="ans">Security Hub／Detective</span></div>
+  </div></section>
+
+<section id="s11" data-toc="確認問題">
+
+  <span class="h2num">11</span>
+  <h2>確認問題</h2>
+  <p class="lead">先に自分で答えを決めてから開いてください。特に3問目と4問目は、紛らわしい選択肢をわざと残してあります。</p>
+
+  <details class="q">
+    <summary><span class="qnum">Q1</span>ある企業が、S3に保存する大容量のログファイルをKMSで暗号化している。ソリューションアーキテクトが、暗号化の仕組みについて経営層に説明することになった。KMSを使った暗号化の動作として正しいものはどれか。
+      <ul class="opts">
+        <li>A. ファイル全体がKMSに送信され、KMS内で暗号化されてからS3に保存される</li>
+        <li>B. KMSが生成したデータキーでファイルを暗号化し、そのデータキーをKMSキーで暗号化して暗号文と一緒に保存する</li>
+        <li>C. KMSキーの鍵素材がS3にコピーされ、S3側で暗号化処理が行われる</li>
+        <li>D. ファイルはKMSキーのハッシュ値で暗号化され、復号にはKMSへのアクセスは不要である</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>エンベロープ暗号化の説明そのものです。KMSが直接暗号化できるのは4KBまでで、それを超えるデータはこの2段階で扱います。KMSを往復するのはデータキーだけで、データ本体は送られません。</p>
+      <p><strong>判断軸:</strong> Aは4KBの制限に反し、性能面でも成立しません。Cは「鍵素材はKMSの外に出ない」というKMSの根本原則に反します。Dは復号にKMSが不要としている点が誤りで、<strong>復号のたびにKMSへのアクセス権が必要</strong>だからこそ「鍵を無効化してアクセスを断つ」という運用が成立します。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q2</span>Webアプリケーションが Aurora に接続している。セキュリティ監査により、データベースの認証情報を90日ごとにローテーションすることが義務付けられた。運用負荷を最小限に抑える方法はどれか。
+      <ul class="opts">
+        <li>A. 認証情報を Systems Manager Parameter Store の SecureString に保存し、90日ごとに手動で更新する</li>
+        <li>B. 認証情報を Secrets Manager に保存し、Aurora 向けのマネージドローテーションを有効にする</li>
+        <li>C. 認証情報をKMSで暗号化してS3に置き、EventBridge で90日ごとにLambdaを起動して更新する</li>
+        <li>D. 認証情報をEC2のインスタンスメタデータに保存し、起動テンプレートで更新する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>Secrets Manager は Aurora・RDS・Redshift・DocumentDB について、ローテーション用のLambdaを自分で書かなくても済むマネージドローテーションを提供します。ローテーション要件があり、かつ運用負荷の最小化が条件なら、ここは一択です。</p>
+      <p><strong>判断軸:</strong> Aは手動なので「運用負荷を最小限」を満たしません。Cは動きますが、Lambdaの実装と保守を自分で抱えることになり、標準機能で済む選択肢に劣ります。Dはそもそも認証情報の置き場所として不適切です。<strong>「ローテーション」という語が出たらSecrets Manager</strong>、というのが第一反応です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q3</span>企業が、複数のS3バケットに顧客の個人情報が意図せず保存されていないかを継続的に確認したいと考えている。さらに、EC2インスタンスに未適用の既知の脆弱性がないかも把握したい。この2つの要件を満たす組み合わせはどれか。
+      <ul class="opts">
+        <li>A. 個人情報の検出に GuardDuty、脆弱性の把握に AWS Config</li>
+        <li>B. 個人情報の検出に Macie、脆弱性の把握に Inspector</li>
+        <li>C. 個人情報の検出に Security Hub、脆弱性の把握に Detective</li>
+        <li>D. 個人情報の検出に Inspector、脆弱性の把握に Macie</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>S3オブジェクトの中身を読んで機密データを分類できるのはMacieだけです。EC2・ECRイメージ・Lambdaの既知のCVEをスキャンするのがInspectorです。この2つは担当が重なりません。</p>
+      <p><strong>判断軸:</strong> Aは両方外しています。GuardDutyはS3への<strong>アクセスの不審さ</strong>を見るだけでオブジェクトの中身を分類せず、Configは<strong>構成</strong>が規則どおりかを見るのでCVEは扱いません。Cは、Security Hubが他サービスの結果を集約するだけで自分では検出せず、Detectiveは既存の検出結果を掘り下げる調査ツールです。Dは役割が完全に入れ替わっています。<strong>「中身を分類するのはMacie」「弱点を探すのはInspector」</strong>の2行で判定できます。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q4</span>東京リージョンで稼働するWebアプリケーションの前段にCloudFrontを導入し、カスタムドメインでHTTPSを提供しようとしている。ACMで ap-northeast-1 に証明書を発行したが、CloudFrontの設定画面で証明書を選択できない。とるべき対応はどれか。
+      <ul class="opts">
+        <li>A. CloudFrontディストリビューションを us-east-1 に作り直す</li>
+        <li>B. ACM で us-east-1 に同じドメインの証明書を発行し、それをCloudFrontに指定する</li>
+        <li>C. ap-northeast-1 の証明書をエクスポートし、CloudFrontにインポートする</li>
+        <li>D. 証明書の検証方法をEメール検証からDNS検証に変更する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>CloudFrontに紐づける証明書は、us-east-1（バージニア北部）のACMにあるものしか参照できません。CloudFront自体はグローバルサービスなので作り直す必要はなく、証明書だけを us-east-1 で発行し直します。1つのドメインに対して複数リージョンで証明書を持つことは問題ありません。</p>
+      <p><strong>判断軸:</strong> Aは、CloudFrontにリージョンという概念がないので意味を成しません。Cは、<strong>ACMのパブリック証明書は秘密鍵をエクスポートできない</strong>ため不可能です。Dは検証方法の話であって、リージョンの制約とは無関係です。<strong>「CloudFront に関わる証明書は常に us-east-1」</strong>は、そのまま覚えてよい数少ない固定知識です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q5</span>あるアカウントで、EC2インスタンスが既知のマルウェア指令サーバーと通信していることが検出された。セキュリティ担当者は、この通信がいつ始まり、どのIAMプリンシパルの操作が起点になったのかを時系列でたどりたい。最も適したサービスはどれか。
+      <ul class="opts">
+        <li>A. AWS Config で構成変更の履歴を確認する</li>
+        <li>B. Security Hub でセキュリティスコアを確認する</li>
+        <li>C. Amazon Detective でGuardDutyの検出結果を起点に調査する</li>
+        <li>D. Amazon Inspector で該当インスタンスの脆弱性をスキャンする</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: C</span></p>
+      <p>Detective は、GuardDutyの検出結果・CloudTrail・VPCフローログを取り込んでグラフモデルを作り、「いつ始まったか」「どのプリンシパルが関与したか」「何が連鎖したか」を時系列でたどれるようにするサービスです。まさに根本原因分析のためのツールです。</p>
+      <p><strong>判断軸:</strong> Aは構成の変更履歴は分かりますが、ネットワークの振る舞いと結び付けられません。Bは全体の準拠状況を見るダッシュボードで、一件の深掘りには向きません。Dは脆弱性の有無を教えてくれますが、すでに起きた通信の経緯は分かりません。<strong>「調査」「根本原因」「時系列」の3語はDetectiveの指定席</strong>です。逆に「全社の状況を一画面で」ならSecurity Hub、と対で覚えてください。</p>
+    </div>
+  </details></section>
+
+<section id="s12" data-toc="今日の宿題">
+
+  <span class="h2num">12</span>
+  <h2>今日の宿題</h2>
+  <p>今日は表が多い回でした。表は読むだけでは残りません。手で書き直したものだけが残ります。25分でここまでやってください。</p>
+
+  <div class="hw">
+    <div class="item"><span class="box"></span><span class="t"><code>notes/security/</code> の README にチェックリストを追加<small>「暗号化」「シークレット」「証明書」「脅威検知」の4項目。それぞれ、自分が説明できるかどうかの欄を作る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">エンベロープ暗号化を、図を見ずに5行で書く<small>データキーが2つの形で存在すること、平文キーを破棄すること、復号にKMSが要ること。書けなければ04に戻る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d1-secure.md</code> に脅威検知の対応表を追記<small>08の表を、サービス名と「何を材料にするか」の2列だけに削って写す。3列目以降は書かない</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">W5のIssueのチェックボックスを2つ埋める<small>「KMS: キーの種類、キーポリシー、エンベロープ暗号化」と「検知: WAF / GuardDuty / Inspector / Macie / Config の役割分担」</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>plan/log.md</code> に1行残す<small>時間と、10の判断軸のうち一番あやしかった行</small></span></div>
+  </div>
+
+  <div class="note">
+    <span class="label">次回に向けて</span>
+    <p>これでドメイン1は一通り終わりです。次はドメイン2――回復力のあるアーキテクチャ。マルチAZとマルチリージョン、Auto Scaling、ELBのヘルスチェック、RTOとRPOの読み分け。<strong>ドメイン1とドメイン2は模試で混ざって出ます。</strong>「暗号化されたスナップショットを別リージョンにコピーする」型の設問は、今日のマルチリージョンキーの知識がないと解けません。</p>
+  </div></section>
+
+<footer>
+  AWS SAA-C03 / W5 座学<br>
+  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
+</footer>
+
+</main>
+</div>
+</div>
+</body>
+</html>

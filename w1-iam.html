@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;font:14px system-ui,-apple-system,sans-serif;background:#fafaf9}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>IAM 権限の決まり方</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#F6F8F7; --surface:#FFFFFF; --surface-2:#EDF1F0; --inset:#F0F4F3;
+  --ink:#13201E; --ink-2:#485855; --ink-3:#74847F; --line:#D5DEDB;
+  --accent:#0E6B68; --accent-soft:#DCEAE8;
+  --allow:#2B7448; --allow-soft:#DEEFE4;
+  --deny:#AE3729; --deny-soft:#F6E1DD;
+  --warn:#8E5B06; --warn-soft:#F6EAD1;
+  --serif:'Shippori Mincho',"Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:'Zen Kaku Gothic New',"Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+    --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+    --accent:#52B2AD; --accent-soft:#14302E;
+    --allow:#6FC38B; --allow-soft:#142E1E;
+    --deny:#E4877A; --deny-soft:#331A16;
+    --warn:#D3A44E; --warn-soft:#2E2510;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1716; --surface:#151F1E; --surface-2:#1C2827; --inset:#111A19;
+  --ink:#E5EDEB; --ink-2:#A6B6B3; --ink-3:#7B8C89; --line:#293836;
+  --accent:#52B2AD; --accent-soft:#14302E;
+  --allow:#6FC38B; --allow-soft:#142E1E;
+  --deny:#E4877A; --deny-soft:#331A16;
+  --warn:#D3A44E; --warn-soft:#2E2510;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:20px;padding-block:0 96px}
+a{color:var(--accent)}
+
+/* ---------- header ---------- */
+.masthead{padding-block:56px 40px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,6vw,46px);line-height:1.3;margin:0 0 18px;text-wrap:balance;letter-spacing:.01em}
+.standfirst{margin:0;max-width:62ch;color:var(--ink-2);font-size:17px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.meta span{font-family:var(--mono);font-size:12px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);background:var(--surface)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:1fr;gap:40px;margin-top:40px}
+@media (min-width:1000px){ .cols{grid-template-columns:200px minmax(0,1fr);gap:56px} }
+nav.toc{font-size:14px}
+@media (min-width:1000px){ nav.toc{position:sticky;top:32px;align-self:start;max-height:calc(100vh - 64px);overflow-y:auto} }
+nav.toc h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px;font-weight:600}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+@media (max-width:999px){ nav.toc ol{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))} }
+nav.toc a{display:block;padding:5px 10px;border-radius:6px;text-decoration:none;color:var(--ink-2);line-height:1.5;border-left:2px solid transparent}
+nav.toc a:hover{background:var(--surface-2);color:var(--ink)}
+nav.toc a .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-right:7px}
+
+main{min-width:0;max-width:74ch}
+section{padding-block:44px;border-top:1px solid var(--line)}
+section:first-child{border-top:none;padding-top:8px}
+h2{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3.6vw,29px);line-height:1.45;margin:0 0 6px;text-wrap:balance}
+.h2num{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.12em;display:block;margin-bottom:8px}
+h3{font-family:var(--sans);font-weight:700;font-size:17px;margin:34px 0 10px;color:var(--ink);letter-spacing:.01em}
+p{margin:0 0 18px;max-width:66ch}
+ul,ol.body{margin:0 0 18px;padding-left:1.35em;max-width:66ch}
+li{margin-bottom:7px}
+strong{font-weight:700}
+em{font-style:normal;background:linear-gradient(transparent 62%,var(--accent-soft) 62%);font-weight:500}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);padding:2px 6px;border-radius:4px;word-break:break-word}
+
+/* ---------- blocks ---------- */
+.lead{font-size:17.5px;color:var(--ink-2);max-width:64ch}
+.goals{list-style:none;padding:0;margin:0;display:grid;gap:10px;max-width:66ch}
+.goals li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;margin:0;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.goals .tick{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:4px}
+
+.note{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.note p:last-child{margin-bottom:0}
+.note .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
+.note.warn{border-left-color:var(--warn)} .note.warn .label{color:var(--warn)}
+
+.trap{background:var(--deny-soft);border:1px solid transparent;border-radius:8px;padding:16px 18px;margin:0 0 20px;max-width:66ch}
+.trap .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--deny);display:block;margin-bottom:6px;font-weight:600}
+.trap p:last-child{margin-bottom:0}
+
+/* ---------- code ---------- */
+.code{background:var(--inset);border:1px solid var(--line);border-radius:8px;overflow-x:auto;margin:0 0 20px}
+.code pre{margin:0;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.75;color:var(--ink)}
+.code .cap{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding:10px 20px 0}
+.k{color:var(--accent)} .s{color:var(--ink-2)} .c{color:var(--ink-3)} .d{color:var(--deny)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 22px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+th,td{text-align:left;padding:12px 15px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7}
+thead th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:none}
+td.yes{color:var(--allow);font-weight:600} td.no{color:var(--deny);font-weight:600}
+
+/* ---------- eval ladder ---------- */
+.ladder{display:grid;gap:0;margin:0 0 8px}
+.rung{display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.rung .no{font-family:var(--mono);font-size:12px;color:var(--ink-3);text-align:center}
+.rung .q{font-size:15px;line-height:1.6}
+.rung .q small{display:block;color:var(--ink-3);font-size:12.5px;line-height:1.6;margin-top:2px}
+.out{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.out.deny{background:var(--deny-soft);color:var(--deny)}
+.out.allow{background:var(--allow-soft);color:var(--allow)}
+.drop{height:14px;margin-left:33px;border-left:2px solid var(--line)}
+.terminal{margin-top:14px;padding:14px 16px;border-radius:8px;background:var(--allow-soft);color:var(--allow);font-weight:700;font-size:15px}
+
+/* ---------- svg figure ---------- */
+figure{margin:0 0 22px}
+.fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+figcaption{font-size:13px;color:var(--ink-3);margin-top:10px;line-height:1.7}
+svg text{font-family:var(--sans)}
+
+/* ---------- judgement list ---------- */
+.judge{display:grid;gap:8px;margin:0 0 22px}
+.judge .row{display:grid;grid-template-columns:1fr;gap:4px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+@media (min-width:640px){ .judge .row{grid-template-columns:1fr auto 1fr;gap:14px;align-items:center} }
+.judge .cue{font-size:14.5px;color:var(--ink-2)}
+.judge .arrow{font-family:var(--mono);color:var(--ink-3);font-size:13px}
+.judge .ans{font-size:14.5px;font-weight:700;color:var(--accent)}
+
+/* ---------- quiz ---------- */
+details.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin:0 0 12px;overflow:hidden}
+details.q summary{cursor:pointer;padding:16px 18px;font-weight:500;line-height:1.75;list-style:none;font-size:15.5px}
+details.q summary::-webkit-details-marker{display:none}
+details.q summary::after{content:"解答を見る";display:block;font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:10px;letter-spacing:.08em}
+details.q[open] summary::after{content:"閉じる";color:var(--ink-3)}
+details.q summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.q .a{padding:0 18px 18px;border-top:1px solid var(--line);margin-top:0;padding-top:16px}
+details.q .a p{margin-bottom:12px;font-size:15px}
+details.q .a p:last-child{margin-bottom:0}
+.qnum{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.1em;display:block;margin-bottom:7px}
+.correct{color:var(--allow);font-weight:700}
+.opts{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:5px}
+.opts li{font-size:14.5px;color:var(--ink-2);margin:0;padding-left:1.8em;text-indent:-1.8em}
+
+/* ---------- homework ---------- */
+.hw{display:grid;gap:10px;margin:0 0 22px}
+.hw .item{display:grid;grid-template-columns:auto 1fr;gap:13px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;align-items:start}
+.hw .box{width:15px;height:15px;border:1.5px solid var(--ink-3);border-radius:3px;margin-top:6px}
+.hw .t{font-size:15px;line-height:1.7}
+.hw .t small{display:block;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+
+footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3);line-height:1.8}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">AWS SAA-C03 / W1 座学</p>
+  <h1>IAM ―― 権限は誰がどう決めるのか</h1>
+  <p class="standfirst">セキュアなアーキテクチャの設計はSAA-C03の出題比率30%、4分野で最大です。そしてIAMはその根幹にあります。ここが曖昧なまま先に進むと、後半の模試で「なぜこの選択肢が正解なのか」が最後まで腑に落ちません。逆にここを固めれば、他分野の設問でも選択肢を2つに絞れるようになります。</p>
+  <div class="meta"><span>所要 60-90分</span><span>前提 CLF合格レベル</span><span>ドメイン1 (30%)</span></div>
+</header>
+
+<div class="cols">
+
+<nav class="toc">
+  <h2>目次</h2>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
+    <li><a href="#s2"><span class="n">02</span>登場人物</a></li>
+    <li><a href="#s3"><span class="n">03</span>ポリシーの読み方</a></li>
+    <li><a href="#s4"><span class="n">04</span>Conditionと変数</a></li>
+    <li><a href="#s5"><span class="n">05</span>2種類のポリシー</a></li>
+    <li><a href="#s6"><span class="n">06</span>ABAC</a></li>
+    <li><a href="#s7"><span class="n">07</span>ロールとAssumeRole</a></li>
+    <li><a href="#s8"><span class="n">08</span>STSのAPI</a></li>
+    <li><a href="#s9"><span class="n">09</span>フェデレーション</a></li>
+    <li><a href="#s10"><span class="n">10</span>評価ロジック</a></li>
+    <li><a href="#s11"><span class="n">11</span>権限境界とSCP</a></li>
+    <li><a href="#s12"><span class="n">12</span>可視化と点検</a></li>
+    <li><a href="#s13"><span class="n">13</span>試験での判断軸</a></li>
+    <li><a href="#s14"><span class="n">14</span>確認問題</a></li>
+    <li><a href="#s15"><span class="n">15</span>今日の宿題</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="s1" data-toc="ゴール">
+
+  <span class="h2num">01</span>
+  <h2>この講義のゴール</h2>
+  <p class="lead">暗記ではなく、設問を読んだときに手が動く状態を目指します。今日終わったときに、次の3つができていれば合格です。</p>
+  <ul class="goals">
+    <li><span class="tick">01</span><div><strong>ポリシーのJSONを読んで、何が許可されるか言える。</strong><br>Effect / Action / Resource / Condition の4つが何を意味するか、実物を見て説明できる。</div></li>
+    <li><span class="tick">02</span><div><strong>「ロールを使う」が正解になる理由を説明できる。</strong><br>アクセスキーとの違いを、一時認証情報という言葉を使って言える。</div></li>
+    <li><span class="tick">03</span><div><strong>Allow と Deny がぶつかったときの勝敗を即答できる。</strong><br>権限境界とSCPが絡んでも、順を追って結論を出せる。</div></li>
+  </ul>
+  <div class="note">
+    <span class="label">なぜIAMから始めるか</span>
+    <p>IAMはドメイン1の中心ですが、そこに閉じません。「EC2からS3を読む」「Lambdaがデータベースに書く」「別アカウントのバケットを参照する」――ドメイン2〜4の設問にも、権限の話は必ず顔を出します。IAMを固めることは、実質的に全分野への投資です。</p>
+  </div>
+
+  <p>道筋は、登場人物 → ポリシーの文法 → ロールと一時認証情報 → フェデレーション → 評価ロジックと上限の順です。機能名を覚えるのではなく<strong>「この要件が来たらこの箱」</strong>という対応を作りながら読んでください。</p></section>
+
+<section id="s2" data-toc="登場人物">
+
+  <span class="h2num">02</span>
+  <h2>登場人物を整理する</h2>
+  <p>IAMには似た名前の要素が並びます。まず役割で切り分けます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>要素</th><th>正体</th><th>試験での扱われ方</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ルートユーザー</strong></td><td>アカウント作成時のメールアドレス。全権限を持ち、剥奪できない。</td><td>「日常業務でrootを使う」選択肢は常に不正解。MFAを有効化して封印するのが正解。</td></tr>
+      <tr><td><strong>IAMユーザー</strong></td><td>長期の認証情報（パスワード、アクセスキー）を持つ主体。</td><td>人間の管理者には可。<strong>アプリケーションやEC2に使うのは不正解</strong>。</td></tr>
+      <tr><td><strong>IAMグループ</strong></td><td>ユーザーをまとめてポリシーを適用する入れ物。</td><td>グループは<strong>プリンシパルになれない</strong>。ロールを引き受けることも、リソースポリシーの Principal に書くこともできない。</td></tr>
+      <tr><td><strong>IAMロール</strong></td><td>一時的に被る「帽子」。認証情報を持たず、引き受けた時点で発行される。</td><td>EC2・Lambda・クロスアカウント・フェデレーション、すべての正解ルート。</td></tr>
+      <tr><td><strong>インスタンスプロファイル</strong></td><td>ロールをEC2に渡すための容れ物。</td><td>「EC2にロールを付ける」の実体。</td></tr>
+      <tr><td><strong>サービスリンクロール</strong></td><td>AWSサービス自身が使う専用のロール。サービスが自動で作る。</td><td><strong>SCPやRCPの対象外</strong>という例外が問われる。</td></tr>
+      <tr><td><strong>ポリシー</strong></td><td>何を許可／拒否するかを書いたJSON文書。</td><td>AWS管理・カスタマー管理・インラインの3種。再利用性ではカスタマー管理が基本。</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>ポリシーの3つの持ち方</h3>
+  <div class="tw"><table>
+    <thead><tr><th>種類</th><th>共有</th><th>設問での位置づけ</th></tr></thead>
+    <tbody>
+      <tr><td><strong>AWS管理ポリシー</strong></td><td class="yes">できる</td><td>すぐ使えるが粒度が粗い。<code>AdministratorAccess</code> は「最小権限に反する」誤答として置かれる</td></tr>
+      <tr><td><strong>カスタマー管理ポリシー</strong></td><td class="yes">できる</td><td>再利用とバージョン管理ができる。<strong>基本はこれ</strong></td></tr>
+      <tr><td><strong>インラインポリシー</strong></td><td class="no">できない</td><td>1つのIDに埋め込む。IDを消せば消える</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="trap">
+    <span class="label">よくある誤解</span>
+    <p>「ロールは人が使うもの、ユーザーは機械が使うもの」――逆です。<strong>ロールこそ機械（EC2、Lambda、他サービス）に使わせるもの</strong>で、人間もフェデレーション経由でロールを引き受けるのが現代的な形です。IAMユーザーは、どうしても長期の認証情報が必要な例外的ケースのために残っている、と理解してください。</p>
+  </div></section>
+
+<section id="s3" data-toc="ポリシーの読み方">
+
+  <span class="h2num">03</span>
+  <h2>ポリシーの読み方</h2>
+  <p>ポリシーは<em>「誰が / 何を / どれに対して / どんな条件で」</em>の4点セットです。実物を見ます。</p>
+
+  <div class="code">
+    <div class="cap">アイデンティティベースポリシーの例</div>
+<pre><span class="c">{</span>
+  <span class="k">"Version"</span>: <span class="s">"2012-10-17"</span>,
+  <span class="k">"Statement"</span>: [
+    {
+      <span class="k">"Sid"</span>: <span class="s">"ReadReportsOnly"</span>,
+      <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
+      <span class="k">"Action"</span>: [<span class="s">"s3:GetObject"</span>, <span class="s">"s3:ListBucket"</span>],
+      <span class="k">"Resource"</span>: [
+        <span class="s">"arn:aws:s3:::quality-reports"</span>,
+        <span class="s">"arn:aws:s3:::quality-reports/*"</span>
+      ],
+      <span class="k">"Condition"</span>: {
+        <span class="k">"Bool"</span>: { <span class="s">"aws:MultiFactorAuthPresent"</span>: <span class="s">"true"</span> }
+      }
+    }
+  ]
+}</pre>
+  </div>
+
+  <p>読み下すとこうです。<strong>MFAで認証しているときに限り</strong>、<code>quality-reports</code>バケットの中身を<strong>読むことだけ</strong>できる。書き込みも削除も許可していません。</p>
+
+  <h3>ここで押さえる4点</h3>
+  <ul>
+    <li><strong>Version は日付ではない。</strong><code>"2012-10-17"</code>はポリシー言語のバージョン番号で、固定値です。作成日ではありません。</li>
+    <li><strong>バケット本体とオブジェクトは別のARN。</strong><code>ListBucket</code>はバケット(<code>:::name</code>)に対する操作、<code>GetObject</code>はオブジェクト(<code>:::name/*</code>)に対する操作。片方だけ書くと動きません。設問でも狙われます。</li>
+    <li><strong>Condition が効く場面を意識する。</strong>MFA必須、送信元IP制限(<code>aws:SourceIp</code>)、特定VPCエンドポイント経由のみ(<code>aws:SourceVpce</code>)、タグ一致(<code>aws:ResourceTag</code>)あたりが頻出です。</li>
+    <li><strong>書かれていないものは許可されない。</strong>暗黙の拒否が既定です。</li>
+  </ul>
+
+  <h3>要素は6つしかない</h3>
+  <p>必ず書くのが Effect / Action / Resource、<strong>リソースベースでだけ書くのが Principal</strong>、任意が Sid / Condition。<strong>Principal があればリソース側、無ければID側</strong>――設問のJSONはこれで即座に分類できます。</p>
+  <ul>
+    <li><strong>否定形は Effect とセットで読む。</strong><code>NotAction</code> と <code>NotResource</code> は「それ以外すべて」です。Allow と組めば範囲が一気に広がって危険、Deny と組めば「これだけ残して全部禁止」という便利な書き方になります。</li>
+    <li><strong>ARN は6部構成。</strong><code>arn:パーティション:サービス:リージョン:アカウントID:リソース</code>。S3のようにリージョンとアカウントIDが空になるサービスがあり、コロンの連続（<code>arn:aws:s3:::bucket</code>）はそのためです。</li>
+    <li><strong>Statement に順序はない。</strong>集めてから Deny 優先で判定されるだけで、「上に書いた Allow が下の Deny に勝つ」ことは起きません。</li>
+  </ul>
+
+  <div class="note warn">
+    <span class="label">NotAction / NotResource の罠</span>
+    <p><code>"NotAction": ["s3:*"]</code> は「S3以外のすべて」を指します。Allow と組み合わせると意図せず広大な権限になりがちで、設問では「最小権限の原則に反する選択肢」として登場します。見かけたら疑ってください。</p>
+  </div></section>
+
+<section id="s4" data-toc="Conditionと変数">
+
+  <span class="h2num">04</span>
+  <h2>Condition と ポリシー変数</h2>
+  <p class="lead">Allow と Deny だけでは実務の要件は表現できません。「社内ネットワークからだけ」「HTTPSのときだけ」「自分のフォルダだけ」を書き切る道具が <code>Condition</code> とポリシー変数です。正解の選択肢がこの2つを使った一文で書かれていることがよくあります。</p>
+
+  <h3>演算子は条件キーの「型」で選ぶ</h3>
+  <div class="tw"><table>
+    <thead><tr><th>演算子</th><th>型</th><th>使いどころ</th></tr></thead>
+    <tbody>
+      <tr><td><code>StringEquals</code> / <code>StringNotEquals</code></td><td>文字列（完全一致）</td><td>タグ値、リージョン、組織IDの照合</td></tr>
+      <tr><td><code>StringLike</code> / <code>StringNotLike</code></td><td>文字列（<code>*</code> 可）</td><td>プレフィックス一致。<code>s3:prefix</code> でのフォルダ制限</td></tr>
+      <tr><td><code>ArnEquals</code> / <code>ArnLike</code></td><td>ARN</td><td><code>aws:SourceArn</code> で呼び出し元リソースを限定</td></tr>
+      <tr><td><code>Bool</code></td><td>真偽値</td><td><code>aws:MultiFactorAuthPresent</code>、<code>aws:SecureTransport</code></td></tr>
+      <tr><td><code>IpAddress</code> / <code>NotIpAddress</code></td><td>CIDR</td><td><code>aws:SourceIp</code> での送信元制限</td></tr>
+      <tr><td><code>...IfExists</code></td><td>サフィックス</td><td>キーがあるときだけ評価。<strong>無ければ条件は通る</strong></td></tr>
+      <tr><td><code>ForAllValues:</code> / <code>ForAnyValue:</code></td><td>セット演算子</td><td><code>aws:TagKeys</code> のような複数値キーに前置する</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note warn">
+    <span class="label">Deny を書くときは「キーが無い場合」を考える</span>
+    <p><code>aws:MultiFactorAuthPresent: "false"</code> を Deny 条件に書いても、MFAを使っていないリクエストでは<strong>キー自体が存在しない</strong>ことがあり、条件が一致せず Deny が発動しません。「MFAを強制したつもりが効いていない」型の設問では、<code>BoolIfExists</code> を使うか、Allow 側で <code>"true"</code> を要求するのが正解です。</p>
+  </div>
+
+  <h3>頻出の条件キー</h3>
+  <div class="tw"><table>
+    <thead><tr><th>キー</th><th>何を見るか</th><th>設問での典型</th></tr></thead>
+    <tbody>
+      <tr><td><code>aws:SourceIp</code></td><td>送信元のパブリックIP</td><td>「社内のIPレンジからのみ許可」</td></tr>
+      <tr><td><code>aws:SourceVpce</code></td><td>経由したVPCエンドポイントのID</td><td>「このエンドポイント経由以外は拒否」</td></tr>
+      <tr><td><code>aws:SecureTransport</code></td><td>HTTPS（TLS）かどうか</td><td>「暗号化されていない通信を拒否」</td></tr>
+      <tr><td><code>aws:PrincipalOrgID</code></td><td>呼び出し元が属する組織のID</td><td>「組織内の全アカウントに共有。アカウントIDを列挙したくない」</td></tr>
+      <tr><td><code>aws:PrincipalTag/キー</code></td><td>呼び出した人・ロールのタグ</td><td>ABACの主役</td></tr>
+      <tr><td><code>aws:RequestTag/キー</code></td><td><strong>これから付ける</strong>タグ</td><td>「タグを付けずにリソースを作らせない」</td></tr>
+      <tr><td><code>aws:ResourceTag/キー</code></td><td><strong>すでに付いている</strong>タグ</td><td>「自分の部門のリソースだけ操作可」</td></tr>
+      <tr><td><code>aws:TagKeys</code></td><td>リクエスト中のタグキー一覧</td><td>「決められたタグキー以外を使わせない」</td></tr>
+      <tr><td><code>aws:RequestedRegion</code></td><td>呼び出し先のリージョン</td><td>「指定リージョン以外を全面禁止」</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p><code>aws:RequestTag</code> と <code>aws:ResourceTag</code> の取り違えです。<strong>これから付けるのが Request、すでに付いているのが Resource</strong>。設問の動詞が作る・付けるなら Request、読む・変える・消すなら Resource です。</p>
+  </div>
+
+  <div class="note warn">
+    <span class="label">SourceIp は VPCエンドポイント経由では効かない</span>
+    <p>エンドポイント経由のリクエストはパブリックIPを通らないため、<code>aws:SourceIp</code> の制限は意図どおりに働きません。「IP制限を入れたのに想定と違う挙動になる」設問では、<code>aws:SourceVpce</code> や <code>aws:SourceVpc</code> への置き換えが正解です。</p>
+  </div>
+
+  <h3>ポリシー変数で「一人ひとり用」を1枚に畳む</h3>
+  <div class="code">
+    <div class="cap">自分の名前のフォルダだけ読み書きできるポリシー</div>
+<pre>{
+  <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
+  <span class="k">"Action"</span>: [<span class="s">"s3:GetObject"</span>, <span class="s">"s3:PutObject"</span>],
+  <span class="k">"Resource"</span>: <span class="s">"arn:aws:s3:::team-share/${aws:username}/*"</span>
+}</pre>
+  </div>
+  <p><code>${...}</code> は評価時にリクエストの値で置き換わり、ユーザーごとにポリシーを作らずに済みます。使えるのは <code>${aws:username}</code>、<code>${aws:userid}</code>、<code>${aws:PrincipalTag/キー}</code> など。<strong><code>${aws:username}</code> はIAMユーザーにしか値が入りません。</strong>ロールセッションやフェデレーションユーザーでは空なので、Identity Center 環境でこれを使う選択肢は疑い、プリンシパルタグに読み替えてください。</p>
+
+  <h3>Deny と NotAction と Condition の合わせ技</h3>
+  <div class="code">
+    <div class="cap">東京リージョン以外を禁止する（グローバルサービスは例外）</div>
+<pre>{
+  <span class="k">"Effect"</span>: <span class="s">"Deny"</span>,
+  <span class="k">"NotAction"</span>: [<span class="s">"iam:*"</span>, <span class="s">"organizations:*"</span>, <span class="s">"route53:*"</span>, <span class="s">"support:*"</span>],
+  <span class="k">"Resource"</span>: <span class="s">"*"</span>,
+  <span class="k">"Condition"</span>: {
+    <span class="k">"StringNotEquals"</span>: { <span class="s">"aws:RequestedRegion"</span>: <span class="s">"ap-northeast-1"</span> }
+  }
+}</pre>
+  </div>
+  <p>「グローバルサービス<strong>以外</strong>のすべてを、宛先が東京<strong>でないとき</strong>に拒否する」。<code>NotAction</code> で例外を作り、<code>Condition</code> で発動条件を絞る2段構えです。例外が要るのは、IAMやRoute 53が内部的に <code>us-east-1</code> として扱われ、素直に縛ると<strong>自分たちのIAM操作まで止まる</strong>からです。「リージョン制限のSCPでログインできなくなった」型の設問は、この抜けが原因です。</p></section>
+
+<section id="s5" data-toc="2種類のポリシー">
+
+  <span class="h2num">05</span>
+  <h2>2種類のポリシー</h2>
+  <p>ポリシーには、<strong>人・機械の側に貼るもの</strong>と、<strong>リソースの側に貼るもの</strong>があります。この区別が評価ロジックの理解に直結します。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>アイデンティティベース</th><th>リソースベース</th></tr></thead>
+    <tbody>
+      <tr><td><strong>貼る先</strong></td><td>IAMユーザー / グループ / ロール</td><td>S3バケット、SQSキュー、KMSキー、Lambda関数など</td></tr>
+      <tr><td><strong>Principal 要素</strong></td><td class="no">書かない（貼った相手が主語）</td><td class="yes">必須（誰に許すかを明記）</td></tr>
+      <tr><td><strong>答える問い</strong></td><td>「この人は何ができるか」</td><td>「このリソースには誰が触れるか」</td></tr>
+      <tr><td><strong>クロスアカウント</strong></td><td>単独では不可</td><td class="yes">可能（相手アカウントを Principal に書ける）</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>リソースベースポリシーは<strong>すべてのサービスにあるわけではありません</strong>。S3バケット、SQSキュー、SNSトピック、KMSキー、Lambda、Secrets Manager、そして<strong>IAMロールの信頼ポリシー</strong>が代表です。<strong>EC2インスタンスにはありません</strong>。「EC2にポリシーを貼って別アカウントから触らせる」という選択肢は成立しないので、見たら落とせます。</p>
+
+  <div class="note">
+    <span class="label">判断軸</span>
+    <p>「<strong>別アカウントからアクセスさせたい</strong>」という設問が出たら、リソースベースポリシー（またはクロスアカウントロール）が絡みます。アイデンティティベースだけでは、自分のアカウントの外には届きません。逆に「<strong>ロールを引き受けさせず、相手のIDのまま直接触らせたい</strong>」ならリソースベースポリシー一択です。</p>
+  </div></section>
+
+<section id="s6" data-toc="ABAC">
+
+  <span class="h2num">06</span>
+  <h2>ABAC ―― タグで権限を決める</h2>
+  <p class="lead">ここまでの書き方は、突き詰めると「このロールにはこのリソース」と列挙する <strong>RBAC（ロールベース）</strong>です。プロジェクトが増えるたびにポリシーが増えるのが弱点で、そこを解くのが <strong>ABAC（属性ベース、タグベース）</strong>。「組織が拡大してもポリシーを増やしたくない」という言い回しで出ます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>RBAC</th><th>ABAC</th></tr></thead>
+    <tbody>
+      <tr><td><strong>許可の決め方</strong></td><td>ポリシーにリソースのARNを列挙する</td><td class="yes">プリンシパルのタグとリソースのタグが一致するかで決める</td></tr>
+      <tr><td><strong>プロジェクトが増えたら</strong></td><td class="no">ポリシーとロールを追加</td><td class="yes">タグを付けるだけ。ポリシーは変えない</td></tr>
+      <tr><td><strong>リソースが増えたら</strong></td><td class="no">ARN一覧を更新</td><td class="yes">タグが付いていれば自動で対象になる</td></tr>
+      <tr><td><strong>人の異動</strong></td><td>別のロールを割り当て直す</td><td class="yes">プリンシパルのタグを書き換えるだけ</td></tr>
+      <tr><td><strong>ポリシーの本数</strong></td><td class="no">職務の数だけ増える</td><td class="yes">原理的には1本で足りる</td></tr>
+      <tr><td><strong>弱点</strong></td><td>管理対象が線形に増える</td><td class="no">タグ付けの規律が崩れると権限も崩れる</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="code">
+    <div class="cap">ABAC の定型 ―― 自分と同じ project タグのインスタンスだけ起動・停止できる</div>
+<pre>{
+  <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
+  <span class="k">"Action"</span>: [<span class="s">"ec2:StartInstances"</span>, <span class="s">"ec2:StopInstances"</span>],
+  <span class="k">"Resource"</span>: <span class="s">"arn:aws:ec2:*:*:instance/*"</span>,
+  <span class="k">"Condition"</span>: {
+    <span class="k">"StringEquals"</span>: {
+      <span class="s">"aws:ResourceTag/project"</span>: <span class="s">"${aws:PrincipalTag/project}"</span>
+    }
+  }
+}</pre>
+  </div>
+
+  <p><code>Resource</code> が<strong>全インスタンス</strong>で、絞り込みをARNではなく条件式が担当しているのがポイントです。プロジェクトが100個に増えても、このポリシーは変わりません。</p>
+
+  <h3>ABACを成立させる3点セット</h3>
+  <ol class="body">
+    <li><strong>プリンシパルにタグが付いている。</strong>IAMユーザーやロールに直接付けるか、フェデレーション時に<strong>セッションタグ</strong>として渡します。SAMLやOIDCのIdPから属性を持ち込めるので、社内ディレクトリの情報をそのまま権限に使えます。</li>
+    <li><strong>リソースにタグが付いている。</strong>ここが崩れると全部崩れるので、<code>aws:RequestTag</code> と <code>aws:TagKeys</code> で<strong>タグ無しではリソースを作れないようにする</strong>制御がセットで出てきます。</li>
+    <li><strong>タグを勝手に書き換えられない。</strong>自分のタグを変えられるなら他人のリソースにも手が届きます。<code>ec2:CreateTags</code> や <code>iam:TagRole</code> を絞るのが必須で、<strong>「ABACの弱点は何か」の答えはここ</strong>です。</li>
+  </ol>
+
+  <div class="note">
+    <span class="label">どんな設問でABACが答えになるか</span>
+    <p>手がかりは3つ。<strong>「チームやプロジェクトが継続的に増える」「ポリシーの数を増やさずに」「新しく作られたリソースにも自動で適用したい」</strong>。どれかがあれば、タグと条件キーを使っている選択肢を選びます。逆に職務も対象リソースも固定なら、ABACにする選択肢はオーバーエンジニアリングとして落とされます。</p>
+  </div></section>
+
+<section id="s7" data-toc="ロールとAssumeRole">
+
+  <span class="h2num">07</span>
+  <h2>ロールと AssumeRole</h2>
+  <p>ロールは、SAAで最も繰り返し問われる概念です。<em>ロールは認証情報を持ちません。</em>引き受けた瞬間に、期限付きの認証情報が発行されます。</p>
+
+  <h3>ロールには2つのポリシーがある</h3>
+  <div class="tw"><table>
+    <thead><tr><th>ポリシー</th><th>答える問い</th><th>書く内容</th></tr></thead>
+    <tbody>
+      <tr><td><strong>信頼ポリシー</strong><br><span style="color:var(--ink-3);font-size:13px">Trust policy</span></td><td>誰がこの帽子を被れるか</td><td>Principal（EC2サービス、別アカウント、IdPなど）</td></tr>
+      <tr><td><strong>許可ポリシー</strong><br><span style="color:var(--ink-3);font-size:13px">Permissions policy</span></td><td>被ると何ができるか</td><td>Action と Resource</td></tr>
+    </tbody>
+  </table></div>
+  <p>この2つは役割がまったく違います。「アクセスできない」というトラブルの設問では、<strong>どちらが欠けているか</strong>を問われます。信頼ポリシーはロールに貼られたリソースベースポリシーそのもので、Principal は用途で決まります。EC2なら <code>ec2.amazonaws.com</code>、Lambdaなら <code>lambda.amazonaws.com</code>、別アカウントならそのARN、オンプレからなら <code>rolesanywhere.amazonaws.com</code> です。</p>
+
+  <h3>クロスアカウントで両側に設定が要る理由</h3>
+  <figure>
+    <div class="fig">
+      <svg viewBox="0 0 860 300" width="860" height="300" role="img" aria-label="アカウントAのユーザーがアカウントBのロールをAssumeRoleし、一時認証情報でS3にアクセスする流れ">
+        <rect x="16" y="46" width="250" height="212" rx="10" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="32" y="72" font-size="12.5" fill="var(--ink-3)" font-weight="600">アカウント A（呼び出す側）</text>
+        <rect x="44" y="112" width="194" height="58" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="141" y="139" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">IAM ユーザー</text>
+        <text x="141" y="158" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">または別のロール</text>
+        <rect x="44" y="190" width="194" height="42" rx="6" fill="var(--accent-soft)"/>
+        <text x="141" y="206" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">① sts:AssumeRole を許可</text>
+        <text x="141" y="222" font-size="11" fill="var(--accent)" text-anchor="middle">（この人が引き受けてよい）</text>
+
+        <line x1="272" y1="141" x2="344" y2="141" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M344 141 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <text x="308" y="130" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">②</text>
+
+        <rect x="356" y="46" width="488" height="212" rx="10" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <text x="372" y="72" font-size="12.5" fill="var(--ink-3)" font-weight="600">アカウント B（リソース側）</text>
+
+        <rect x="384" y="112" width="184" height="58" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="476" y="139" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">IAM ロール</text>
+        <text x="476" y="158" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">一時認証情報を発行</text>
+        <rect x="384" y="190" width="184" height="42" rx="6" fill="var(--accent-soft)"/>
+        <text x="476" y="206" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">信頼ポリシー</text>
+        <text x="476" y="222" font-size="11" fill="var(--accent)" text-anchor="middle">Principal にアカウント A</text>
+
+        <line x1="576" y1="141" x2="652" y2="141" stroke="var(--ink-3)" stroke-width="1.8"/>
+        <path d="M652 141 l-9 -5 v10 z" fill="var(--ink-3)"/>
+        <text x="614" y="130" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">③</text>
+
+        <rect x="664" y="112" width="160" height="58" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="744" y="139" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 バケット</text>
+        <text x="744" y="158" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">許可ポリシーの範囲で</text>
+      </svg>
+    </div>
+    <figcaption>① 呼び出す側に <code>sts:AssumeRole</code> の許可、② 引き受けられる側の信頼ポリシーにアカウントAの記載。<strong>この両方が揃って初めて成立します。</strong>片側だけの選択肢は不正解です。</figcaption>
+  </figure>
+
+  <h3>一時認証情報の性質</h3>
+  <ul>
+    <li>返ってくるのは3点セット――アクセスキーID、シークレットアクセスキー、<strong>セッショントークン</strong>。3つ目があるのが一時認証情報の目印です。</li>
+    <li>既定の有効期間は1時間、ロールの設定で最大12時間まで延長可能。ロールから別のロールへ連鎖（ロールチェーン）する場合は最大1時間に制限されます。</li>
+    <li>EC2では<strong>インスタンスプロファイル</strong>経由で自動的に取得・更新されます。アプリ側でキーを書く必要はありません。</li>
+    <li>Lambdaでは<strong>実行ロール</strong>が同じ役割を果たします。</li>
+    <li>引き受け時の<strong>ロールセッション名</strong>はCloudTrailに記録されます。共有ロールでも誰が使ったか追えるのはこのおかげで、<code>sts:SourceIdentity</code> を要求すれば以降のセッションでも消せない識別子が残ります。</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">ExternalId</span>
+    <p>サードパーティのSaaSに自社アカウントへのアクセスを許すとき、信頼ポリシーに <code>sts:ExternalId</code> の条件を付けます。これは「混乱した代理人問題」――そのSaaSが他の顧客のIDを使って、意図しないアカウントに侵入されるのを防ぐ仕組みです。<strong>設問に「サードパーティ」「外部ベンダー」が出たらExternalId</strong>、と覚えてください。同じ問題をAWSサービス相手に防ぐキーは <code>aws:SourceArn</code> と <code>aws:SourceAccount</code> です。<strong>外部の会社ならExternalId、AWSサービスならSourceArn</strong>と対応させておくと迷いません。</p>
+  </div>
+
+  <div class="note warn">
+    <span class="label">iam:PassRole を忘れない</span>
+    <p>「EC2を起動してロールを付ける」「Lambda関数に実行ロールを指定する」には、<code>ec2:RunInstances</code> などのほかに <strong><code>iam:PassRole</code></strong> が要ります。ロールをサービスに<strong>渡す</strong>権限です。「EC2は起動できるのに、ロールを付けようとすると失敗する」型の設問はこれが答え。逆に <code>iam:PassRole</code> を <code>Resource: "*"</code> で与えると、開発者は管理者権限のロールをEC2に付けて権限昇格できます。<strong>渡せるロールをARNで限定する</strong>のが正しい書き方です。</p>
+  </div></section>
+
+<section id="s8" data-toc="STSのAPI">
+
+  <span class="h2num">08</span>
+  <h2>STS の主要なAPI</h2>
+  <p class="lead">一時認証情報を出す窓口が STS です。5つあり、<strong>ロールを引き受けるのか</strong>と<strong>呼ぶときにAWSの認証情報が要るか</strong>で使い分けが決まります。設問はAPI名そのものより「この状況ならどれか」の形で出ます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>API</th><th>何のため</th><th>AWS認証情報</th><th>有効期間</th><th>設問の手がかり</th></tr></thead>
+    <tbody>
+      <tr><td><strong>AssumeRole</strong></td><td>同一／別アカウントのIAMロールを引き受ける</td><td class="no">必要</td><td>15分〜12時間、既定1時間。ロールチェーンは1時間</td><td>クロスアカウント、EC2・Lambda、ExternalId</td></tr>
+      <tr><td><strong>AssumeRoleWithWebIdentity</strong></td><td>OIDC・ソーシャルログインで認証済みの利用者にロールを渡す</td><td class="yes">不要</td><td>15分〜12時間、既定1時間</td><td>モバイル／Webアプリ、Google・Facebook、Podに権限を渡す</td></tr>
+      <tr><td><strong>AssumeRoleWithSAML</strong></td><td>SAML 2.0 のIdPで認証した従業員にロールを渡す</td><td class="yes">不要</td><td>15分〜12時間。アサーションの <code>SessionNotOnOrAfter</code> が早ければそちら</td><td>Active Directory、ADFS、既存の社内IdP</td></tr>
+      <tr><td><strong>GetSessionToken</strong></td><td>IAMユーザーの権限のまま、MFA付きの一時認証情報を得る</td><td class="no">必要</td><td>15分〜36時間、既定12時間。ルートは最大1時間</td><td>「MFAを条件にしたAPI操作」</td></tr>
+      <tr><td><strong>GetFederationToken</strong></td><td>自前のIDブローカーがフェデレーションユーザー用の認証情報を発行</td><td class="no">必要</td><td>15分〜36時間、既定12時間。ルートは最大1時間</td><td>「独自の認証プロキシ」「コンソールのサインインURLを発行」</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>3つの見分け方</h3>
+  <ul>
+    <li><strong>ロールになるか、ユーザーのままか。</strong><code>AssumeRole</code> 系はロールの権限に切り替わり、<code>GetSessionToken</code> は<strong>呼び出したIAMユーザーの権限をそのまま</strong>引き継いでMFAの事実だけを足します。</li>
+    <li><strong>長期キーが要るか。</strong>AWS認証情報なしで呼べるのは <code>AssumeRoleWithWebIdentity</code> と <code>AssumeRoleWithSAML</code> だけ。「アプリにAWSの認証情報を埋め込まずに」ならこの2つかCognitoです。</li>
+    <li><strong>最長は12時間か36時間か。</strong>ロールを引き受ける系は12時間が上限です。「長時間バッチのために延ばしたい」ならロールの最大セッション時間を延ばすのが正解で、それ以上を求める選択肢は成立しません。</li>
+  </ul>
+
+  <div class="note warn">
+    <span class="label">GetSessionToken の制限</span>
+    <p>得られた認証情報は<strong>MFAの情報を含めない限りIAMのAPIを呼べず</strong>、STSも <code>AssumeRole</code> と <code>GetCallerIdentity</code> 以外は呼べません。欠陥ではなく、MFAを強制するための設計です。</p>
+  </div></section>
+
+<section id="s9" data-toc="フェデレーション">
+
+  <span class="h2num">09</span>
+  <h2>フェデレーションと IAM Identity Center</h2>
+  <p class="lead">「IAMユーザーを作らずにAWSを使わせる」のがフェデレーションです。選択肢は多く見えますが、<strong>相手が社内の従業員か、アプリの一般利用者か、AWS外のワークロードか</strong>でほぼ決まります。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>方式</th><th>相手</th><th>仕組み</th><th>設問の手がかり</th></tr></thead>
+    <tbody>
+      <tr><td><strong>IAM Identity Center</strong></td><td>社内の従業員</td><td>許可セットが各アカウントにIAMロールとして展開される</td><td class="yes">「複数アカウント」「従業員」「一元管理」</td></tr>
+      <tr><td><strong>SAML 2.0 フェデレーション</strong></td><td>社内の従業員</td><td>IAMにSAMLプロバイダを登録し <code>AssumeRoleWithSAML</code></td><td>「既存のSAML IdPをそのまま」「単一アカウント」</td></tr>
+      <tr><td><strong>OIDC / Web ID</strong></td><td>アプリ利用者、AWS外のワークロード</td><td>IAMにOIDCプロバイダを登録し <code>AssumeRoleWithWebIdentity</code></td><td>「Googleでログイン」「CI/CDから鍵なしでデプロイ」</td></tr>
+      <tr><td><strong>Cognito ユーザープール</strong></td><td>アプリの一般利用者</td><td>サインアップ／サインインを提供する<strong>認証基盤</strong></td><td>「アプリ独自のユーザー登録」</td></tr>
+      <tr><td><strong>Cognito IDプール</strong></td><td>アプリの一般利用者</td><td>認証済み利用者に<strong>AWSの一時認証情報</strong>を配る</td><td>「利用者が直接S3にアップロード」</td></tr>
+      <tr><td><strong>IAM Roles Anywhere</strong></td><td>オンプレミスのサーバー</td><td>X.509証明書で認証して一時認証情報を得る</td><td>「データセンターのサーバーからAWS API」</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>IAM Identity Center ―― 従業員アクセスの本命</h3>
+  <p>旧称 AWS SSO。実態は<strong>複数アカウントの権限を一箇所で配るサービス</strong>です。Organizations の管理アカウントで有効化する<strong>組織インスタンス</strong>が本来の使い方で、試験で問われるのもこちらです。</p>
+  <ul>
+    <li><strong>アイデンティティソースは3択。</strong>Identity Center 自身のディレクトリ、Active Directory、外部IdP（SAML 2.0 でのサインインとSCIMでのユーザー同期）。「既存の社内IDでAWSにログインさせたい」はこのどれかで、<strong>IAMユーザーを人数分作る選択肢は常に不正解</strong>です。</li>
+    <li><strong>許可セットが中核。</strong>ポリシーの束に名前を付けたもので、「ユーザーまたはグループ × アカウント × 許可セット」で割り当てます。割り当てると<strong>対象アカウントにIAMロールが自動でプロビジョニングされます</strong>。実体はロールなので、ログ上もそう見えます。</li>
+    <li><strong>アクセスポータルから入る。</strong>利用者は専用URLでサインインし、使えるアカウントと許可セットを選びます。CLIは <code>aws configure sso</code> で一時認証情報が自動更新され、<strong>アクセスキーをローカルに置かない運用</strong>が完成します。</li>
+  </ul>
+
+  <div class="trap">
+    <span class="label">Identity Center と Organizations の関係</span>
+    <p>組織インスタンスは <strong>AWS Organizations が前提</strong>です。また配られるのはロールへの割り当てなので、<strong>SCPの上限はそのまま効きます</strong>。「Identity Center で管理者権限を割り当てたのに操作できない」ならSCPを疑います。</p>
+  </div>
+
+  <h3>IAM Roles Anywhere ―― オンプレミスから鍵なしで</h3>
+  <p>アクセスキーを配るしかなかった場面を、<strong>社内に既にある証明書の仕組み</strong>で置き換えます。構成要素は3つです。</p>
+  <ul>
+    <li><strong>トラストアンカー。</strong>信頼するCAの登録。AWS Private CA でも、自社の既存CAの証明書を持ち込む形でも構いません。</li>
+    <li><strong>プロファイル。</strong>引き受けられるロールの集合と、任意のセッションポリシー。ここでさらに権限を絞れます。</li>
+    <li><strong>ロールの信頼ポリシー。</strong><code>rolesanywhere.amazonaws.com</code> を信頼し、<code>aws:SourceArn</code> でトラストアンカーを限定します。この条件が無いと、同じアカウントのどのトラストアンカーの証明書でもロールを引き受けられてしまいます。</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">「どこから呼ぶか」の対応表</span>
+    <p>EC2なら<strong>インスタンスプロファイル</strong>、Lambdaなら<strong>実行ロール</strong>、ECSなら<strong>タスクロール</strong>、EKSのPodなら<strong>OIDC経由のサービスアカウント連携</strong>、オンプレなら<strong>IAM Roles Anywhere</strong>。この5つを言えれば「認証情報を安全に渡す方法はどれか」型は考えずに解けます。<strong>どの場合も、アクセスキーを配る選択肢が正解になることはありません。</strong></p>
+  </div></section>
+
+<section id="s10" data-toc="評価ロジック">
+
+  <span class="h2num">10</span>
+  <h2>評価ロジック ―― Allow と Deny の勝敗</h2>
+  <p>ここが本日の山場です。AWSはリクエストごとに、関係するすべてのポリシーを集めて次の順で判定します。</p>
+
+  <div class="ladder">
+    <div class="rung"><span class="no">01</span><span class="q">どこかに<strong>明示的な Deny</strong> があるか<small>アイデンティティ、リソース、SCP、権限境界、セッション――どれか一つでも</small></span><span class="out deny">あり → 拒否</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">02</span><span class="q"><strong>SCP</strong> で許可されているか<small>組織のメンバーアカウントの場合のみ。管理アカウントには適用されない</small></span><span class="out deny">いいえ → 拒否</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">03</span><span class="q"><strong>リソースベースポリシー</strong>で許可されているか<small>同一アカウント内なら、これだけで許可が成立する（多くのサービスで）</small></span><span class="out allow">はい → 許可</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">04</span><span class="q"><strong>権限境界</strong>の範囲内か<small>設定されている場合のみ</small></span><span class="out deny">いいえ → 拒否</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">05</span><span class="q"><strong>アイデンティティベースポリシー</strong>で許可されているか<small>セッションポリシーがあればその範囲内でもあること</small></span><span class="out deny">いいえ → 拒否（暗黙の拒否）</span></div>
+  </div>
+  <div class="terminal">すべて通過 → 許可</div>
+
+  <h3>3つの原則に圧縮する</h3>
+  <ol class="body">
+    <li><strong>明示的な Deny は絶対。</strong>他に何個 Allow があっても覆りません。AdministratorAccess を持っていても、SCPで Deny されていれば実行できません。</li>
+    <li><strong>何も書かれていなければ拒否。</strong>暗黙の拒否が既定値です。「許可されていないから拒否」と「Denyされたから拒否」は、結果は同じでも設問での意味が違います。</li>
+    <li><strong>Allow は足し算、制約は掛け算。</strong>同一アカウント内のアイデンティティとリソースは和集合（どちらかが許せば通る）。権限境界・SCP・セッションポリシーは積集合（すべてが許してはじめて通る）。</li>
+  </ol>
+
+  <div class="tw"><table>
+    <thead><tr><th>組み合わせ</th><th>論理</th><th>意味</th></tr></thead>
+    <tbody>
+      <tr><td>アイデンティティ + リソース（同一アカウント）</td><td class="yes">和集合 OR</td><td>どちらか一方が許可すれば通る</td></tr>
+      <tr><td>アイデンティティ + リソース（別アカウント）</td><td>積集合 AND</td><td>両方が許可して初めて通る</td></tr>
+      <tr><td>アイデンティティ + 権限境界</td><td>積集合 AND</td><td>境界は権限を与えない。上限を決めるだけ</td></tr>
+      <tr><td>アイデンティティ + SCP</td><td>積集合 AND</td><td>SCPも権限を与えない。組織の天井</td></tr>
+      <tr><td>ロールの許可ポリシー + セッションポリシー</td><td>積集合 AND</td><td>セッションポリシーは権限を増やせない</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>クロスアカウントは「2回」評価される</h3>
+  <p>アカウント境界をまたぐとき、AWSは評価を2回行います。呼び出し元で「このIDは外に出てよいか」、リソース側で「この相手を入れてよいか」。<strong>両方が Allow のときだけ通り、どちらかに明示的な Deny があれば拒否</strong>です。</p>
+  <p>これが「同一アカウントなら和集合、別アカウントなら積集合」の正体です。境界をまたぐと<strong>呼び出し元のアイデンティティベースポリシーが必ず要ります</strong>。相手のバケットポリシーに自分のロールARNが書いてあっても、自分の側で <code>s3:GetObject</code> が許可されていなければ通りません。「バケットポリシーは正しいのにアクセスできない」なら、疑うのは呼び出し元です。ロールを引き受けたあとは<strong>そのロールが属するアカウントの中の話</strong>に変わるので、「いま自分はどちらのアカウントのプリンシパルか」を常に確認してください。</p>
+
+  <h3>セッションポリシーの位置づけ</h3>
+  <p><code>AssumeRole</code> や <code>GetFederationToken</code> を呼ぶときに渡す、その場限りのポリシーです。<strong>ロールの許可ポリシーとの積集合になり、書いても権限は増えません。</strong>役割は<strong>「広めのロールを共通で用意し、呼び出し側が用途ごとに狭める」</strong>ことで、1つのロールを複数のテナントで使い分ける構成の答えになります。Roles Anywhere のプロファイルも効き方は同じ「上から被せる上限」です。<code>GetFederationToken</code> だけは特殊で、セッションポリシーを渡さなければ、そのフェデレーションユーザーにはほぼ何の権限も残りません。</p>
+
+  <h3>「暗黙の拒否」と「明示的な拒否」の書き分け</h3>
+  <p>結果はどちらも「アクセス拒否」ですが、<strong>設問での意味と正解の対処法が違います</strong>。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>暗黙の拒否</th><th>明示的な拒否</th></tr></thead>
+    <tbody>
+      <tr><td><strong>原因</strong></td><td>どこにも Allow が書かれていない</td><td>どこかに <code>"Effect": "Deny"</code> がある</td></tr>
+      <tr><td><strong>設問での書かれ方</strong></td><td>「権限が付与されていない」「アタッチし忘れた」「新しく作ったロールで」</td><td>「管理者権限があるのに」「ポリシーを追加しても解決しない」「組織のポリシーで」</td></tr>
+      <tr><td><strong>正解の方向</strong></td><td class="yes">必要な Allow を足す</td><td class="no">Allow を足しても無駄。Deny か上限を直す</td></tr>
+      <tr><td><strong>出どころ</strong></td><td>ポリシーの書き漏れ、ARNの指定ミス</td><td>SCP、RCP、バケットポリシーの Deny、条件付き Deny</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>もうひとつ、<strong>どちらでもない第3のパターン</strong>が<strong>権限境界やSCPの範囲外</strong>です。Deny が1行も書かれていないのに、上限の外という理由で拒否されます。設問では「上限を超えている」「境界の外」という言い方になります。<strong>「Allow を足して解決するか」で3種類を切り分ける</strong>と選択肢が一気に絞れます。</p>
+
+  <div class="trap">
+    <span class="label">最頻出の引っかけ</span>
+    <p>「ユーザーに <code>AdministratorAccess</code> が付いているのに操作できない。原因は？」――答えは<strong>SCPか権限境界</strong>です。権限を与えるポリシーをいくら足しても、上限を超えることはできません。この形の設問は必ず出ます。「より強いポリシーをアタッチする」「インラインで上書きする」という選択肢は全部不正解で、<strong>ポリシーに優先度や上書きという概念はありません。</strong></p>
+  </div></section>
+
+<section id="s11" data-toc="権限境界とSCP">
+
+  <span class="h2num">11</span>
+  <h2>権限境界 と SCP の違い</h2>
+  <p>どちらも「上限を決める」仕組みで、混同されがちです。適用先が決定的に違います。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th></th><th>権限境界<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Permissions boundary</span></th><th>SCP<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Service Control Policy</span></th></tr></thead>
+    <tbody>
+      <tr><td><strong>適用先</strong></td><td>個々のIAMユーザー／ロール</td><td>AWSアカウント（OU単位・組織単位）</td></tr>
+      <tr><td><strong>設定場所</strong></td><td>IAM</td><td>AWS Organizations</td></tr>
+      <tr><td><strong>典型的な目的</strong></td><td>開発者にIAM操作を任せつつ、自分より強い権限を作らせない</td><td>組織全体のガードレール（例：特定リージョン以外を全面禁止）</td></tr>
+      <tr><td><strong>管理アカウント</strong></td><td>概念として無関係</td><td class="no">適用されない</td></tr>
+      <tr><td><strong>権限を付与するか</strong></td><td class="no">しない（上限のみ）</td><td class="no">しない（上限のみ）</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>SCP で押さえる3点</h3>
+  <ul>
+    <li><strong>継承は積み重なる。</strong>ルート・OU・アカウントの各階層のSCPを<strong>すべて満たす</strong>必要があり、上位で許可されていないものを下位で許可し直すことはできません。「子OUで例外を作る」選択肢はここで落ちます。</li>
+    <li><strong>既定で <code>FullAWSAccess</code> が付く。</strong>主流は<strong>拒否リスト戦略</strong>――これを残したまま禁止したいものを Deny で足す形です。<code>FullAWSAccess</code> を外して許可するサービスだけ列挙する許可リスト戦略は厳格ですが管理が重くなります。「最小の運用負荷で特定操作だけ禁止」なら拒否リストです。</li>
+    <li><strong>効かない相手がいる。</strong>管理アカウント内のプリンシパルと<strong>サービスリンクロール</strong>は対象外です。「全アカウントで強制したのに管理アカウントだけ通る」は仕様どおりで、対策は管理アカウントで本番を動かさないことです。</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">RCP ―― リソース側のガードレール</span>
+    <p>SCPが「自組織のプリンシパルが何をできるか」の上限であるのに対し、<strong>RCP（リソースコントロールポリシー）は「自組織のリソースに誰が触れるか」の上限</strong>です。全アカウントのS3に対し <code>aws:PrincipalOrgID</code> が自組織でないアクセスを一律 Deny する使い方が代表例。SCPと同じく権限は与えず、管理アカウントとサービスリンクロールは対象外です。「組織外への意図しない共有を、バケットポリシーを1つずつ直さずに止めたい」ならRCPです。</p>
+  </div>
+
+  <div class="note">
+    <span class="label">設問での見分け方</span>
+    <p>「<strong>開発者に</strong>権限委譲したい / 権限昇格を防ぎたい」→ 権限境界。「<strong>組織全体で</strong>禁止したい」→ SCP。「<strong>組織外からのアクセス</strong>を止めたい」→ RCP。主語が個人かアカウントか外部かで切り分けられます。</p>
+  </div></section>
+
+<section id="s12" data-toc="可視化と点検">
+
+  <span class="h2num">12</span>
+  <h2>アクセスの可視化と点検</h2>
+  <p class="lead">権限は設計した瞬間から劣化します。人が辞め、プロジェクトが終わり、使われない権限だけが残る。「棚卸しして最小権限に近づけたい」という要件は繰り返し出ます。道具は<strong>何を見たいのか</strong>で選びます。</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>道具</th><th>答える問い</th><th>データの出どころ</th><th>設問の手がかり</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Access Analyzer<br>（外部アクセス）</strong></td><td>組織やアカウントの外に公開されていないか</td><td class="yes">ポリシーの静的解析</td><td>「外部に共有されているリソースを検出したい」</td></tr>
+      <tr><td><strong>Access Analyzer<br>（未使用アクセス）</strong></td><td>使われていないロール・キー・権限はどれか</td><td>アクセス履歴の分析</td><td>「未使用のロールや権限を継続的に見つけたい」</td></tr>
+      <tr><td><strong>Access Analyzer<br>（検証・生成）</strong></td><td>このポリシーは妥当か／実績から最小権限を作れないか</td><td>ポリシー文書と CloudTrail</td><td>「使った操作からポリシーを作りたい」</td></tr>
+      <tr><td><strong>Access Advisor</strong></td><td>このIDは、どのサービスに最後にいつアクセスしたか</td><td>管理イベントの記録</td><td>「使っていないサービスの許可を外したい」</td></tr>
+      <tr><td><strong>認証情報レポート</strong></td><td>全ユーザーの認証情報の状態</td><td>IAMが生成するCSV</td><td>「MFA未設定のユーザーを一覧」「古いアクセスキーの洗い出し」</td></tr>
+      <tr><td><strong>CloudTrail</strong></td><td>いつ誰が何のAPIを呼んだか</td><td>APIイベントのログ</td><td>「証跡として残したい」「インシデント調査」</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>3つの違いを一言で</h3>
+  <ul>
+    <li><strong>Access Analyzer は「境界の外」を見る。</strong>アカウントまたは組織を<strong>信頼ゾーン</strong>として指定し、その外からアクセスできるリソース（S3、IAMロール、KMSキー、Lambda、SQS、Secrets Manager、SNSなど）を検出します。ログではなく<strong>ポリシーを解析して到達可能性を示す</strong>ので、まだ誰も触っていない穴も見つかります。ここがCloudTrailとの決定的な差です。</li>
+    <li><strong>Access Advisor は「最後にいつ使ったか」を見る。</strong>ユーザー・ロール・グループ・ポリシーごとに、サービス単位の最終アクセス日時が出ます。「1年使われていない権限」を根拠つきで削れます。管理アカウントからはOUやアカウント単位でも見られ、SCPを絞る材料になります。</li>
+    <li><strong>認証情報レポートは「アカウント全体の健康診断」。</strong>全IAMユーザーのパスワード有無と最終使用日、MFAの有効化、アクセスキー2本ぶんの状態・最終ローテーション日・最終使用日がCSVで出ます。<strong>生成は4時間に1回まで</strong>。監査や報告の設問で出ます。</li>
+  </ul>
+
+  <div class="note warn">
+    <span class="label">「検出」と「予防」を混同しない</span>
+    <p>この節の道具はすべて<strong>発見的統制</strong>で、それ自体は何も止めません。「防ぎたい」「させないようにしたい」とあれば、答えはSCP・RCP・権限境界・条件付きDenyという<strong>予防的統制</strong>の側。「検出したい」「可視化したい」ならこの節の道具です。<strong>動詞を見て側を選ぶ</strong>のが確実です。</p>
+  </div></section>
+
+<section id="s13" data-toc="試験での判断軸">
+
+  <span class="h2num">13</span>
+  <h2>試験での判断軸</h2>
+  <p class="lead">SAAは知識ではなく選択を問う試験です。設問文にこの手がかりが出たら、この答えに寄せる――という対応表を頭に入れてください。</p>
+
+  <div class="judge">
+    <div class="row"><span class="cue">アクセスキーをコードや設定ファイルに保存</span><span class="arrow">→</span><span class="ans">常に不正解。ロールを使う</span></div>
+    <div class="row"><span class="cue">EC2上のアプリから他のAWSサービスへ</span><span class="arrow">→</span><span class="ans">インスタンスプロファイル（ロール）</span></div>
+    <div class="row"><span class="cue">Lambdaから他のAWSサービスへ</span><span class="arrow">→</span><span class="ans">実行ロール</span></div>
+    <div class="row"><span class="cue">オンプレミスのサーバーからAWS API</span><span class="arrow">→</span><span class="ans">IAM Roles Anywhere（X.509証明書）</span></div>
+    <div class="row"><span class="cue">社内のIDで複数アカウントにログインさせたい</span><span class="arrow">→</span><span class="ans">IAM Identity Center（許可セット）</span></div>
+    <div class="row"><span class="cue">既存のSAML IdPを単一アカウントでそのまま使う</span><span class="arrow">→</span><span class="ans">SAMLプロバイダ + AssumeRoleWithSAML</span></div>
+    <div class="row"><span class="cue">モバイル／Webアプリの一般利用者を認証</span><span class="arrow">→</span><span class="ans">Cognito ユーザープール</span></div>
+    <div class="row"><span class="cue">その利用者にAWSリソースを直接触らせる</span><span class="arrow">→</span><span class="ans">Cognito IDプール</span></div>
+    <div class="row"><span class="cue">別アカウントのリソースにアクセス</span><span class="arrow">→</span><span class="ans">クロスアカウントロール（両側に設定）</span></div>
+    <div class="row"><span class="cue">外部ベンダー・SaaSにアクセスを許す</span><span class="arrow">→</span><span class="ans">ロール + ExternalId</span></div>
+    <div class="row"><span class="cue">プロジェクトが増えてもポリシーを増やしたくない</span><span class="arrow">→</span><span class="ans">ABAC（タグ + aws:PrincipalTag）</span></div>
+    <div class="row"><span class="cue">開発者の権限昇格を防ぎたい</span><span class="arrow">→</span><span class="ans">権限境界 + iam:PassRole の限定</span></div>
+    <div class="row"><span class="cue">組織のすべてのアカウントで操作を禁止</span><span class="arrow">→</span><span class="ans">SCP（拒否リスト戦略）</span></div>
+    <div class="row"><span class="cue">組織外のプリンシパルからのアクセスを一括遮断</span><span class="arrow">→</span><span class="ans">RCP + aws:PrincipalOrgID</span></div>
+    <div class="row"><span class="cue">HTTPS以外／特定エンドポイント以外を拒否</span><span class="arrow">→</span><span class="ans">Deny + aws:SecureTransport / aws:SourceVpce</span></div>
+    <div class="row"><span class="cue">外部に公開されているリソースを洗い出す</span><span class="arrow">→</span><span class="ans">IAM Access Analyzer（外部アクセス）</span></div>
+    <div class="row"><span class="cue">使われていない権限・古いキーを棚卸しする</span><span class="arrow">→</span><span class="ans">Access Advisor / 認証情報レポート</span></div>
+    <div class="row"><span class="cue">誰が何をしたか追跡したい</span><span class="arrow">→</span><span class="ans">CloudTrail</span></div>
+  </div>
+
+  <div class="note warn">
+    <span class="label">Cognito の2つを混同しない</span>
+    <p><strong>ユーザープール</strong>はサインアップ・サインインを提供する認証基盤（誰であるかを確かめる）。<strong>IDプール（フェデレーテッドアイデンティティ）</strong>は、認証済みの利用者にAWSの一時認証情報を配る仕組み（何ができるかを与える）。設問で「アプリの利用者が直接S3にアップロードする」と来たらIDプールです。</p>
+  </div>
+
+  <div class="note">
+    <span class="label">迷ったときの3原則</span>
+    <p>2つに絞れて決めきれないときは、この順で見ます。<strong>①長期の認証情報を作らない方。②権限の範囲が狭い方。③手作業が少ない方。</strong>逆に、要件に書かれていない機能を足している選択肢は、技術的に正しくてもオーバーエンジニアリングとして外れます。</p>
+  </div></section>
+
+<section id="s14" data-toc="確認問題">
+
+  <span class="h2num">14</span>
+  <h2>確認問題</h2>
+  <p class="lead">先に自分で答えを決めてから開いてください。当てずっぽうで開くと、この5分が無駄になります。</p>
+
+  <details class="q">
+    <summary><span class="qnum">Q1</span>EC2インスタンス上で動くアプリケーションが、S3バケットにログをアップロードする必要がある。最も安全な実装はどれか。
+      <ul class="opts">
+        <li>A. IAMユーザーを作成し、アクセスキーをアプリの設定ファイルに保存する</li>
+        <li>B. IAMロールを作成し、インスタンスプロファイルとしてEC2にアタッチする</li>
+        <li>C. ルートユーザーのアクセスキーを環境変数に設定する</li>
+        <li>D. S3バケットをパブリック書き込み可能にする</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>ロールをアタッチすると、EC2はインスタンスメタデータ経由で一時認証情報を自動取得し、自動で更新します。キーの保存もローテーションの運用も不要になります。</p>
+      <p><strong>判断軸:</strong> 「アクセスキーを保存する」選択肢は、どれだけもっともらしく書かれていても選ばない。これはSAA全体を通じて有効な原則です。なお<strong>ECSならタスクロール、Lambdaなら実行ロール、オンプレなら IAM Roles Anywhere</strong> に置き換わるだけで、構造は同じです。この4つを一つの型として扱えれば、この系統は読む前に答えが決まります。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q2</span>アカウントAのユーザーが、アカウントBのS3バケットを読む必要がある。クロスアカウントロールを使う場合、必要な設定はどれか。
+      <ul class="opts">
+        <li>A. アカウントB側でロールを作り、信頼ポリシーにアカウントAを記載するだけでよい</li>
+        <li>B. アカウントA側のユーザーに sts:AssumeRole を許可するだけでよい</li>
+        <li>C. 両方が必要</li>
+        <li>D. アカウントBのバケットをパブリックにする</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: C</span></p>
+      <p>引き受けられる側（B）の信頼ポリシーに「Aを信頼する」と書き、かつ引き受ける側（A）のユーザーに <code>sts:AssumeRole</code> を許可する。<strong>権限の受け渡しは常に双方向の合意</strong>です。境界をまたぐリクエストは両側で評価され、どちらも Allow のときだけ通ります。</p>
+      <p><strong>判断軸:</strong> クロスアカウントの設問で「片側だけ」の選択肢は不正解。図で言えば①と②の両方です。<strong>ロールを引き受けたあとはアカウントBの中の話になる</strong>点も押さえてください。ロールの許可ポリシーでバケットを読めるなら、バケットポリシーに改めてアカウントAを書く必要はありません。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q3</span>組織のSCPでS3への全アクションがDenyされている。あるメンバーアカウントのユーザーには AdministratorAccess がアタッチされている。このユーザーはS3バケットを作成できるか。
+      <ul class="opts">
+        <li>A. できる。AdministratorAccess が優先される</li>
+        <li>B. できない</li>
+        <li>C. バケットの所有者であればできる</li>
+        <li>D. MFAを使えばできる</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>明示的なDenyはすべてのAllowに優先します。加えてSCPは「権限の上限」であり、アイデンティティベースポリシーとの積集合が実効権限になります。上限の外には出られません。ポリシーに優先度という概念はないので、Aの理屈は成立しません。</p>
+      <p><strong>判断軸:</strong> 「管理者権限があるのにできない」型の設問は、SCPか権限境界を疑う。切り分けの言葉は<strong>「Allow を足して解決するか」</strong>です。解決しないなら明示的なDenyか上限の問題で、対処はポリシー追加ではなくSCPや境界の見直しになります。なお<strong>管理アカウント</strong>ならSCPが適用されないため答えが変わります。そこまで読めれば上出来です。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q4</span>開発チームに自分たちでIAMロールを作らせたいが、作ったロールに管理者権限を持たせることは防ぎたい。適切な仕組みはどれか。
+      <ul class="opts">
+        <li>A. SCPで開発者アカウントのIAM操作をすべて禁止する</li>
+        <li>B. 開発者のIAMユーザーに権限境界を設定し、作成するロールにも同じ境界の付与を必須にする</li>
+        <li>C. 開発者にはロールを作らせず、すべて管理者が代行する</li>
+        <li>D. CloudTrailで監視し、違反があれば事後に削除する</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>権限境界はこの「権限委譲したいが上限は守らせたい」ために存在します。条件キー <code>iam:PermissionsBoundary</code> で、境界を付けたロールしか作れないよう強制するのが定石です。</p>
+      <p><strong>判断軸:</strong> A と C は要件（自分たちで作らせたい）を満たしていません。D は事後対応で、予防になっていません。<strong>「予防的統制か、発見的統制か」</strong>はセキュリティ設問の頻出の切り口です。あわせて<strong>権限昇格を塞ぐにはもう一枚要る</strong>と覚えてください。境界付きのロールしか作れなくしても、<code>iam:PassRole</code> が <code>Resource: "*"</code> なら既存の強いロールをEC2に付けて迂回できます。答えは<strong>権限境界 + 渡せるロールのARN限定</strong>のセットです。</p>
+    </div>
+  </details>
+
+  <details class="q">
+    <summary><span class="qnum">Q5</span>外部の監視SaaSベンダーに、自社AWSアカウントの読み取り権限を与えることになった。信頼ポリシーに加えるべき条件はどれか。
+      <ul class="opts">
+        <li>A. aws:SourceIp でベンダーのIPを限定する</li>
+        <li>B. sts:ExternalId に自社固有の値を設定する</li>
+        <li>C. aws:MultiFactorAuthPresent を true にする</li>
+        <li>D. 条件は不要。信頼ポリシーにベンダーのアカウントIDを書けば十分</li>
+      </ul>
+    </summary>
+    <div class="a">
+      <p><span class="correct">正解: B</span></p>
+      <p>ExternalIdは「混乱した代理人問題」への対策です。ベンダーは多数の顧客のロールを引き受けられる立場にあるため、顧客ごとの固有値を要求して他社のIDを使ったアクセスを防ぎます。Dが不十分なのは、アカウントIDだけでは<strong>そのベンダーの他の顧客担当者でも引き受けられる</strong>ためです。</p>
+      <p><strong>判断軸:</strong> Cが不正解なのは、ベンダーは自動化されたサービスでありMFAを提示できないため。<strong>設問の主体が人か機械かで、使える対策が変わります。</strong>Aは送信元IPが変動しうるうえ、根本（誰の依頼で呼んでいるか）を解決しません。相手がAWSサービスなら <code>aws:SourceArn</code>、という対になる型も一緒に覚えてください。</p>
+    </div>
+  </details></section>
+
+<section id="s15" data-toc="今日の宿題">
+
+  <span class="h2num">15</span>
+  <h2>今日の宿題</h2>
+  <p>読んだだけでは残りません。20分でここまでやってください。</p>
+
+  <div class="hw">
+    <div class="item"><span class="box"></span><span class="t"><code>notes/security/iam.md</code> を作る<small>テンプレは <code>notes/_templates/service.md</code>。網羅せず、「どんな要件のときに何を選ぶか」だけ書く。STSの5つのAPIとフェデレーションの表は自分の言葉で写す</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">評価ロジックを、資料を見ずに3行で書く<small>明示的Deny / 暗黙の拒否 / 和集合と積集合。そのうえで「クロスアカウントでは2回評価される」を1行足す。書けなければ10に戻る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d1-secure.md</code> に判断軸を追記<small>13の表から、自分が知らなかったものだけを写す</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">W1のIssueのチェックボックスを2つ埋める<small>「IAM: ポリシー評価ロジック、ロール、AssumeRole」と「IAM: 権限境界、Organizations と SCP」</small></span></div>
+    <div class="item"><span class="box"></span><span class="t"><code>plan/log.md</code> に1行残す<small>時間と、気づいたこと</small></span></div>
+  </div>
+
+  <div class="note">
+    <span class="label">次回</span>
+    <p>W1の残りはVPCです。サブネット、ルートテーブル、IGW、NAT Gateway、そしてセキュリティグループとネットワークACLの違い。週末はVPCをゼロから構築するハンズオンを予定しています。<strong>NAT Gatewayの削除を忘れると課金が続くので、その点だけ先に頭に入れておいてください。</strong></p>
+  </div></section>
+
+<footer>
+  AWS SAA-C03 / W1 座学<br>
+  評価ロジックの記述は AWS 公式ドキュメント「Policy evaluation logic」に基づく。出題比率は SAA-C03 試験ガイドによる。
+</footer>
+
+</main>
+</div>
+</div>
+</body>
+</html>
