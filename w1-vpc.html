@@ -168,9 +168,9 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 
 <header class="masthead">
   <p class="eyebrow">AWS SAA-C03 / W1 座学</p>
-  <h1>VPC ―― 通信はどこを通り、どこで止まるか</h1>
-  <p class="standfirst">ネットワークはSAA-C03で最も設問数が多い領域のひとつです。しかも「つながらない原因はどれか」という形で、セキュリティグループとルートテーブルとNATの知識を同時に問われます。ひとつずつ覚えるのではなく、パケットがどの順でどこを通るかという1本の筋で理解してください。</p>
-  <div class="meta"><span>所要 60-90分</span><span>前提 IAM 講義を読了</span><span>ドメイン1・3</span></div>
+  <h1>VPC ―― 図で見る6つの依頼</h1>
+  <p class="standfirst">VPC は「どこに何が置かれ、通信がどの道を通って、どこで止まるか」という空間の話です。この講義は図が主役です。緑の矢印は通る道、赤い矢印と ✕ は止まる場所。文章は図の補足だけにしてあります。</p>
+  <div class="meta"><span>所要 40-50分</span><span>前提 IAM 講義を読了</span><span>ドメイン1・3</span></div>
 </header>
 
 <div class="cols">
@@ -178,595 +178,342 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 <nav class="toc">
   <h2>目次</h2>
   <ol>
-    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
-    <li><a href="#s2"><span class="n">02</span>VPCの骨格</a></li>
-    <li><a href="#s3"><span class="n">03</span>NAT</a></li>
-    <li><a href="#s4"><span class="n">04</span>SGとNACL</a></li>
-    <li><a href="#s5"><span class="n">05</span>疎通の切り分け</a></li>
-    <li><a href="#s6"><span class="n">06</span>エンドポイント</a></li>
-    <li><a href="#s7"><span class="n">07</span>VPC間とオンプレ</a></li>
-    <li><a href="#s8"><span class="n">08</span>Route 53</a></li>
-    <li><a href="#s9"><span class="n">09</span>CloudFrontとGA</a></li>
-    <li><a href="#s10"><span class="n">10</span>試験での判断軸</a></li>
-    <li><a href="#s11"><span class="n">11</span>確認問題</a></li>
-    <li><a href="#s12"><span class="n">12</span>今日の宿題</a></li>
+    <li><a href="#s1"><span class="n">01</span>全体の地図</a></li>
+    <li><a href="#s2"><span class="n">02</span>3つの関所</a></li>
+    <li><a href="#s3"><span class="n">03</span>場面1 外から隠す</a></li>
+    <li><a href="#s4"><span class="n">04</span>場面2 外へ出る</a></li>
+    <li><a href="#s5"><span class="n">05</span>場面3 S3への近道</a></li>
+    <li><a href="#s6"><span class="n">06</span>場面4 つながらない</a></li>
+    <li><a href="#s7"><span class="n">07</span>場面5 工場とつなぐ</a></li>
+    <li><a href="#s8"><span class="n">08</span>場面6 VPC同士</a></li>
+    <li><a href="#s9"><span class="n">09</span>場面→答えの早見表</a></li>
+    <li><a href="#s10"><span class="n">10</span>確認問題</a></li>
+    <li><a href="#s11"><span class="n">11</span>今日の宿題</a></li>
   </ol>
 </nav>
 
 <main>
 
-<section id="s1" data-toc="ゴール">
-
+<section id="s1" data-toc="全体の地図">
+  
   <span class="h2num">01</span>
-  <h2>この講義のゴール</h2>
-  <p class="lead">VPCの設問は、構成要素の名前を知っているだけでは解けません。問われるのは「このパケットはどこで止まるか」です。今日終わったときに、次の3つができていれば合格です。</p>
-  <ul class="goals">
-    <li><span class="tick">01</span><div><strong>サブネットがパブリックかプライベートかを、ルートテーブルだけを見て判定できる。</strong><br>名前でも設定項目でもなく、<code>0.0.0.0/0</code> の向き先で決まることを説明できる。</div></li>
-    <li><span class="tick">02</span><div><strong>「つながらない」の原因を、順番に切り分けられる。</strong><br>ルートテーブル、セキュリティグループ、ネットワークACL、パブリックIP――どれを先に疑うかの順序が頭に入っている。</div></li>
-    <li><span class="tick">03</span><div><strong>接続要件を読んで、使うべきサービスを1つに絞れる。</strong><br>エンドポイント / ピアリング / Transit Gateway / Direct Connect / VPN の使い分けを、要件の言葉から逆引きできる。</div></li>
-  </ul>
-  <div class="note">
-    <span class="label">なぜネットワークが重いのか</span>
-    <p>SAA-C03の設問は「復元力の高いアーキテクチャ」「高性能なアーキテクチャ」「セキュアなアーキテクチャ」の3方向からネットワークに触れてきます。マルチAZの話をすればサブネットとNATの冗長化が出てきますし、コスト最適化の話をすればデータ転送料とVPCエンドポイントが出てきます。IAMが全分野の土台だったのと同じ意味で、VPCも全分野に顔を出します。ここは投資に見合う領域です。</p>
-  </div></section>
-
-<section id="s2" data-toc="VPCの骨格">
-
-  <span class="h2num">02</span>
-  <h2>VPC の骨格 ―― 何が経路を決めているか</h2>
-  <p class="lead">VPCは箱ではなく、<em>ルーティングの集合</em>だと考えてください。要素はいくつもありますが、通信の可否を最終的に決めているのはルートテーブル1つです。</p>
-
-  <h3>CIDR の決め方は後から効いてくる</h3>
-  <p>VPCを作るときに指定するCIDRブロックは <code>/16</code> から <code>/28</code> の範囲です。この設計を軽く扱うと、後でピアリングやオンプレミス接続をするときに詰みます。<strong>CIDRが重複しているVPC同士はピアリングできません</strong>し、オンプレミスのアドレス空間と重なっていればVPNもDirect Connectも素直につながりません。設問で「将来の統合を見据えて」「複数のVPCを接続する予定がある」と書かれていたら、それはCIDR重複の話を振っているサインです。</p>
-  <p>作成後にプライマリCIDRは変更できませんが、<strong>セカンダリCIDRの追加はできます</strong>。IPアドレスが枯渇したという設問では、「VPCを作り直す」ではなく「セカンダリCIDRを追加してサブネットを増やす」が正解側です。なお<strong>各サブネットで先頭4つと末尾1つ、合計5つのIPアドレスがAWSに予約される</strong>ため、<code>/24</code> で使えるのは251個です。</p>
-
-  <h3>サブネットは必ず1つのAZに閉じる</h3>
-  <p>サブネットは単一のアベイラビリティゾーンにしか存在できません。制約であると同時に、<strong>マルチAZ設計の単位がサブネットである</strong>ということでもあります。ALBが最低2つのAZのサブネットを要求するのも、RDSのサブネットグループが同じ要求をするのも理由は同じです。「可用性を高めたい」と来たら、まずサブネットがAZをまたいでいるかを見ます。</p>
-
-  <h3>パブリックとプライベートは設定項目ではない</h3>
-  <p>ここが最初の関門です。AWSコンソールに「このサブネットをパブリックにする」というチェックボックスはありません。<strong>関連付けられたルートテーブルに、Internet Gateway 宛のデフォルトルート（<code>0.0.0.0/0 → igw-xxxx</code>）があるサブネットがパブリックサブネット</strong>です。それだけです。</p>
-
+  <h2>全体の地図</h2>
+  <p class="lead">まず、部品がどこに置かれるかを見ます。工場の敷地にたとえると、VPC が敷地、AZ が建屋、サブネットが建屋の中の区画、IGW が正門です。</p>
   <figure>
-    <div class="fig">
-      <svg viewBox="0 0 860 360" width="860" height="360" role="img" aria-label="パブリックサブネットのNAT Gatewayを経由してプライベートサブネットのEC2がInternet Gateway経由でインターネットに出る経路と、2つのルートテーブルの内容">
-        <rect x="235" y="14" width="160" height="46" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="315" y="43" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Internet Gateway</text>
-
-        <rect x="560" y="14" width="180" height="46" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="650" y="43" font-size="13.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">インターネット</text>
-
-        <line x1="395" y1="37" x2="550" y2="37" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M554 37 l-9 -5 v10 z" fill="var(--ink-3)"/>
-
-        <rect x="16" y="80" width="828" height="268" rx="10" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="5 4"/>
-        <text x="32" y="104" font-size="12.5" fill="var(--ink-3)" font-weight="600">VPC 10.0.0.0/16</text>
-
-        <rect x="40" y="118" width="390" height="100" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.2"/>
-        <text x="54" y="139" font-size="11.5" fill="var(--ink-3)" font-weight="600">パブリックサブネット 10.0.1.0/24（AZ-a）</text>
-        <rect x="225" y="148" width="180" height="52" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
-        <text x="315" y="171" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT Gateway</text>
-        <text x="315" y="189" font-size="11" fill="var(--ink-3)" text-anchor="middle">Elastic IP を持つ</text>
-
-        <rect x="40" y="240" width="390" height="100" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.2"/>
-        <text x="54" y="261" font-size="11.5" fill="var(--ink-3)" font-weight="600">プライベートサブネット 10.0.11.0/24（AZ-a）</text>
-        <rect x="225" y="270" width="180" height="52" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="315" y="293" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text>
-        <text x="315" y="311" font-size="11" fill="var(--ink-3)" text-anchor="middle">パブリックIPなし</text>
-
-        <line x1="315" y1="268" x2="315" y2="206" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M315 202 l-5 9 h10 z" fill="var(--ink-3)"/>
-        <line x1="315" y1="146" x2="315" y2="68" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M315 64 l-5 9 h10 z" fill="var(--ink-3)"/>
-
-        <rect x="456" y="118" width="372" height="100" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/>
-        <text x="472" y="140" font-size="11.5" fill="var(--ink-3)" font-weight="600">ルートテーブル A（パブリックサブネットに関連付け）</text>
-        <text x="472" y="167" font-size="12.5" fill="var(--ink-2)">10.0.0.0/16</text>
-        <text x="620" y="167" font-size="12.5" fill="var(--ink-2)">→  local</text>
-        <rect x="464" y="180" width="356" height="26" rx="5" fill="var(--accent-soft)"/>
-        <text x="472" y="198" font-size="12.5" fill="var(--accent)" font-weight="700">0.0.0.0/0</text>
-        <text x="620" y="198" font-size="12.5" fill="var(--accent)" font-weight="700">→  igw-0a1b</text>
-
-        <rect x="456" y="240" width="372" height="100" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/>
-        <text x="472" y="262" font-size="11.5" fill="var(--ink-3)" font-weight="600">ルートテーブル B（プライベートサブネットに関連付け）</text>
-        <text x="472" y="289" font-size="12.5" fill="var(--ink-2)">10.0.0.0/16</text>
-        <text x="620" y="289" font-size="12.5" fill="var(--ink-2)">→  local</text>
-        <rect x="464" y="302" width="356" height="26" rx="5" fill="var(--accent-soft)"/>
-        <text x="472" y="320" font-size="12.5" fill="var(--accent)" font-weight="700">0.0.0.0/0</text>
-        <text x="620" y="320" font-size="12.5" fill="var(--accent)" font-weight="700">→  nat-0c2d</text>
-      </svg>
-    </div>
-    <figcaption>2つのサブネットの違いは、ルートテーブルの<strong>2行目だけ</strong>です。<code>igw</code> に向いていればパブリック、<code>nat</code> に向いていればプライベート（外に出られるが外からは入れない）、その行自体がなければ完全に閉じたサブネットになります。</figcaption>
-  </figure>
-
-  <div class="tw"><table>
-    <thead><tr><th>呼び方</th><th><code>0.0.0.0/0</code> の向き先</th><th>できること</th></tr></thead>
-    <tbody>
-      <tr><td><strong>パブリックサブネット</strong></td><td>Internet Gateway</td><td class="yes">外に出られる。パブリックIPがあれば外から入れる</td></tr>
-      <tr><td><strong>プライベートサブネット</strong></td><td>NAT Gateway / NAT インスタンス</td><td>外に出られる。<span class="no">外から入ることはできない</span></td></tr>
-      <tr><td><strong>隔離サブネット</strong></td><td>ルートなし（<code>local</code> のみ）</td><td class="no">インターネットとは一切通信しない。VPCエンドポイント経由のみ</td></tr>
-    </tbody>
-  </table></div>
-
-  <p>この3段構えがそのまま「どこに何を置くか」の設計になります。ALBとNAT Gatewayはパブリック、アプリケーションサーバーはプライベート、RDSやElastiCacheのようにインターネットと話す必要のないデータストアは隔離サブネット。<strong>「データベースをインターネットから完全に遮断したい」と来たら、セキュリティグループではなく、まずサブネットとルートテーブルの話です。</strong></p>
-
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「EC2をパブリックサブネットに置いてInternet Gatewayもアタッチしたのに、インターネットに出られない」。原因は<strong>インスタンスにパブリックIPまたはElastic IPが割り当てられていない</strong>ことです。Internet Gatewayは1対1のNAT（プライベートIPとパブリックIPの変換）を行う装置なので、変換先のパブリックIPがなければ仕事ができません。ルートテーブルとIGWだけでは足りない、という点を必ず押さえてください。</p>
+  <div class="fig">
+    <svg viewBox="0 0 760 372" width="760" height="372" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="リージョンの中にVPC、VPCの中に2つのAZ、各AZにパブリックとプライベートのサブネットがある入れ子の図"><rect x="300" y="8" width="160" height="30" rx="15.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="380.0" y="27.2" font-size="12" fill="var(--ink-2)" text-anchor="middle">インターネット</text><line x1="380" y1="38" x2="380" y2="72" stroke="var(--ink-3)" stroke-width="1.8"/><rect x="10" y="56" width="740" height="308" rx="12" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="6 4"/><text x="24" y="76" font-size="11.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">AWS 東京リージョン</text><rect x="26" y="90" width="708" height="262" rx="10" fill="var(--inset)" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="6 4"/><text x="40" y="110" font-size="12" fill="var(--accent)" text-anchor="start" font-weight="700">VPC  10.0.0.0/16</text><rect x="330" y="74" width="100" height="32" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="380.0" y="94.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">IGW</text><text x="440" y="84" font-size="10.5" fill="var(--ink-3)" text-anchor="start">インターネットゲートウェイ（正門）</text><rect x="42" y="122" width="328" height="220" rx="6" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="54" y="140" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-a</text><rect x="56" y="150" width="300" height="70" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/><text x="68" y="168" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">パブリックサブネット</text><text x="68" y="182" font-size="10.5" fill="var(--ink-3)" text-anchor="start">10.0.1.0/24</text><rect x="56" y="232" width="300" height="98" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="68" y="250" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">プライベートサブネット</text><text x="68" y="264" font-size="10.5" fill="var(--ink-3)" text-anchor="start">10.0.11.0/24</text><rect x="228" y="262" width="110" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="283.0" y="286.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="390" y="122" width="328" height="220" rx="6" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="402" y="140" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-c</text><rect x="404" y="150" width="300" height="70" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/><text x="416" y="168" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">パブリックサブネット</text><text x="416" y="182" font-size="10.5" fill="var(--ink-3)" text-anchor="start">10.0.2.0/24</text><rect x="404" y="232" width="300" height="98" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="416" y="250" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">プライベートサブネット</text><text x="416" y="264" font-size="10.5" fill="var(--ink-3)" text-anchor="start">10.0.12.0/24</text><rect x="576" y="262" width="110" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="631.0" y="286.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text></svg>
   </div>
+  <figcaption><strong>入れ子の関係。</strong>リージョン ⊃ VPC ⊃ AZ ⊃ サブネット。サブネットは必ず1つの AZ の中に作る。同じ役割のサブネットを AZ ごとに並べておくと、片方の AZ が止まってももう片方で動き続けられる。IGW は VPC に1つで、外との唯一の出入口。</figcaption>
+</figure>
+</section>
 
+<section id="s2" data-toc="3つの関所">
+  
+  <span class="h2num">02</span>
+  <h2>通信を止める3つの関所</h2>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 284" width="760" height="284" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="外からEC2に届くまでに、ルートテーブル、ネットワークACL、セキュリティグループの3つの関所がある"><rect x="10" y="140" width="108" height="32" rx="16.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="64.0" y="160.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">インターネット</text><line x1="118" y1="156" x2="146.0" y2="156.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="156.0,156.0 146.0,161.5 146.0,150.5" fill="var(--allow)"/><rect x="158" y="140" width="64" height="32" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="190.0" y="160.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">IGW</text><rect x="270" y="36" width="476" height="236" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/><text x="286" y="30" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">サブネット</text><line x1="270" y1="52" x2="270" y2="258" stroke="var(--warn)" stroke-width="5" stroke-dasharray="8 5"/><rect x="304" y="54" width="190" height="56" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="304" y="54" width="190" height="18" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="312" y="67" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ルートテーブル</text><text x="312" y="87" font-size="10.5" fill="var(--ink-2)" text-anchor="start">10.0.0.0/16</text><text x="486" y="87" font-size="10.5" fill="var(--ink-2)" text-anchor="end">→ local</text><text x="312" y="104" font-size="10.5" fill="var(--accent)" text-anchor="start" font-weight="700">0.0.0.0/0</text><text x="486" y="104" font-size="10.5" fill="var(--accent)" text-anchor="end" font-weight="700">→ IGW</text><circle cx="304" cy="54" r="10" fill="var(--ink-2)"/><text x="304" y="58" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><text x="399" y="128" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">① ルートテーブル：道はあるか</text><rect x="522" y="98" width="204" height="120" rx="16" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="7 4"/><rect x="566" y="132" width="116" height="48" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="624.0" y="154.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="624.0" y="169.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">解析バッチ</text><line x1="222" y1="156" x2="556.0" y2="156.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="566.0,156.0 556.0,161.5 556.0,150.5" fill="var(--allow)"/><circle cx="270" cy="156" r="10" fill="var(--warn)"/><text x="270" y="160" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><circle cx="522" cy="156" r="10" fill="var(--accent)"/><text x="522" y="160" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><rect x="209.6" y="195.0" width="120.8" height="18" rx="3" fill="var(--surface)"/><text x="270" y="206" font-size="12" fill="var(--warn)" text-anchor="middle" font-weight="700">② ネットワークACL</text><rect x="176.8" y="213.5" width="186.5" height="16.5" rx="3" fill="var(--surface)"/><text x="270" y="223" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">区画の境界。行きと帰りを別々に判定</text><text x="624" y="238" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">③ セキュリティグループ</text><text x="624" y="255" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">建物の受付。帰りは自動で通す</text></svg>
+  </div>
+  <figcaption><strong>3つの関所の位置。</strong>①ルートテーブルはサブネットの「道案内」、②ネットワークACLはサブネットの境界の「検問所」、③セキュリティグループはインスタンスを囲む「受付」。通信はこの3つを全部通れたときだけ届く。</figcaption>
+</figure>
   <div class="note">
-    <span class="label">判断軸</span>
-    <p>Internet Gateway はVPCに<strong>1つだけ</strong>アタッチでき、リージョンサービスなので冗長化も帯域の心配も不要です。AWS側が水平スケールしています。したがって「インターネット接続がボトルネックになっているのでIGWを増やす」という選択肢は常に不正解です。ボトルネックになりうるのはNAT Gatewayの側です。</p>
-  </div></section>
+    <span class="label">この講義の見取り図</span>
+    <p>これから出てくる6つの場面のうち、<strong>5つは ① ルートテーブルの話</strong>です。図の中の「ルートテーブル」の看板に注目して読んでください。残りの1つ（場面4）が、② と ③ の違いの話です。</p>
+  </div>
+</section>
 
-<section id="s3" data-toc="NAT">
-
+<section id="s3" data-toc="場面1 外から隠す">
+  
   <span class="h2num">03</span>
-  <h2>NAT ―― 出るだけの経路をどう作るか</h2>
-  <p class="lead">プライベートサブネットのインスタンスがパッチを取りに行く、外部APIを叩く。この「出るだけ」の通信を成立させるのがNATです。SAAでは<strong>可用性とコスト</strong>の2方向から問われます。</p>
-
-  <h3>NAT Gateway と NAT インスタンス</h3>
-  <p>NATインスタンスはEC2に自分でNATソフトウェアを載せる旧来の方式です。今から新規に選ぶ理由はありませんが、設問では「なぜマネージドが良いのか」を問う形で出ます。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th></th><th>NAT Gateway</th><th>NAT インスタンス</th></tr></thead>
-    <tbody>
-      <tr><td><strong>正体</strong></td><td>AWSマネージドのNATサービス</td><td>自分で立てたEC2インスタンス</td></tr>
-      <tr><td><strong>可用性</strong></td><td class="yes">AZ内で冗長化済み（AZ単位では単一障害点）</td><td class="no">インスタンス障害でそのまま停止。自前でスクリプト冗長化が必要</td></tr>
-      <tr><td><strong>帯域</strong></td><td class="yes">自動でスケールする</td><td class="no">インスタンスタイプに固定される</td></tr>
-      <tr><td><strong>運用</strong></td><td class="yes">パッチ・OS管理が不要</td><td class="no">OSもNAT設定も自分で面倒を見る</td></tr>
-      <tr><td><strong>セキュリティグループ</strong></td><td class="no">アタッチできない</td><td class="yes">アタッチできる</td></tr>
-      <tr><td><strong>送信元／宛先チェック</strong></td><td>意識不要</td><td class="no">明示的に無効化する必要がある</td></tr>
-      <tr><td><strong>踏み台・ポート転送</strong></td><td class="no">できない</td><td class="yes">できる（兼用可能）</td></tr>
-      <tr><td><strong>料金</strong></td><td>時間課金 ＋ データ処理量課金</td><td>EC2インスタンス料金のみ（処理量課金なし）</td></tr>
-    </tbody>
-  </table></div>
-
-  <p>この表で覚えておくべきは、下から3行です。<strong>NAT Gateway にはセキュリティグループをアタッチできません。</strong>トラフィックを制御したければ、NAT Gatewayが置かれているサブネットのネットワークACLか、通信元インスタンス側のセキュリティグループで制御します。「NAT Gatewayのセキュリティグループで送信先を制限する」という選択肢が出たら、その時点で不正解です。</p>
-  <p>また、外から中へのセッションを一切受け付けないのがNATの定義なので、NAT Gatewayは踏み台になりません。<strong>「プライベートサブネットのインスタンスに管理者がログインしたい」の答えはNAT Gatewayではなく Systems Manager Session Manager です。</strong>踏み台を立てずに済み、SSHポートを開けずに済み、操作がCloudTrailに残ります。</p>
-
-  <h3>可用性設計 ―― AZごとに置く</h3>
-  <p>NAT GatewayはAZの中に作られます。AZ-aに1つだけ置いて両AZのプライベートサブネットから参照する構成は、動きはしますが2つの問題を抱えます。</p>
-  <ol class="body">
-    <li><strong>AZ-aが落ちるとAZ-bのインスタンスも外に出られなくなる。</strong>せっかくマルチAZにしたのに、外向き通信の単一障害点を作ってしまっている状態です。</li>
-    <li><strong>AZ間データ転送料金が乗る。</strong>AZ-bから出る通信が、わざわざAZ-aを経由してから外に出ることになります。</li>
-  </ol>
-  <p>したがって<strong>各AZのパブリックサブネットにNAT Gatewayを1つずつ置き、同じAZのプライベートサブネットのルートテーブルを自分のAZのNAT Gatewayに向ける</strong>のが定石です。「高可用性」「AZ障害に耐える」という語とともにNAT Gatewayが1つの構成図が示されたら、そこが答えです。</p>
-
-  <div class="note warn">
-    <span class="label">コストの罠</span>
-    <p>NAT Gatewayは<strong>起動している時間と、通したデータ量の両方に課金されます</strong>。プライベートサブネットのEC2がS3に大量のデータを書き込む構成では、その全量がNAT Gatewayのデータ処理料金として乗ってきます。「NAT Gatewayの費用が想定より高い」という設問の答えは、ほぼ確実に<strong>S3・DynamoDB向けのゲートウェイ型VPCエンドポイントを作ってNATを迂回させる</strong>です。次の節で扱います。</p>
-    <p>もう1点、学習用のハンズオンでは<strong>NAT Gatewayを消し忘れると課金が続きます</strong>。週末のハンズオンの最後に必ず削除してください。</p>
+  <h2>場面1 ―― 「解析用 EC2 を立てたい。外から直接触られたくない」</h2>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 292" width="760" height="292" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はルートテーブルにIGWへの道があり外から届く。右は道がなく外から届かない"><text x="4" y="20" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">素朴な案：パブリックサブネットに置く</text><rect x="100" y="32" width="150" height="28" rx="14.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="175.0" y="50.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">インターネット</text><rect x="140" y="80" width="70" height="28" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="175.0" y="98.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">IGW</text><line x1="175" y1="60" x2="175.0" y2="70.0" stroke="var(--deny)" stroke-width="2.2"/><polygon points="175.0,80.0 169.5,70.0 180.5,70.0" fill="var(--deny)"/><rect x="10" y="124" width="340" height="158" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/><text x="22" y="142" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">パブリックサブネット</text><rect x="26" y="150" width="170" height="56" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="26" y="150" width="170" height="18" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="34" y="163" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ルートテーブル</text><text x="34" y="183" font-size="10.5" fill="var(--ink-2)" text-anchor="start">10.0.0.0/16</text><text x="188" y="183" font-size="10.5" fill="var(--ink-2)" text-anchor="end">→ local</text><text x="34" y="200" font-size="10.5" fill="var(--deny)" text-anchor="start" font-weight="700">0.0.0.0/0</text><text x="188" y="200" font-size="10.5" fill="var(--deny)" text-anchor="end" font-weight="700">→ IGW</text><rect x="222" y="168" width="110" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="277.0" y="194.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><polyline points="175,108 175,140 277,140 277.0,158.0" fill="none" stroke="var(--deny)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="277.0,168.0 271.5,158.0 282.5,158.0" fill="var(--deny)"/><text x="292" y="158" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">届く</text><text x="26" y="266" font-size="10.5" fill="var(--ink-2)" text-anchor="start">0.0.0.0/0 → IGW がある ＝ パブリック</text><text x="394" y="20" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">正解：プライベートサブネットに置く</text><rect x="490" y="32" width="150" height="28" rx="14.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="565.0" y="50.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">インターネット</text><rect x="530" y="80" width="70" height="28" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="565.0" y="98.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">IGW</text><line x1="565" y1="60" x2="565.0" y2="70.0" stroke="var(--deny)" stroke-width="2.2"/><polygon points="565.0,80.0 559.5,70.0 570.5,70.0" fill="var(--deny)"/><rect x="400" y="124" width="340" height="158" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="412" y="142" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">プライベートサブネット</text><rect x="416" y="150" width="170" height="39" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="416" y="150" width="170" height="18" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="424" y="163" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ルートテーブル</text><text x="424" y="183" font-size="10.5" fill="var(--ink-2)" text-anchor="start">10.0.0.0/16</text><text x="578" y="183" font-size="10.5" fill="var(--ink-2)" text-anchor="end">→ local</text><rect x="612" y="168" width="110" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="667.0" y="194.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><line x1="565" y1="108" x2="565.0" y2="106.0" stroke="var(--deny)" stroke-width="2.2"/><polygon points="565.0,116.0 559.5,106.0 570.5,106.0" fill="var(--deny)"/><circle cx="565" cy="124" r="10" fill="var(--deny)"/><line x1="560.5" y1="119.5" x2="569.5" y2="128.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="560.5" y1="128.5" x2="569.5" y2="119.5" stroke="var(--bg)" stroke-width="2.4"/><rect x="577.0" y="109.5" width="54.0" height="17.5" rx="3" fill="var(--surface)"/><text x="581" y="120" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">道がない</text><text x="416" y="266" font-size="10.5" fill="var(--ink-2)" text-anchor="start">外への道が書かれていない → 外から届かない</text></svg>
   </div>
-
-  <h3>IPv6 の場合は別の装置になる</h3>
-  <p>IPv6はアドレスが枯渇しないのでNATという概念自体がありません。しかし「外には出たいが外からは入られたくない」という要件はIPv4と同じです。これを満たすのが <strong>Egress-Only Internet Gateway</strong>。IPv6専用でアウトバウンドのみを許可し、ステートフルに戻りを通します。追加料金はかかりません。</p>
-  <p>設問での見分けは単純です。<strong>IPv6 かつ「アウトバウンドのみ」なら Egress-Only Internet Gateway、IPv4 かつ「アウトバウンドのみ」なら NAT Gateway。</strong>IPv6でNAT Gatewayを使う選択肢は不正解です。</p></section>
-
-<section id="s4" data-toc="SGとNACL">
-
-  <span class="h2num">04</span>
-  <h2>セキュリティグループ と ネットワークACL</h2>
-  <p class="lead">この2つの違いはSAAで必ず問われます。しかも「どちらを使うべきか」という形と、「なぜ通らないのか」という形の両方で出ます。丸暗記ではなく、<em>ステートフルかステートレスか</em>という1点から全部を導けるようにしてください。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th></th><th>セキュリティグループ<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Security Group</span></th><th>ネットワークACL<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Network ACL</span></th></tr></thead>
-    <tbody>
-      <tr><td><strong>適用先</strong></td><td>ENI（インスタンス、ALB、RDS、エンドポイントなど）</td><td>サブネット</td></tr>
-      <tr><td><strong>状態の扱い</strong></td><td class="yes">ステートフル（戻りは自動で許可）</td><td class="no">ステートレス（戻りも明示的に許可が必要）</td></tr>
-      <tr><td><strong>書けるルール</strong></td><td class="no">許可のみ。拒否は書けない</td><td class="yes">許可と拒否の両方が書ける</td></tr>
-      <tr><td><strong>評価の仕方</strong></td><td>すべてのルールを評価し、どれかに一致すれば許可</td><td>ルール番号の小さい順に評価し、<strong>最初に一致したもので確定</strong></td></tr>
-      <tr><td><strong>既定の動作</strong></td><td>インバウンド全拒否 / アウトバウンド全許可</td><td>デフォルトNACLは全許可 / <strong>自作NACLは全拒否</strong></td></tr>
-      <tr><td><strong>送信元の指定</strong></td><td class="yes">他のセキュリティグループIDを指定できる</td><td class="no">CIDRしか書けない</td></tr>
-      <tr><td><strong>適用範囲</strong></td><td>アタッチされたリソース個別</td><td>そのサブネット内の全リソースに一律</td></tr>
-      <tr><td><strong>複数の適用</strong></td><td>1つのENIに複数のSGを付けられる（和集合）</td><td>1つのサブネットに付けられるNACLは1つだけ</td></tr>
-      <tr><td><strong>主な用途</strong></td><td>アプリ層ごとのアクセス制御（標準的な手段）</td><td>サブネット単位の粗い防壁、特定IPのブロック</td></tr>
-    </tbody>
-  </table></div>
-
-  <h3>ステートフルとは何が違うのか</h3>
-  <p>セキュリティグループは通した通信を覚えています。インバウンドで443を許可すれば、応答はアウトバウンドに書かなくても返ります。逆も同じです。<strong>セキュリティグループでは「行き」だけを考えればよい</strong>、と理解してください。</p>
-  <p>ネットワークACLは何も覚えません。インバウンドでポート443を許可しただけでは、応答が出ていけません。応答パケットの宛先ポートはクライアントが使った<strong>エフェメラルポート</strong>（一時的な高位ポート、一般に1024〜65535）なので、アウトバウンド側でこの範囲を許可しておく必要があります。<strong>「NACLでHTTPSを許可したのに通信が成立しない」という設問の答えは、ほぼ常にエフェメラルポートの許可漏れです。</strong>これは出題頻度が非常に高い形です。</p>
-
-  <h3>セキュリティグループを送信元に指定できることの意味</h3>
-  <p>セキュリティグループの送信元には、CIDRだけでなく<strong>別のセキュリティグループのID</strong>を書けます。たとえばRDS用のセキュリティグループのインバウンドに「ソース: アプリ層のセキュリティグループ、ポート3306」と書けば、そのセキュリティグループが付いたインスタンスからだけ接続できます。</p>
-  <p>この書き方の価値は、<strong>Auto Scalingでインスタンスが入れ替わってもルールを直さなくてよい</strong>ことです。「Auto Scaling グループのインスタンスからのみDBへの接続を許可したい。運用負荷を最小に」と来たら答えはこれで、CIDRでサブネット全体を許可する選択肢は動きはしますが最小権限になっていません。ネットワークACLはCIDRしか書けないため、この粒度の制御ができません。</p>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p><strong>「特定のIPアドレスからのアクセスをブロックしたい」という要件だけは、セキュリティグループでは実現できません。</strong>セキュリティグループには拒否ルールが書けないからです。DDoSの発信元や、社内のブラックリストIPを遮断する要件が出たら、答えはネットワークACL（またはAWS WAF、AWS Shield、AWS Network Firewall）です。「ブロック」「拒否」「除外」という語が要件に出たら、そこがネットワークACLを選ぶサインです。</p>
-  </div>
-
-  <div class="trap">
-    <span class="label">よくある誤解</span>
-    <p>「セキュリティグループとネットワークACLは、どちらか一方を使うもの」――違います。<strong>両方が順番に適用されます。</strong>インバウンドならサブネットに入るときにNACL、ENIに入るときにSG。アウトバウンドならENIを出るときにSG、サブネットを出るときにNACL。どちらか一方でも拒否されれば通りません。この「二重の関門」の順序が、次の節の切り分けの土台になります。</p>
-  </div>
-
-  <div class="note warn">
-    <span class="label">同じサブネット内の通信</span>
-    <p>ネットワークACLはサブネットの<strong>境界</strong>で評価されます。したがって<strong>同じサブネット内のインスタンス同士の通信にはNACLは適用されません</strong>。この場合に効くのはセキュリティグループだけです。「同一サブネット内の2台が通信できない」という設問でNACLを疑う選択肢は不正解になります。</p>
-  </div></section>
-
-<section id="s5" data-toc="疎通の切り分け">
-
-  <span class="h2num">05</span>
-  <h2>「つながらない」を切り分ける</h2>
-  <p class="lead">SAAのネットワーク設問の多くは、この形をしています。構成が説明され、「通信できない。原因として最も可能性が高いものはどれか」と聞かれる。原因の候補は毎回同じ場所にあるので、順番を固定して上から見ていきます。</p>
-
-  <div class="ladder">
-    <div class="rung"><span class="no">01</span><span class="q">送信元サブネットのルートテーブルに、宛先への<strong>経路</strong>があるか<small>インターネット向けなら 0.0.0.0/0、他VPC向けならピアリングやTGWへのルート</small></span><span class="out deny">ない → 届かない</span></div>
-    <div class="drop"></div>
-    <div class="rung"><span class="no">02</span><span class="q">その経路の<strong>出口の種類</strong>は要件に合っているか<small>IGW / NAT / エンドポイント / ピアリング接続 / 仮想プライベートゲートウェイ</small></span><span class="out deny">違う → 届かない</span></div>
-    <div class="drop"></div>
-    <div class="rung"><span class="no">03</span><span class="q">インターネットとの通信なら、<strong>パブリックIP または Elastic IP</strong> があるか<small>IGWは変換装置。変換先がなければ何もできない</small></span><span class="out deny">ない → 届かない</span></div>
-    <div class="drop"></div>
-    <div class="rung"><span class="no">04</span><span class="q"><strong>送信元のセキュリティグループのアウトバウンド</strong>が許可しているか<small>既定では全許可なので、絞っている場合だけ疑う</small></span><span class="out deny">不許可 → 拒否</span></div>
-    <div class="drop"></div>
-    <div class="rung"><span class="no">05</span><span class="q"><strong>宛先のセキュリティグループのインバウンド</strong>が許可しているか<small>ここが最頻出。ポート番号とソース（CIDRかSG ID）の両方を見る</small></span><span class="out deny">不許可 → 拒否</span></div>
-    <div class="drop"></div>
-    <div class="rung"><span class="no">06</span><span class="q">両サブネットの<strong>ネットワークACL</strong>が行きを許可しているか<small>ルール番号の小さい順。上位に広い Deny がないかを見る</small></span><span class="out deny">不許可 → 拒否</span></div>
-    <div class="drop"></div>
-    <div class="rung"><span class="no">07</span><span class="q">ネットワークACLが<strong>戻りのエフェメラルポート</strong>を許可しているか<small>1024〜65535。ステートレスなので明示が必要</small></span><span class="out deny">不許可 → 片道で止まる</span></div>
-    <div class="drop"></div>
-    <div class="rung"><span class="no">08</span><span class="q">インスタンス側で<strong>プロセスが待ち受けている</strong>か<small>OSのファイアウォール、アプリのバインドアドレス</small></span><span class="out allow">はい → 到達する</span></div>
-  </div>
-  <div class="terminal">すべて通過 → 通信が成立する</div>
-
-  <h3>この順番が意味を持つ理由</h3>
-  <p>ルートテーブルを先に見るのは、<strong>経路がなければパケットはそもそも発射されない</strong>からです。セキュリティグループやNACLで落とされた場合は、パケットは飛んでいるが弾かれている状態で、両者は区別できます。</p>
-  <p><strong>VPC フローログ</strong>はENIを出入りしたトラフィックを記録し、各レコードに <code>ACCEPT</code> か <code>REJECT</code> を残します。<code>REJECT</code> があればセキュリティグループかネットワークACLで落ちた、<strong>何も記録がなければルーティングの問題</strong>です。ただしパケットの中身は記録しません。中身が要るなら <strong>VPC トラフィックミラーリング</strong> です。</p>
-  <p><strong>VPC Reachability Analyzer</strong> は、実際にパケットを流さずに経路上の構成を解析し、到達可能か、不可能ならどのコンポーネントで止まるかを返します。「実際のトラフィックを発生させずに到達性を検証したい」と出たらこれです。フローログは事後の記録、Reachability Analyzer は事前の検証、という役割分担で覚えてください。</p>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>片方向だけ通っている（リクエストは届くが応答が返らない、あるいはその逆）という記述を見たら、<strong>真っ先にネットワークACLを疑います</strong>。セキュリティグループはステートフルなので、原理的に片道だけ通るという状態が作れません。この非対称性が、2つを見分ける最短の手がかりです。</p>
-  </div></section>
-
-<section id="s6" data-toc="エンドポイント">
-
-  <span class="h2num">06</span>
-  <h2>VPC エンドポイント ―― AWSサービスへ、外に出ずに届く</h2>
-  <p class="lead">S3やDynamoDBはVPCの外にあるサービスです。素直に通信するとインターネット経由になり、NAT Gatewayを通り、データ処理料金がかかり、そしてトラフィックが一度パブリックな経路に出ます。これを避けるのがVPCエンドポイントです。<strong>コスト最適化とセキュリティの両方の設問に登場します。</strong></p>
-
-  <h3>2つの型</h3>
-  <div class="tw"><table>
-    <thead><tr><th></th><th>ゲートウェイ型<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Gateway Endpoint</span></th><th>インターフェース型<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Interface Endpoint / PrivateLink</span></th></tr></thead>
-    <tbody>
-      <tr><td><strong>対応サービス</strong></td><td class="no">S3 と DynamoDB のみ</td><td class="yes">多数のAWSサービス、SaaS、自社サービス</td></tr>
-      <tr><td><strong>実体</strong></td><td>ルートテーブルのエントリ（プレフィックスリスト）</td><td>サブネット内に作られるENI（プライベートIPを持つ）</td></tr>
-      <tr><td><strong>設定する場所</strong></td><td>ルートテーブル</td><td>サブネット（AZごとに作る）</td></tr>
-      <tr><td><strong>料金</strong></td><td class="yes">追加料金なし</td><td class="no">時間課金 ＋ データ処理量課金</td></tr>
-      <tr><td><strong>セキュリティグループ</strong></td><td class="no">アタッチできない</td><td class="yes">アタッチできる</td></tr>
-      <tr><td><strong>オンプレミスから利用</strong></td><td class="no">できない</td><td class="yes">できる（DX / VPN 経由）</td></tr>
-      <tr><td><strong>ピアリング相手から利用</strong></td><td class="no">できない</td><td class="yes">できる</td></tr>
-      <tr><td><strong>DNS</strong></td><td>公開DNS名のまま。ルーティングで振り分け</td><td>プライベートDNSを有効化すると公開DNS名がENIのIPに解決される</td></tr>
-    </tbody>
-  </table></div>
-
-  <p>使い分けの軸は3つです。<strong>S3かDynamoDBで、VPC内からの利用だけなら迷わずゲートウェイ型</strong>――無料で、NAT Gatewayのデータ処理料金をまるごと削れます。<strong>オンプレミスやピアリング相手からも使いたいなら、S3であってもインターフェース型</strong>（S3は両方の型に対応しています）。そして<strong>それ以外のAWSサービス（SQS、SNS、KMS、Secrets Manager、Systems Manager、CloudWatch Logs など）はインターフェース型</strong>しかありません。</p>
-
-  <div class="code">
-    <div class="cap">ゲートウェイ型を作るとルートテーブルに追加される行と、エンドポイントポリシーの例</div>
-<pre><span class="c"># ルートテーブル</span>
-pl-xxxxxxxx (com.amazonaws.ap-northeast-1.s3)  <span class="k">→</span>  vpce-0a1b2c3d
-
-<span class="c">// エンドポイントポリシー（このエンドポイント経由で何ができるかの上限）</span>
-{
-  <span class="k">"Statement"</span>: [{
-    <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
-    <span class="k">"Principal"</span>: <span class="s">"*"</span>,
-    <span class="k">"Action"</span>: [<span class="s">"s3:GetObject"</span>],
-    <span class="k">"Resource"</span>: <span class="s">"arn:aws:s3:::quality-reports/*"</span>
-  }]
-}</pre>
-  </div>
-
-  <p>ゲートウェイ型は<strong>プレフィックスリスト</strong>（そのサービスのIPレンジをまとめた識別子）をルートテーブルに追加する形で動きます。宛先がS3のIPレンジに一致するパケットだけがエンドポイントに流れ、それ以外は従来どおりNAT Gatewayへ向かうので、既存構成を壊さずに追加できます。</p>
-  <p>両方の型に<strong>エンドポイントポリシー</strong>を付けられます。IAMの講義でやった権限境界と同じく、<strong>権限を与えるものではなく上限を絞るもの</strong>です。「特定のS3バケットにだけアクセスさせたい」と来たときは、エンドポイントポリシーとS3バケットポリシーの <code>aws:SourceVpce</code> 条件が両方とも候補になります。<strong>バケット側で締めたいなら <code>aws:SourceVpce</code>、VPC側で締めたいならエンドポイントポリシー</strong>という切り分けです。</p>
-
-  <h3>PrivateLink を自社サービスに使う</h3>
-  <p>この仕組みはAWSサービス専用ではありません。<strong>自分のVPCで動かすサービスを Network Load Balancer の背後に置いて「エンドポイントサービス」として公開すると、他のVPCやアカウントからPrivateLink経由で呼び出せます。</strong>重要な性質は2点です。</p>
+  <figcaption><strong>違いはルートテーブルの1行だけ。</strong>左は <code>0.0.0.0/0 → IGW</code> があるので外と道がつながっている。右はその行がないので、セキュリティグループをどう設定しても外からは届かない。サブネットに「パブリック／プライベート」という設定項目はない。</figcaption>
+</figure>
   <ul>
-    <li><strong>CIDRが重複していてもよい。</strong>ピアリングと違い、アドレス空間の調整が要りません。消費側のVPCにはENIが生えるだけだからです。</li>
-    <li><strong>公開されるのは特定のサービスだけ。</strong>ピアリングのようにネットワーク同士をつなぐのではなく、1つのエンドポイントを差し出す形なので、露出面が小さく済みます。</li>
+    <li><strong>左の素朴な案が壊れる理由：</strong>Unit 42 がハニーポット（おとりのサーバー）を320台クラウドに置いた調査では、<strong>80% が24時間以内に侵害</strong>され、1週間で全台が侵害された。外とつながったサーバーは、公開した瞬間から世界中のボットにスキャンされる</li>
+    <li><strong>正解：</strong>プライベートサブネットに置く。関所で止める前に、<strong>そもそも道を作らない</strong>のが一番強い</li>
+    <li><strong>ログインしたいとき：</strong>22番ポートを開けずに <em>Session Manager</em> を使う</li>
   </ul>
-  <p>「SaaSをインターネット経由せずに利用したい」「自社サービスを取引先のVPCに公開したいが、ネットワーク全体はつなぎたくない」と来たら答えはPrivateLinkです。ピアリングを選ぶと過剰な接続になります。</p>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「パブリックサブネットの条件は?」→ <strong>ルートテーブルに IGW へのルートがある</strong>。「SSH を開けずに EC2 を管理したい」→ <strong>Session Manager</strong>。</p></div>
+</section>
 
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「オンプレミスのサーバーから、Direct Connect経由でS3にプライベートにアクセスしたい」という設問で、<strong>ゲートウェイ型エンドポイント</strong>を選ぶのは不正解です。ゲートウェイ型はルートテーブルで動くため、VPC内から発したトラフィックにしか効きません。オンプレミスから使うなら<strong>インターフェース型</strong>（またはDirect Connectのパブリック仮想インターフェース）です。同じ理由で、ピアリング相手のVPCからも使えません。</p>
-  </div></section>
+<section id="s4" data-toc="場面2 外へ出る">
+  
+  <span class="h2num">04</span>
+  <h2>場面2 ―― 「プライベートの EC2 から、パッチとライブラリを取りたい」</h2>
+  <p>場面1で外から届かない場所に置いた結果、EC2 から外へも出られなくなりました。かといってパブリックに移すと場面1の左に逆戻りです。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 318" width="760" height="318" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="プライベートのEC2はNAT Gateway経由で外へ出られるが、外から始まる通信は入れない"><rect x="330" y="8" width="150" height="28" rx="14.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="405.0" y="26.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">インターネット</text><rect x="10" y="72" width="740" height="238" rx="10" fill="var(--inset)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="24" y="92" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">VPC</text><rect x="370" y="56" width="70" height="28" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="405.0" y="74.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">IGW</text><rect x="30" y="104" width="300" height="192" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/><text x="42" y="122" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">パブリックサブネット</text><rect x="110" y="148" width="140" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="180.0" y="174.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT Gateway</text><text x="180" y="212" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">$ 時間料金＋データ量</text><rect x="46" y="228" width="190" height="39" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="46" y="228" width="190" height="18" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="54" y="241" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ルートテーブル</text><text x="54" y="261" font-size="10.5" fill="var(--ink-2)" text-anchor="start">0.0.0.0/0</text><text x="228" y="261" font-size="10.5" fill="var(--ink-2)" text-anchor="end">→ IGW</text><rect x="430" y="104" width="300" height="192" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="442" y="122" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">プライベートサブネット</text><rect x="530" y="148" width="130" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="595.0" y="168.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="595.0" y="183.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">解析バッチ</text><rect x="446" y="228" width="200" height="56" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="446" y="228" width="200" height="18" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="454" y="241" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ルートテーブル</text><text x="454" y="261" font-size="10.5" fill="var(--ink-2)" text-anchor="start">10.0.0.0/16</text><text x="638" y="261" font-size="10.5" fill="var(--ink-2)" text-anchor="end">→ local</text><text x="454" y="278" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">0.0.0.0/0</text><text x="638" y="278" font-size="10.5" fill="var(--allow)" text-anchor="end" font-weight="700">→ NAT</text><line x1="530" y1="170" x2="262.0" y2="170.0" stroke="var(--allow)" stroke-width="2.4"/><polygon points="252.0,170.0 262.0,164.5 262.0,175.5" fill="var(--allow)"/><rect x="326.6" y="152.0" width="126.8" height="17" rx="3" fill="var(--surface)"/><text x="390" y="162" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">外向き（pip・パッチ）</text><polyline points="180,148 180,70 358.0,70.0" fill="none" stroke="var(--allow)" stroke-width="2.4" stroke-linejoin="round"/><polygon points="368.0,70.0 358.0,75.5 358.0,64.5" fill="var(--allow)"/><line x1="405" y1="56" x2="405.0" y2="48.0" stroke="var(--allow)" stroke-width="2.4"/><polygon points="405.0,38.0 410.5,48.0 399.5,48.0" fill="var(--allow)"/><polyline points="442,70 595,70 595.0,84.0" fill="none" stroke="var(--deny)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="595.0,94.0 589.5,84.0 600.5,84.0" fill="var(--deny)"/><circle cx="595" cy="104" r="10" fill="var(--deny)"/><line x1="590.5" y1="99.5" x2="599.5" y2="108.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="590.5" y1="108.5" x2="599.5" y2="99.5" stroke="var(--bg)" stroke-width="2.4"/><rect x="608.0" y="82.5" width="144.5" height="16.5" rx="3" fill="var(--surface)"/><text x="612" y="92" font-size="10.5" fill="var(--deny)" text-anchor="start" font-weight="700">外から始まる通信は通さない</text></svg>
+  </div>
+  <figcaption><strong>NAT Gateway は出口専用の通用口。</strong>プライベート側のルートテーブルに <code>0.0.0.0/0 → NAT</code> と書くと、EC2 → NAT → IGW の順で外へ出られる（緑）。外から始まる通信は NAT を通れない（赤）。NAT 自体はパブリックサブネットに置く。</figcaption>
+</figure>
+  <h3>NAT Gateway の落とし穴：AZ</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 740 270" width="740" height="270" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はNATがAZ-aにしかなく、AZ-aの障害でAZ-cも外に出られない。右はAZごとにNATがあり、AZ-cは動き続ける"><text x="10" y="20" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">NAT を AZ-a にだけ置いた</text><rect x="10" y="34" width="165" height="196" rx="6" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="22" y="52" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">AZ-a 障害</text><circle cx="157" cy="50" r="9" fill="var(--deny)"/><line x1="152.95" y1="45.95" x2="161.05" y2="54.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="152.95" y1="54.05" x2="161.05" y2="45.95" stroke="var(--bg)" stroke-width="2.4"/><rect x="185" y="34" width="165" height="196" rx="6" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="197" y="52" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-c</text><rect x="35" y="78" width="115" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6" opacity="0.4"/><text x="92.5" y="100.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT</text><rect x="35" y="162" width="115" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6" opacity="0.4"/><text x="92.5" y="184.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="210" y="162" width="115" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="267.5" y="184.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><polyline points="210,180 180,180 180,96 162.0,96.0" fill="none" stroke="var(--deny)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="152.0,96.0 162.0,90.5 162.0,101.5" fill="var(--deny)"/><circle cx="180" cy="138" r="10" fill="var(--deny)"/><line x1="175.5" y1="133.5" x2="184.5" y2="142.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="175.5" y1="142.5" x2="184.5" y2="133.5" stroke="var(--bg)" stroke-width="2.4"/><text x="185" y="256" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">AZ-c も外へ出られない</text><text x="390" y="20" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">AZ ごとに NAT を置いた</text><rect x="390" y="34" width="165" height="196" rx="6" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="402" y="52" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">AZ-a 障害</text><circle cx="537" cy="50" r="9" fill="var(--deny)"/><line x1="532.95" y1="45.95" x2="541.05" y2="54.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="532.95" y1="54.05" x2="541.05" y2="45.95" stroke="var(--bg)" stroke-width="2.4"/><rect x="565" y="34" width="165" height="196" rx="6" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="577" y="52" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-c</text><rect x="415" y="78" width="115" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6" opacity="0.4"/><text x="472.5" y="100.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT</text><rect x="415" y="162" width="115" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6" opacity="0.4"/><text x="472.5" y="184.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="590" y="162" width="115" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="647.5" y="184.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="590" y="78" width="115" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="647.5" y="100.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT</text><line x1="647" y1="162" x2="647.0" y2="126.0" stroke="var(--allow)" stroke-width="2.4"/><polygon points="647.0,116.0 652.5,126.0 641.5,126.0" fill="var(--allow)"/><line x1="647" y1="78" x2="647.0" y2="50.0" stroke="var(--allow)" stroke-width="2.4"/><polygon points="647.0,40.0 652.5,50.0 641.5,50.0" fill="var(--allow)"/><text x="565" y="256" font-size="12" fill="var(--allow)" text-anchor="middle" font-weight="700">AZ-c は外へ出られる</text></svg>
+  </div>
+  <figcaption><strong>NAT Gateway は AZ の中に作られる。</strong>1か所に集約すると、その AZ の障害で全 AZ の外向き通信が止まる（左）。AZ ごとに置き、各 AZ のルートテーブルを同じ AZ の NAT に向ければ、障害は片方の AZ に閉じる（右）。</figcaption>
+</figure>
+  <ul>
+    <li><strong>NAT Gateway は止められない。</strong>置いているだけで時間料金がかかり、通ったデータ量にも課金される。<strong>削除しない限り請求が続く</strong>（明日のハンズオンで消し忘れ注意）</li>
+    <li>古い選択肢として <em>NAT インスタンス</em>（EC2 で自作する NAT）が出ることがある。冗長化もパッチも自前なので、「運用負荷を下げたい」設問では選ばない</li>
+  </ul>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「プライベートから外向きだけ通したい」→ <strong>NAT Gateway をパブリックサブネットに</strong>。「NAT の可用性を高めたい」→ <strong>AZ ごとに配置</strong>。</p></div>
+</section>
 
-<section id="s7" data-toc="VPC間とオンプレ">
-
-  <span class="h2num">07</span>
-  <h2>VPC 同士と、オンプレミスをつなぐ</h2>
-  <p class="lead">つなぎ方は4つ――ピアリング、Transit Gateway、Site-to-Site VPN、Direct Connect。選択の軸は<em>規模</em>と<em>帯域の安定性</em>と<em>いつまでに必要か</em>の3つです。</p>
-
-  <h3>VPC ピアリング と Transit Gateway</h3>
+<section id="s5" data-toc="場面3 S3への近道">
+  
+  <span class="h2num">05</span>
+  <h2>場面3 ―― 「S3 から毎晩大量に読むようにしたら、請求が跳ねた」</h2>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 304" width="760" height="304" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はS3宛ての通信がNATを通り課金される。右はエンドポイント経由でNATを通らず無料"><text x="10" y="20" font-size="12.5" fill="var(--warn)" text-anchor="start" font-weight="700">前：S3 宛ても NAT を通っている</text><rect x="10" y="34" width="180" height="104" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="22" y="52" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">プライベート</text><rect x="40" y="72" width="120" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="100.0" y="96.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="10" y="156" width="180" height="110" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/><text x="22" y="174" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">パブリック</text><rect x="40" y="192" width="120" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="100.0" y="216.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT</text><rect x="230" y="197" width="54" height="30" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="257.0" y="216.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">IGW</text><rect x="300" y="192" width="60" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="330.0" y="216.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><line x1="100" y1="112" x2="100.0" y2="182.0" stroke="var(--warn)" stroke-width="2.6"/><polygon points="100.0,192.0 94.5,182.0 105.5,182.0" fill="var(--warn)"/><line x1="160" y1="212" x2="220.0" y2="212.0" stroke="var(--warn)" stroke-width="2.6"/><polygon points="230.0,212.0 220.0,217.5 220.0,206.5" fill="var(--warn)"/><line x1="284" y1="212" x2="290.0" y2="212.0" stroke="var(--warn)" stroke-width="2.6"/><polygon points="300.0,212.0 290.0,217.5 290.0,206.5" fill="var(--warn)"/><text x="100" y="252" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">処理料金 $0.045 / GB</text><text x="10" y="294" font-size="11.5" fill="var(--warn)" text-anchor="start" font-weight="700">月10TB 読むと処理料金だけで約 $460</text><text x="400" y="20" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">後：ゲートウェイ型エンドポイント</text><rect x="400" y="34" width="180" height="104" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="412" y="52" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">プライベート</text><rect x="430" y="72" width="120" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="490.0" y="96.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="400" y="156" width="180" height="110" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/><text x="412" y="174" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">パブリック</text><rect x="430" y="192" width="120" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6" opacity="0.4"/><text x="490.0" y="216.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT</text><rect x="690" y="72" width="60" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="720.0" y="96.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><line x1="550" y1="92" x2="680.0" y2="92.0" stroke="var(--allow)" stroke-width="2.6"/><polygon points="690.0,92.0 680.0,97.5 680.0,86.5" fill="var(--allow)"/><rect x="577.5" y="74.0" width="85.0" height="17" rx="3" fill="var(--surface)"/><text x="620" y="84" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">エンドポイント</text><text x="620" y="110" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">無料</text><rect x="590" y="150" width="160" height="56" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="590" y="150" width="160" height="18" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="598" y="163" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ルートテーブル</text><text x="598" y="183" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">S3 の範囲</text><text x="742" y="183" font-size="10.5" fill="var(--allow)" text-anchor="end" font-weight="700">→ VPCE</text><text x="598" y="200" font-size="10.5" fill="var(--ink-2)" text-anchor="start">0.0.0.0/0</text><text x="742" y="200" font-size="10.5" fill="var(--ink-2)" text-anchor="end">→ NAT</text><text x="490" y="252" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">S3 以外の外向きだけ</text><text x="400" y="294" font-size="11.5" fill="var(--allow)" text-anchor="start" font-weight="700">S3 宛ては NAT を通らない → 処理料金ゼロ</text></svg>
+  </div>
+  <figcaption><strong>同じ S3 に行くのに、通り道で料金が変わる。</strong>左は「VPC の外へは全部 NAT」というルートなので S3 宛ても NAT を通り、データ量に課金される（料金は us-east-1 の例）。右はルートテーブルに「S3 の範囲 → エンドポイント」という近道を足したので、S3 宛てだけが NAT を迂回する。</figcaption>
+</figure>
   <div class="tw"><table>
-    <thead><tr><th></th><th>VPC ピアリング</th><th>Transit Gateway</th></tr></thead>
+    <thead><tr><th></th><th>ゲートウェイ型</th><th>インターフェース型（PrivateLink）</th></tr></thead>
     <tbody>
-      <tr><td><strong>接続形態</strong></td><td>1対1のフルメッシュ</td><td class="yes">ハブ＆スポーク（中央集約）</td></tr>
-      <tr><td><strong>推移的ルーティング</strong></td><td class="no">できない</td><td class="yes">できる</td></tr>
-      <tr><td><strong>接続数の増え方</strong></td><td class="no">VPCがn個なら n(n-1)/2 本</td><td class="yes">VPCごとに1本のアタッチメント</td></tr>
-      <tr><td><strong>CIDR 重複</strong></td><td class="no">不可</td><td class="no">不可</td></tr>
-      <tr><td><strong>VPN / Direct Connect の集約</strong></td><td class="no">できない</td><td class="yes">できる</td></tr>
-      <tr><td><strong>ルーティングの制御</strong></td><td>各VPCのルートテーブルで個別に</td><td class="yes">TGWルートテーブルで分離（本番と開発を隔離するなど）</td></tr>
-      <tr><td><strong>料金</strong></td><td>データ転送料のみ</td><td class="no">アタッチメント時間課金 ＋ データ処理量課金</td></tr>
-      <tr><td><strong>向く規模</strong></td><td>数個まで</td><td class="yes">数十〜数千</td></tr>
+      <tr><td><strong>対象</strong></td><td>S3 と DynamoDB だけ</td><td>それ以外の多くの AWS サービス</td></tr>
+      <tr><td><strong>仕組み</strong></td><td>ルートテーブルに道を足す</td><td>サブネットに専用の窓口（プライベート IP）を置く</td></tr>
+      <tr><td><strong>料金</strong></td><td class="yes">無料</td><td class="no">時間料金＋データ量</td></tr>
     </tbody>
   </table></div>
+  <ul>
+    <li>ルートテーブルは<strong>宛先がより具体的な行が優先</strong>される。だから「S3 の範囲」の行が <code>0.0.0.0/0</code> より先に効く</li>
+    <li>IAM とのつながり：バケットポリシーに <code>aws:SourceVpce</code> を付けると「<strong>このエンドポイント経由でしか読めないバケット</strong>」にできる。鍵が漏れても VPC の外からは読めない</li>
+  </ul>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「NAT のコストを下げたい」「S3・DynamoDB へインターネットを経由させたくない」→ <strong>ゲートウェイ型エンドポイント</strong>。インターフェース型と並んでいたら、S3・DynamoDB なら<strong>無料のゲートウェイ型</strong>。</p></div>
+</section>
 
-  <p>最重要は<strong>推移的ルーティング</strong>の行です。A-B と B-C がピアリングされていても、<strong>A から C には通信できません。</strong>ピアリングは接続した2者の間だけの経路であり、中継しないからです。同じ理由で<strong>エッジ間ルーティングも禁止</strong>されており、相手VPCのInternet Gateway、NAT Gateway、ゲートウェイ型エンドポイント、Direct Connect接続を借りることもできません。「インターネット出口を1つのVPCに集約したい」をピアリングで実現する選択肢は不正解で、正解は<strong>Transit Gateway による集約</strong>です。</p>
-  <p>一方でピアリングは<strong>リージョンもアカウントもまたげ</strong>、追加のデータ処理料金がないので安価です。「2つのVPCをつなぐ最も費用対効果の高い方法は」ならピアリング、「VPCが20個あって今後も増える」「オンプレミス接続も集約したい」ならTransit Gatewayです。</p>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>設問に出てくる数を数えてください。<strong>VPCが3つ以下ならピアリング、それ以上かつ増える見込みがあるならTransit Gateway。</strong>そして「オンプレミスもまとめたい」「ルーティングを部門ごとに分離したい」という語が1つでもあれば、数によらずTransit Gatewayです。なお、Transit Gateway同士をリージョン間でピアリングすることもできるので、グローバルなハブ＆スポークも組めます。</p>
+<section id="s6" data-toc="場面4 つながらない">
+  
+  <span class="h2num">06</span>
+  <h2>場面4 ―― 「つながらない。どこが悪い?」</h2>
+  <p class="lead">SAA のネットワーク設問の多くはこの形です。原因の候補は毎回同じ場所にあるので、上から順に見ます。</p>
+  <div class="ladder">
+    <div class="rung"><span class="no">01</span><span class="q"><strong>ルートテーブル</strong>に宛先への道があるか</span><span class="out deny">ない → 届かない</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">02</span><span class="q">外とやり取りするなら<strong>パブリック IP</strong> があるか</span><span class="out deny">ない → 届かない</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">03</span><span class="q"><strong>ネットワークACL</strong>が行きと帰りの<strong>両方</strong>を許可しているか<small>下の図の話。ここが最頻出</small></span><span class="out deny">片方なし → 片道で止まる</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">04</span><span class="q">宛先の<strong>セキュリティグループ</strong>が許可しているか</span><span class="out deny">なし → 拒否</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">05</span><span class="q">OS とアプリが待ち受けているか</span><span class="out allow">はい → 到達</span></div>
   </div>
+  <div class="terminal">全部通過 → 通信が成立する</div>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 430" width="760" height="430" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="シーケンス図。行きはACLとセキュリティグループを通るが、帰りの応答はACLのアウトバウンドで拒否される"><rect x="20" y="14" width="120" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="80.0" y="36.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ブラウザ</text><rect x="230" y="14" width="140" height="36" rx="6" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="300.0" y="36.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ネットワークACL</text><rect x="400" y="14" width="160" height="36" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="480.0" y="36.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">セキュリティグループ</text><rect x="610" y="14" width="120" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="670.0" y="36.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">Web サーバー</text><line x1="80" y1="50" x2="80" y2="370" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 4"/><line x1="300" y1="50" x2="300" y2="370" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 4"/><line x1="480" y1="50" x2="480" y2="370" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 4"/><line x1="670" y1="50" x2="670" y2="370" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 4"/><text x="12" y="90" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">行き</text><line x1="80" y1="100" x2="288.0" y2="100.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="298.0,100.0 288.0,105.5 288.0,94.5" fill="var(--allow)"/><rect x="113.4" y="82.0" width="153.2" height="17" rx="3" fill="var(--surface)"/><text x="190" y="92" font-size="11" fill="var(--ink-2)" text-anchor="middle">要求 → サーバーの 443 番</text><circle cx="300" cy="100" r="8" fill="var(--allow)"/><polyline points="296.4,100.0 299.2,103.0 304.0,97.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="314" y="104" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">IN 443：許可</text><line x1="300" y1="140" x2="468.0" y2="140.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="478.0,140.0 468.0,145.5 468.0,134.5" fill="var(--allow)"/><circle cx="480" cy="140" r="8" fill="var(--allow)"/><polyline points="476.4,140.0 479.2,143.0 484.0,137.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="494" y="144" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">IN 443：許可</text><line x1="480" y1="180" x2="658.0" y2="180.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="668.0,180.0 658.0,185.5 658.0,174.5" fill="var(--allow)"/><rect x="560.0" y="162.0" width="30.0" height="17" rx="3" fill="var(--surface)"/><text x="575" y="172" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">届く</text><line x1="20" y1="208" x2="740" y2="208" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 4"/><text x="12" y="236" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">帰り</text><line x1="670" y1="246" x2="492.0" y2="246.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="482.0,246.0 492.0,240.5 492.0,251.5" fill="var(--allow)"/><rect x="491.8" y="228.0" width="166.4" height="17" rx="3" fill="var(--surface)"/><text x="575" y="238" font-size="11" fill="var(--ink-2)" text-anchor="middle">応答 → ブラウザの 52814 番</text><circle cx="480" cy="246" r="8" fill="var(--allow)"/><polyline points="476.4,246.0 479.2,249.0 484.0,243.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="392.0" y="260.5" width="176.0" height="16.5" rx="3" fill="var(--surface)"/><text x="480" y="270" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">帰りは自動で通す（ステートフル）</text><line x1="480" y1="300" x2="322.0" y2="300.0" stroke="var(--deny)" stroke-width="2.2"/><polygon points="312.0,300.0 322.0,294.5 322.0,305.5" fill="var(--deny)"/><circle cx="300" cy="300" r="10" fill="var(--deny)"/><line x1="295.5" y1="295.5" x2="304.5" y2="304.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="295.5" y1="304.5" x2="304.5" y2="295.5" stroke="var(--bg)" stroke-width="2.4"/><rect x="82.4" y="318.5" width="209.6" height="16.5" rx="3" fill="var(--surface)"/><text x="288" y="328" font-size="10.5" fill="var(--deny)" text-anchor="end" font-weight="700">OUT は 443 だけ許可 → 52814 は拒否</text><line x1="300" y1="362" x2="84" y2="362" stroke="var(--deny)" stroke-width="1.6" stroke-dasharray="5 4"/><rect x="131.0" y="346.0" width="118.0" height="17" rx="3" fill="var(--surface)"/><text x="190" y="356" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">ブラウザには届かない</text><rect x="150" y="384" width="460" height="38" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4"/><text x="380" y="408" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">直し方：ACL の OUT に 1024-65535（エフェメラルポート）を許可</text></svg>
+  </div>
+  <figcaption><strong>「行きは届くのに返事が来ない」の正体（シーケンス図）。</strong>サーバーの返事は、ブラウザ側が一時的に開いた番号（この例では 52814 番）宛てに送られる。セキュリティグループは「さっきの通信の返事だ」と覚えているので自動で通す。ネットワークACL は覚えていないので、帰り道のルールがないと止める。</figcaption>
+</figure>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>セキュリティグループ</th><th>ネットワークACL</th></tr></thead>
+    <tbody>
+      <tr><td><strong>付く場所</strong></td><td>インスタンス</td><td>サブネット</td></tr>
+      <tr><td><strong>帰りの通信</strong></td><td class="yes">自動で通す（ステートフル）</td><td class="no">別途許可が必要（ステートレス）</td></tr>
+      <tr><td><strong>書けるルール</strong></td><td>許可のみ</td><td>許可と<strong>拒否</strong></td></tr>
+      <tr><td><strong>評価</strong></td><td>全ルールを見て、どれかが許可すれば通す</td><td>番号の小さい順に見て、最初に一致したもので決まる</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「特定 IP を<strong>拒否</strong>したい」→ <strong>ネットワークACL</strong>（SG は拒否を書けない）。「行きは届くのに応答が返らない」→ <strong>ACL のエフェメラルポート</strong>。</p></div>
+</section>
 
-  <h3>Site-to-Site VPN と Direct Connect</h3>
-  <p>オンプレミスとAWSをつなぐ手段は2つです。決定的な違いは、<strong>インターネットを通るか、専用線を通るか</strong>です。</p>
-
+<section id="s7" data-toc="場面5 工場とつなぐ">
+  
+  <span class="h2num">07</span>
+  <h2>場面5 ―― 「工場の検査装置のデータを、VPC に直接送りたい」</h2>
+  <p>インターネット越しに HTTPS で送ると、帯域が日によって変わり、夜間バッチが朝までに終わらない日が出ます。生産系データをインターネットに出すこと自体が社内規定で通らないことも多い。工場と VPC の間に専用の道を引きます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 284" width="760" height="284" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="工場とVPCを、インターネット経由のVPNと専用線のDirect Connectの2本でつなぐ"><rect x="16" y="50" width="170" height="190" rx="10" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.5"/><text x="30" y="72" font-size="12" fill="var(--ink-2)" text-anchor="start" font-weight="700">工場（オンプレ）</text><rect x="36" y="128" width="130" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="101.0" y="154.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">検査装置</text><rect x="574" y="50" width="170" height="190" rx="10" fill="var(--inset)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="588" y="72" font-size="12" fill="var(--accent)" text-anchor="start" font-weight="700">VPC</text><rect x="600" y="128" width="124" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="662.0" y="154.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">解析 EC2</text><line x1="186" y1="96" x2="305" y2="96" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="6 4"/><line x1="455" y1="96" x2="574" y2="96" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="6 4"/><rect x="305" y="80" width="150" height="32" rx="16.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="380.0" y="100.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">インターネット</text><text x="380" y="70" font-size="12" fill="var(--ink-2)" text-anchor="middle" font-weight="700">Site-to-Site VPN（予備）</text><text x="380" y="130" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">暗号化トンネル・当日開通・〜1.25Gbps</text><line x1="186" y1="200" x2="574" y2="200" stroke="var(--accent)" stroke-width="4.5"/><rect x="295.6" y="179.0" width="168.8" height="18" rx="3" fill="var(--surface)"/><text x="380" y="190" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">Direct Connect（主回線）</text><text x="380" y="222" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">専用線・開通まで数週間〜数か月・一貫した性能</text><text x="380" y="270" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">普段は専用線を使い、切れたら VPN に切り替わる</text></svg>
+  </div>
+  <figcaption><strong>上の破線は公衆のインターネットの中を通る暗号化トンネル</strong>（VPN）、<strong>下の太線は物理的な専用線</strong>（Direct Connect）。どちらも VPC 側のルートテーブルに「工場のアドレス範囲 → この接続」と書く点は同じ。Direct Connect を主にして VPN を予備に置くと、専用線を2本引くより安く冗長化できる。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th></th><th>Site-to-Site VPN</th><th>Direct Connect</th></tr></thead>
     <tbody>
-      <tr><td><strong>経路</strong></td><td>インターネット上のIPsecトンネル</td><td class="yes">AWSへの専用線（インターネットを通らない）</td></tr>
-      <tr><td><strong>帯域の安定性</strong></td><td class="no">インターネット次第で変動する</td><td class="yes">一貫している</td></tr>
-      <tr><td><strong>レイテンシー</strong></td><td class="no">変動する</td><td class="yes">安定して低い</td></tr>
-      <tr><td><strong>開通までの時間</strong></td><td class="yes">数分〜数時間</td><td class="no">数週間〜数か月</td></tr>
-      <tr><td><strong>暗号化</strong></td><td class="yes">IPsecで既定で暗号化</td><td class="no">既定では暗号化されない</td></tr>
-      <tr><td><strong>コスト</strong></td><td class="yes">低い（時間課金＋データ転送）</td><td class="no">高い（ポート時間課金＋回線費用）</td></tr>
-      <tr><td><strong>冗長性</strong></td><td>1接続あたり2トンネルが標準で提供される</td><td class="no">1接続では冗長にならない。複数本必要</td></tr>
+      <tr><td><strong>開通まで</strong></td><td class="yes">その日のうちに</td><td class="no">数週間〜数か月（回線工事）</td></tr>
+      <tr><td><strong>性能</strong></td><td>インターネットの状況に左右される</td><td class="yes">一貫している</td></tr>
+      <tr><td><strong>暗号化</strong></td><td class="yes">標準で暗号化</td><td class="no">標準では暗号化されない</td></tr>
+      <tr><td><strong>コスト</strong></td><td>安い</td><td>高い</td></tr>
     </tbody>
   </table></div>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「すぐに」「低コストで」→ <strong>VPN</strong>。「一貫したネットワーク性能」→ <strong>Direct Connect</strong>。「DX の冗長化を低コストで」→ <strong>VPN を予備に</strong>。「DX で暗号化も必要」→ <strong>DX の上に VPN を張る</strong>。</p></div>
+</section>
 
-  <p>Site-to-Site VPN は1接続につき<strong>2本のIPsecトンネル</strong>が提供され、それぞれ異なるAWS側エンドポイントに終端するので、AWS側は最初から冗長です。落ちるとすればオンプレミス側のカスタマーゲートウェイなので、そこを2台にするのが次の一手になります。スループットは<strong>1トンネルあたり最大約1.25 Gbps</strong>で、超えたい場合はTransit Gatewayと組み合わせて複数トンネルをECMPで束ねます。「VPNの帯域が足りない」なら、この構成かDirect Connectへの移行が答えです。</p>
-  <p>開通までの時間はそのまま手がかりになります。<strong>「今すぐ接続が必要」「一時的な移行期間だけ」ならVPN</strong>、<strong>「安定した低レイテンシー」「大量データを継続的に転送」「一貫した帯域」ならDirect Connect</strong>です。</p>
-
-  <h3>仮想インターフェースの3種類</h3>
-  <p>物理回線の上には仮想インターフェース（VIF）を作ります。3種類あり、行き先が違います。</p>
-  <ul>
-    <li><strong>プライベートVIF</strong> ―― VPCのプライベートIP空間へ。仮想プライベートゲートウェイまたはDirect Connect ゲートウェイ経由。</li>
-    <li><strong>パブリックVIF</strong> ―― S3やDynamoDBなどAWSの<em>パブリックな</em>エンドポイントへ、インターネットを経由せずに届きます。</li>
-    <li><strong>トランジットVIF</strong> ―― Transit Gateway へ。多数のVPCをDX経由でまとめて見せるときに使います。</li>
-  </ul>
-  <p><strong>Direct Connect ゲートウェイ</strong>を挟むと、1本のDX接続から<strong>複数リージョンの複数VPC</strong>に届きます。「東京と大阪のVPCに1本のDXで」の答えはこれです。</p>
-
-  <h3>冗長構成のパターン</h3>
-  <p>DXを1本引いただけでは高可用性になりません。物理回線もDXロケーションも単一障害点だからです。可用性とコストの釣り合いで3段階あります。</p>
-  <ol class="body">
-    <li><strong>Direct Connect ＋ Site-to-Site VPN バックアップ。</strong>最も一般的で費用対効果の高い構成です。通常はDXを使い、落ちたらVPNへフェイルオーバーします（BGPのルート優先度でDXを優先させる）。ただし<strong>フェイルオーバー後は帯域が落ちる</strong>ので、「縮退運転で業務が成立するか」が採否の分かれ目です。</li>
-    <li><strong>Direct Connect 2本（異なるDXロケーション）。</strong>回線とロケーションの両方を冗長化します。帯域が落ちないので、フェイルオーバー後も同じ性能が要る要件で選びます。コストは倍以上です。</li>
-    <li><strong>Direct Connect 2本 × 2ロケーション（計4本）。</strong>「最大の回復性」という語が出たときの構成です。</li>
-  </ol>
-  <p><strong>「コストを抑えつつ冗長化」ならDX＋VPNバックアップ、「フェイルオーバー時も同じ帯域が必要」ならDX 2本</strong>で切り分けられます。VPNバックアップの選択肢を、安いという理由だけで除外しないでください。</p>
-
-  <div class="note warn">
-    <span class="label">Direct Connect は暗号化されない</span>
-    <p>専用線なのでインターネットは通りませんが、<strong>それ自体は暗号化を意味しません。</strong>「転送中の暗号化」が求められる設問ではDX単体は不十分で、答えは<strong>パブリックVIF の上に Site-to-Site VPN を張る</strong>か、対応する回線なら <strong>MACsec</strong> です。「DXだからデータは暗号化されている」という選択肢は誤りです。</p>
-  </div></section>
-
-<section id="s8" data-toc="Route 53">
-
+<section id="s8" data-toc="場面6 VPC同士">
+  
   <span class="h2num">08</span>
-  <h2>Route 53 ―― どのIPを返すかで経路を決める</h2>
-  <p class="lead">DNSは「名前をIPに変える仕組み」ですが、SAAでは<em>トラフィックを振り分ける仕組み</em>として出題されます。ルーティングポリシーの選択は、そのまま可用性設計とレイテンシー設計の選択です。</p>
-
-  <h3>ルーティングポリシーを要件から逆引きする</h3>
-  <div class="tw"><table>
-    <thead><tr><th>ポリシー</th><th>何を基準に返すか</th><th>設問に出る言い回し</th></tr></thead>
-    <tbody>
-      <tr><td><strong>シンプル</strong></td><td>常に同じレコードを返す</td><td>単一のリソース。<span class="no">ヘルスチェックは使えない</span></td></tr>
-      <tr><td><strong>加重</strong></td><td>指定した重みの比率で分配</td><td>「90:10で新バージョンに流す」「カナリアリリース」「A/Bテスト」</td></tr>
-      <tr><td><strong>レイテンシー</strong></td><td>そのユーザーから最も応答が速いリージョン</td><td>「複数リージョンで最高のパフォーマンスを」</td></tr>
-      <tr><td><strong>フェイルオーバー</strong></td><td>プライマリが健全ならプライマリ、落ちたらセカンダリ</td><td>「アクティブ／スタンバイ」「災害対策サイト」「Sorryページ」</td></tr>
-      <tr><td><strong>位置情報</strong></td><td>ユーザーが<em>どこにいるか</em>（国・大陸・州）</td><td>「日本のユーザーには日本語サイト」「法規制でこの国からは別の配信先へ」</td></tr>
-      <tr><td><strong>地理的近接性</strong></td><td>ユーザーと<em>リソース</em>の地理的な距離。バイアス値で範囲を伸縮できる</td><td>「トラフィックの流れ先を地理的に少しずつ移したい」</td></tr>
-      <tr><td><strong>複数値回答</strong></td><td>最大8件のIPをランダムに返す。ヘルスチェック付き</td><td>「簡易的な負荷分散」「ロードバランサーを使わずに複数台へ」</td></tr>
-    </tbody>
-  </table></div>
-
-  <p>取り違えが多いのは<strong>レイテンシー / 位置情報 / 地理的近接性</strong>の3つです。切り分けは単純で、<strong>「速さ」が要件ならレイテンシー、「どこの国の人か」なら位置情報、「どのリソースに何割寄せるか」を地理で調整したいなら地理的近接性</strong>（トラフィックフローで設定します）。日本のユーザーが東京リージョンに行くとは限らない――経路次第では別リージョンの方が速い――という点で、レイテンシーと位置情報は結果が一致しません。法規制やローカライズが理由なら位置情報です。</p>
-  <p>もうひとつ、<strong>複数値回答は負荷分散装置ではありません。</strong>どのIPを使うかはクライアントが決めるので厳密な分散になりません。価値は「ヘルスチェックに応じて不健全なIPを返さなくなる」点にあり、シンプルルーティングとの違いもそこです。</p>
-
-  <h3>ヘルスチェック</h3>
-  <p>フェイルオーバールーティングはヘルスチェックとセットで初めて機能します。ヘルスチェックには3種類あります。</p>
-  <ul>
-    <li><strong>エンドポイントの監視</strong> ―― 指定したIPやドメインに対してHTTP/HTTPS/TCPで疎通を確認します。</li>
-    <li><strong>他のヘルスチェックの監視（計算型）</strong> ―― 複数のヘルスチェックを束ね、「3つのうち2つが健全なら健全」といった判定をします。</li>
-    <li><strong>CloudWatch アラームの監視</strong> ―― アラームの状態を健全性として使います。Route 53のヘルスチェッカーはインターネット側から来るため閉じたリソースには届かないので、<strong>プライベートサブネットのリソースを監視したいときはこれ</strong>です。</li>
-  </ul>
-
-  <h3>エイリアスレコード</h3>
-  <p>エイリアスレコードはRoute 53固有の拡張で、AWSリソース（ALB/NLB、CloudFront、S3の静的ウェブサイト、API Gateway、同一ホストゾーン内の別レコードなど）を指します。CNAMEとの違いを押さえます。</p>
-  <div class="tw"><table>
-    <thead><tr><th></th><th>エイリアス</th><th>CNAME</th></tr></thead>
-    <tbody>
-      <tr><td><strong>ゾーン頂点（example.com そのもの）</strong></td><td class="yes">設定できる</td><td class="no">設定できない</td></tr>
-      <tr><td><strong>AWSリソースへのクエリ料金</strong></td><td class="yes">無料</td><td class="no">課金される</td></tr>
-      <tr><td><strong>指せる先</strong></td><td>AWSリソースと同一ゾーン内のレコード</td><td>任意のドメイン名</td></tr>
-      <tr><td><strong>IPの変化への追従</strong></td><td class="yes">AWS側が自動で追従する</td><td>名前解決の連鎖で追従</td></tr>
-    </tbody>
-  </table></div>
-  <p><strong>「example.com（wwwなし）をALBに向けたい」という設問の答えは、必ずエイリアスレコードです。</strong>CNAMEはゾーン頂点に作れないので、この一点だけで選択肢が絞れます。</p>
-
-  <div class="note">
-    <span class="label">ハイブリッドDNS</span>
-    <p>オンプレミスのDNSとVPC内の名前解決をつなぐのが <strong>Route 53 Resolver エンドポイント</strong>です。向きを取り違えないでください。「オンプレミスのサーバーがAWS内のRDSのエンドポイント名を解決できない」→ <strong>インバウンド</strong>、「EC2から社内のホスト名を解決したい」→ <strong>アウトバウンド</strong>です。</p>
-  </div></section>
-
-<section id="s9" data-toc="CloudFrontとGA">
-
-  <span class="h2num">09</span>
-  <h2>CloudFront と Global Accelerator</h2>
-  <p class="lead">どちらもAWSのエッジロケーションを使って利用者に近づける仕組みですが、<em>やっていることが根本的に違います</em>。CloudFrontはキャッシュし、Global Acceleratorはキャッシュしません。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th></th><th>CloudFront</th><th>Global Accelerator</th></tr></thead>
-    <tbody>
-      <tr><td><strong>本質</strong></td><td>コンテンツをエッジにキャッシュするCDN</td><td>AWSのグローバルネットワークへ最短で乗せるアクセラレーター</td></tr>
-      <tr><td><strong>対応プロトコル</strong></td><td class="no">HTTP / HTTPS（とWebSocket）</td><td class="yes">任意のTCP / UDP</td></tr>
-      <tr><td><strong>キャッシュ</strong></td><td class="yes">する</td><td class="no">しない</td></tr>
-      <tr><td><strong>クライアントが見るIP</strong></td><td>エッジごとに変わる</td><td class="yes">2つの固定Anycast IP</td></tr>
-      <tr><td><strong>フェイルオーバー</strong></td><td>オリジンフェイルオーバー（オリジングループ）</td><td class="yes">ヘルスチェックに基づき数十秒で切り替え</td></tr>
-      <tr><td><strong>向く用途</strong></td><td>静的ファイル配信、動画、動的コンテンツの高速化</td><td>ゲーム、VoIP、IoT、非HTTPのAPI、固定IPが要るシステム</td></tr>
-    </tbody>
-  </table></div>
-
-  <p>切り分けは2つのキーワードで決まります。<strong>「静的コンテンツ」「キャッシュ」「動画配信」ならCloudFront。「UDP」「非HTTP」「固定IPアドレスが必要」「ファイアウォールでIPを許可リストに登録」ならGlobal Accelerator。</strong>とくに「固定IP」は強い手がかりです。企業のファイアウォールが宛先IPで許可を出している環境では、エッジごとにIPが変わるCloudFrontは使えません。</p>
-
-  <h3>オリジンアクセスコントロール（OAC）</h3>
-  <p>CloudFrontでS3を配信するとき、<strong>S3バケットをパブリックにしてはいけません。</strong>利用者がCloudFrontを飛ばしてS3のURLを直接叩けてしまい、WAFもキャッシュも署名付きURLも回避されるからです。これを防ぐのが <strong>OAC（Origin Access Control）</strong>です。</p>
-  <p>OACを設定するとCloudFrontがS3へのリクエストにSigV4で署名します。バケットポリシーには「このディストリビューションからのみ許可」と書き、パブリックアクセスはブロックしたままにできます。旧来の <strong>OAI（Origin Access Identity）</strong>も同じ役割でしたが、OACは<strong>SSE-KMSで暗号化されたオブジェクトに対応し、GET以外のHTTPメソッドにも対応する</strong>点で上位互換です。<strong>新規構成の正解は常にOAC</strong>で、OAIは「レガシー」として選択肢に混ざります。</p>
-
-  <div class="note">
-    <span class="label">よく一緒に出る周辺機能</span>
-    <p><strong>署名付きURL / Cookie</strong> ―― 期限付き配信。単一ファイルならURL、複数ファイルをまとめて許すならCookie。<strong>地理的制限</strong> ―― 特定の国からのアクセスを遮断。<strong>AWS WAF</strong> ―― アプリケーション層の攻撃を防ぐ。<strong>CloudFront Functions / Lambda@Edge</strong> ―― 前者は軽量なヘッダー書き換えやリダイレクト、後者はより複雑な処理に使います。</p>
+  <h2>場面6 ―― 「別部署の VPC ともつなぎたい。部署は今後も増える」</h2>
+  <p>2つの VPC を1対1でつなぐのが <em>VPC ピアリング</em>です。設定は簡単ですが、増えていくと破綻します。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 176" width="760" height="176" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="VPC-AとB、BとCをピアリングしても、AからCへは届かない"><rect x="60" y="50" width="140" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="130.0" y="79.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">VPC-A</text><rect x="310" y="50" width="140" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="380.0" y="79.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">VPC-B</text><rect x="560" y="50" width="140" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="630.0" y="79.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">VPC-C</text><line x1="200" y1="75" x2="310" y2="75" stroke="var(--accent)" stroke-width="2.6"/><rect x="224.8" y="56.5" width="60.5" height="16.5" rx="3" fill="var(--surface)"/><text x="255" y="66" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">ピアリング</text><line x1="450" y1="75" x2="560" y2="75" stroke="var(--accent)" stroke-width="2.6"/><rect x="474.8" y="56.5" width="60.5" height="16.5" rx="3" fill="var(--surface)"/><text x="505" y="66" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">ピアリング</text><polyline points="130,100 130,132 630,132 630.0,114.0" fill="none" stroke="var(--deny)" stroke-width="2" stroke-linejoin="round" stroke-dasharray="6 4"/><polygon points="630.0,104.0 635.5,114.0 624.5,114.0" fill="var(--deny)"/><circle cx="380" cy="132" r="10" fill="var(--deny)"/><line x1="375.5" y1="127.5" x2="384.5" y2="136.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="375.5" y1="136.5" x2="384.5" y2="127.5" stroke="var(--bg)" stroke-width="2.4"/><text x="380" y="162" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">B は中継しない → A から C へは届かない</text></svg>
   </div>
+  <figcaption><strong>ピアリングは推移しない。</strong>A–B と B–C がつながっていても、B が A の通信を C へ中継することはない。</figcaption>
+</figure>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 288" width="760" height="288" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左は5つのVPCを全部ピアリングして10本の線が必要。右はTransit Gatewayを中心に5本で済む"><text x="14" y="20" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">ピアリングで全部つなぐ</text><line x1="185.0" y1="53.0" x2="272.5" y2="116.6" stroke="var(--ink-3)" stroke-width="1.4"/><line x1="185.0" y1="53.0" x2="239.1" y2="219.4" stroke="var(--ink-3)" stroke-width="1.4"/><line x1="185.0" y1="53.0" x2="130.9" y2="219.4" stroke="var(--ink-3)" stroke-width="1.4"/><line x1="185.0" y1="53.0" x2="97.5" y2="116.6" stroke="var(--ink-3)" stroke-width="1.4"/><line x1="272.5" y1="116.6" x2="239.1" y2="219.4" stroke="var(--ink-3)" stroke-width="1.4"/><line x1="272.5" y1="116.6" x2="130.9" y2="219.4" stroke="var(--ink-3)" stroke-width="1.4"/><line x1="272.5" y1="116.6" x2="97.5" y2="116.6" stroke="var(--ink-3)" stroke-width="1.4"/><line x1="239.1" y1="219.4" x2="130.9" y2="219.4" stroke="var(--ink-3)" stroke-width="1.4"/><line x1="239.1" y1="219.4" x2="97.5" y2="116.6" stroke="var(--ink-3)" stroke-width="1.4"/><line x1="130.9" y1="219.4" x2="97.5" y2="116.6" stroke="var(--ink-3)" stroke-width="1.4"/><circle cx="185.0" cy="53.0" r="20" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="185.0" y="58.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">A</text><circle cx="272.5" cy="116.6" r="20" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="272.5" y="121.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">B</text><circle cx="239.1" cy="219.4" r="20" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="239.1" y="224.4" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">C</text><circle cx="130.9" cy="219.4" r="20" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="130.9" y="224.4" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">D</text><circle cx="97.5" cy="116.6" r="20" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="97.5" y="121.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">E</text><text x="185" y="274" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">5部署で10本、10部署で45本</text><text x="404" y="20" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">Transit Gateway に集約</text><line x1="575" y1="145" x2="575.0" y2="47.0" stroke="var(--accent)" stroke-width="2.2"/><line x1="575" y1="145" x2="668.2" y2="114.7" stroke="var(--accent)" stroke-width="2.2"/><line x1="575" y1="145" x2="632.6" y2="224.3" stroke="var(--accent)" stroke-width="2.2"/><line x1="575" y1="145" x2="517.4" y2="224.3" stroke="var(--accent)" stroke-width="2.2"/><line x1="575" y1="145" x2="481.8" y2="114.7" stroke="var(--accent)" stroke-width="2.2"/><rect x="541" y="129" width="68" height="32" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="575.0" y="149.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">TGW</text><circle cx="575.0" cy="47.0" r="20" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="575.0" y="52.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">A</text><circle cx="668.2" cy="114.7" r="20" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="668.2" y="119.7" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">B</text><circle cx="632.6" cy="224.3" r="20" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="632.6" y="229.3" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">C</text><circle cx="517.4" cy="224.3" r="20" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="517.4" y="229.3" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">D</text><circle cx="481.8" cy="114.7" r="20" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="481.8" y="119.7" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">E</text><text x="575" y="274" font-size="12" fill="var(--allow)" text-anchor="middle" font-weight="700">部署が増えても1本足すだけ</text></svg>
+  </div>
+  <figcaption><strong>部署が増えるほど差が開く。</strong>全部をピアリングでつなぐと N×(N−1)÷2 本になり、そのそれぞれに両側のルートテーブルを書く。Transit Gateway を中心に置けば、部署が1つ増えても線は1本増えるだけ。オンプレとの VPN や Direct Connect も同じハブに集約できる。</figcaption>
+</figure>
+  <ul>
+    <li><strong>もう一つの落とし穴：</strong>アドレス範囲（CIDR）が重なっている VPC 同士はピアリングできない。各部署が勝手に <code>10.0.0.0/16</code> で作っていると、後からつなげない</li>
+  </ul>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「<strong>2つの</strong> VPC を低コストで」→ <strong>ピアリング</strong>。「<strong>多数の</strong> VPC」「推移的」「ハブ＆スポーク」→ <strong>Transit Gateway</strong>。</p></div>
+</section>
 
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「CloudFrontを導入したのにオリジンの負荷が下がらない」。典型的な原因はキャッシュキーに<strong>不要なクエリ文字列・Cookie・ヘッダーを含めてしまっている</strong>ことです。キャッシュキーが細分化されるとヒット率が落ちます。対策はキャッシュポリシーの見直しで、「TTLを伸ばす」も選択肢に出ますが、キャッシュキーの問題が示唆されていればそちらが正解です。</p>
-  </div></section>
-
-<section id="s10" data-toc="試験での判断軸">
-
-  <span class="h2num">10</span>
-  <h2>試験での判断軸</h2>
-  <p class="lead">ネットワークの設問は、要件の言葉がほぼ固定されています。この対応表を頭に入れておくと、選択肢を読む前に答えの見当がつきます。</p>
+<section id="s9" data-toc="場面→答えの早見表">
+  
+  <span class="h2num">09</span>
+  <h2>場面 → 答えの早見表</h2>
+  <p class="lead">設問文にこの手がかりが出たら、この答えに寄せる。下の3行（Route 53・CloudFront・Global Accelerator）は、EC2 と S3 の講義で場面として扱います。</p>
 
   <div class="judge">
-    <div class="row"><span class="cue">プライベートサブネットから外部へ出るだけ（IPv4）</span><span class="arrow">→</span><span class="ans">NAT Gateway をAZごとに</span></div>
-    <div class="row"><span class="cue">特定のIPアドレスをブロックしたい</span><span class="arrow">→</span><span class="ans">ネットワークACL（SGでは不可）</span></div>
-    <div class="row"><span class="cue">行きは通るが戻りが返らない</span><span class="arrow">→</span><span class="ans">NACLのエフェメラルポート許可漏れ</span></div>
-    <div class="row"><span class="cue">NAT Gateway のデータ処理料金が高い</span><span class="arrow">→</span><span class="ans">S3・DynamoDB のゲートウェイ型エンドポイント</span></div>
-    <div class="row"><span class="cue">オンプレミスからS3にプライベート接続</span><span class="arrow">→</span><span class="ans">インターフェース型エンドポイント / パブリックVIF</span></div>
-    <div class="row"><span class="cue">SaaSや自社サービスを別VPCに公開（CIDR重複あり）</span><span class="arrow">→</span><span class="ans">PrivateLink（エンドポイントサービス）</span></div>
-    <div class="row"><span class="cue">VPCが2〜3個。安くつなぎたい</span><span class="arrow">→</span><span class="ans">VPC ピアリング</span></div>
-    <div class="row"><span class="cue">VPCが多数 / 推移的に通したい / オンプレも集約</span><span class="arrow">→</span><span class="ans">Transit Gateway</span></div>
-    <div class="row"><span class="cue">すぐに接続したい / 一時的な移行</span><span class="arrow">→</span><span class="ans">Site-to-Site VPN</span></div>
-    <div class="row"><span class="cue">一貫した帯域と低レイテンシー</span><span class="arrow">→</span><span class="ans">Direct Connect</span></div>
-    <div class="row"><span class="cue">DXを冗長化。縮退運転でよい / 同帯域が必要</span><span class="arrow">→</span><span class="ans">DX＋VPN / 別ロケーションにDX 2本</span></div>
-    <div class="row"><span class="cue">ゾーン頂点をALBに向けたい</span><span class="arrow">→</span><span class="ans">Route 53 エイリアスレコード</span></div>
-    <div class="row"><span class="cue">UDP / 非HTTP / 固定IPが必要</span><span class="arrow">→</span><span class="ans">Global Accelerator</span></div>
-    <div class="row"><span class="cue">静的コンテンツをキャッシュして高速化</span><span class="arrow">→</span><span class="ans">CloudFront ＋ OAC</span></div>
+    <div class="row"><span class="cue">パブリックサブネットの条件</span><span class="arrow">→</span><span class="ans">ルートテーブルに IGW へのルート</span></div>
+    <div class="row"><span class="cue">SSH を開けずに EC2 を管理したい</span><span class="arrow">→</span><span class="ans">Session Manager</span></div>
+    <div class="row"><span class="cue">プライベートから外向きだけ通したい</span><span class="arrow">→</span><span class="ans">NAT Gateway（パブリックサブネットに）</span></div>
+    <div class="row"><span class="cue">NAT の可用性を高めたい</span><span class="arrow">→</span><span class="ans">AZ ごとに NAT Gateway</span></div>
+    <div class="row"><span class="cue">NAT のコストを下げたい（S3・DynamoDB）</span><span class="arrow">→</span><span class="ans">ゲートウェイ型エンドポイント</span></div>
+    <div class="row"><span class="cue">他の AWS サービスへ閉域で</span><span class="arrow">→</span><span class="ans">インターフェース型エンドポイント</span></div>
+    <div class="row"><span class="cue">特定 IP を拒否したい</span><span class="arrow">→</span><span class="ans">ネットワークACL</span></div>
+    <div class="row"><span class="cue">行きは届くのに応答が返らない</span><span class="arrow">→</span><span class="ans">ACL のエフェメラルポート</span></div>
+    <div class="row"><span class="cue">オンプレと、すぐに・安く</span><span class="arrow">→</span><span class="ans">Site-to-Site VPN</span></div>
+    <div class="row"><span class="cue">オンプレと、一貫した性能で</span><span class="arrow">→</span><span class="ans">Direct Connect</span></div>
+    <div class="row"><span class="cue">Direct Connect の冗長を低コストで</span><span class="arrow">→</span><span class="ans">VPN をバックアップに</span></div>
+    <div class="row"><span class="cue">多数の VPC をつなぐ／推移させたい</span><span class="arrow">→</span><span class="ans">Transit Gateway</span></div>
+    <div class="row"><span class="cue">DNS で障害時に切り替えたい</span><span class="arrow">→</span><span class="ans">Route 53 フェイルオーバールーティング</span></div>
+    <div class="row"><span class="cue">静的コンテンツを世界に速く配信</span><span class="arrow">→</span><span class="ans">CloudFront</span></div>
+    <div class="row"><span class="cue">固定 IP で、TCP/UDP を世界から速く</span><span class="arrow">→</span><span class="ans">Global Accelerator</span></div>
   </div>
+</section>
 
-  <div class="note warn">
-    <span class="label">「プライベートに接続」の3択</span>
-    <p>設問で「インターネットを経由せずに」と書かれたとき、答えの候補は3つあります。<strong>相手がAWSのサービスならVPCエンドポイント</strong>、<strong>相手が別のVPCのサービスならPrivateLinkかピアリングかTGW</strong>、<strong>相手がオンプレミスならDirect ConnectかVPN</strong>。まず「誰と話したいのか」を確定させてから選択肢を読むと、迷いません。</p>
-  </div></section>
-
-<section id="s11" data-toc="確認問題">
-
-  <span class="h2num">11</span>
+<section id="s10" data-toc="確認問題">
+  
+  <span class="h2num">10</span>
   <h2>確認問題</h2>
-  <p class="lead">先に自分で答えを決めてから開いてください。特にQ2とQ4は、実際の試験と同じ密度で書いています。</p>
+  <p class="lead">先に自分の答えを決めてから開いてください。</p>
 
   <details class="q">
-    <summary><span class="qnum">Q1</span>プライベートサブネットのEC2インスタンス群が、S3へ毎日大量のログをアップロードしている。NAT Gatewayのデータ処理料金が月額の大半を占めていることが分かった。最もコストを削減できる対応はどれか。
+    <summary><span class="qnum">Q1</span>あるサブネットを「パブリックサブネット」にしているものは何か。
       <ul class="opts">
-        <li>A. NAT Gateway を NAT インスタンス（t3.micro）に置き換える</li>
-        <li>B. S3 向けのゲートウェイ型 VPC エンドポイントを作成し、ルートテーブルに関連付ける</li>
-        <li>C. EC2 をパブリックサブネットに移動し、Elastic IP を割り当てる</li>
-        <li>D. S3 向けのインターフェース型 VPC エンドポイントを作成する</li>
+        <li>A. サブネット作成時に「パブリック」を選んだこと</li>
+        <li>B. サブネットのルートテーブルに、インターネットゲートウェイへのルートがあること</li>
+        <li>C. サブネットの CIDR にグローバル IP アドレスを使っていること</li>
+        <li>D. サブネット内のセキュリティグループが 0.0.0.0/0 を許可していること</li>
       </ul>
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>ゲートウェイ型エンドポイントは<strong>追加料金なし</strong>で、S3宛のトラフィックをNAT Gatewayを通さずにAWSの内部経路へ流します。データ処理料金がそのまま消えます。</p>
-      <p><strong>判断軸:</strong> Dのインターフェース型でもNATは迂回できますが、時間課金とデータ処理量課金がかかるため「最もコストを削減できる」には劣ります。<strong>S3・DynamoDB かつVPC内からの利用だけなら必ずゲートウェイ型が優先</strong>。Aは可用性と帯域を犠牲にし、Cはインスタンスをインターネットに露出させます。</p>
+      <p>サブネットに「パブリック／プライベート」というスイッチはありません。ルートテーブルに IGW への道があるかどうかだけで決まります。</p>
+      <p><strong>判断軸:</strong> D はもっともらしい誤答です。セキュリティグループは「入ってよいか」の関所で、道そのものを作るわけではありません。<strong>道がなければ、関所を開けても届かない。</strong></p>
     </div>
   </details>
 
   <details class="q">
-    <summary><span class="qnum">Q2</span>パブリックサブネットのWebサーバーに対して、インターネットからのHTTPSアクセスが届かない。セキュリティグループのインバウンドは 443/tcp を <code>0.0.0.0/0</code> から許可しており、ネットワークACLのインバウンドにも 443/tcp の許可ルールがある。ルートテーブルには <code>0.0.0.0/0 → igw-xxxx</code> がある。インスタンスにはパブリックIPが割り当てられている。最も可能性が高い原因はどれか。
+    <summary><span class="qnum">Q2</span>3つの AZ にプライベートサブネットがあり、どれも AZ-a の NAT Gateway を経由して外へ出ている。可用性を高めるための最も適切な変更はどれか。
       <ul class="opts">
-        <li>A. セキュリティグループのアウトバウンドで 443/tcp が許可されていない</li>
-        <li>B. ネットワークACLのアウトバウンドでエフェメラルポート（1024-65535）が許可されていない</li>
-        <li>C. Internet Gateway が VPC にアタッチされていない</li>
-        <li>D. サブネットのルートテーブルに NAT Gateway へのルートがない</li>
+        <li>A. AZ-a の NAT Gateway のサイズを大きくする</li>
+        <li>B. 各 AZ に NAT Gateway を置き、各 AZ のルートテーブルを同じ AZ の NAT Gateway に向ける</li>
+        <li>C. NAT Gateway を NAT インスタンスに置き換える</li>
+        <li>D. プライベートサブネットを1つの AZ にまとめる</li>
       </ul>
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>ネットワークACLはステートレスなので、インバウンドで443を許可しても、応答パケットを外へ出すためのアウトバウンドルールが別途必要です。応答の宛先ポートはクライアント側のエフェメラルポートなので、1024-65535 を許可していないとここで止まります。</p>
-      <p><strong>判断軸:</strong> Aが不正解なのは<strong>セキュリティグループがステートフル</strong>だからです。Cはルートテーブルに <code>igw-xxxx</code> がある時点で成立せず、Dはパブリックサブネットの話なのでNATは無関係。<strong>「行きの許可は確認済みなのに通らない」と念入りに書いてあったら、ステートレスな側＝NACLの戻りを疑ってください。</strong></p>
+      <p>NAT Gateway は AZ の中に作られます。1か所に集約すると、その AZ の障害で全 AZ の外向き通信が止まります。</p>
+      <p><strong>判断軸:</strong> C は可用性を自分で作り込む必要があり、運用負荷が上がります。D は可用性を下げる方向です。<strong>「AZ をまたいで冗長化」の設問では、部品を AZ ごとに置くのが基本形</strong>です。</p>
     </div>
   </details>
 
   <details class="q">
-    <summary><span class="qnum">Q3</span>VPC-A と VPC-B、VPC-B と VPC-C がそれぞれ VPC ピアリングで接続されている。VPC-A のインスタンスから VPC-C のインスタンスへ通信させたい。また今後VPCは20個程度まで増える予定で、オンプレミスとのVPN接続も1か所に集約したい。適切な設計はどれか。
+    <summary><span class="qnum">Q3</span>プライベートサブネットの EC2 が S3 から大量のデータを読み、NAT Gateway のデータ処理料金が高額になっている。最もコスト効率の良い対策はどれか。
       <ul class="opts">
-        <li>A. VPC-A と VPC-C の間にもピアリング接続を追加する</li>
-        <li>B. VPC-B のルートテーブルに VPC-A と VPC-C 向けのルートを追加して中継させる</li>
-        <li>C. Transit Gateway を作成し、各VPCとVPN接続をアタッチする</li>
-        <li>D. 3つのVPCを1つに統合し、サブネットで分離する</li>
+        <li>A. NAT Gateway を NAT インスタンスに置き換える</li>
+        <li>B. S3 用のゲートウェイ型 VPC エンドポイントを作成する</li>
+        <li>C. S3 用のインターフェース型 VPC エンドポイントを作成する</li>
+        <li>D. EC2 をパブリックサブネットに移す</li>
       </ul>
     </summary>
     <div class="a">
-      <p><span class="correct">正解: C</span></p>
-      <p>VPCが20個に増え、VPN接続も集約したいという要件は、ピアリングのフルメッシュでは管理できません（20個なら190本）。Transit Gateway なら各VPCが1本のアタッチメントを持つだけで済み、VPNも同じハブに集約できます。</p>
-      <p><strong>判断軸:</strong> Bは<strong>ピアリングが推移的ルーティングをしない</strong>ためルートを書いても通りません。ここが最大の引っかけです。Aは今回の3つは解決しますが、増加と集約の要件を満たしません。<strong>設問に将来の数が書かれていたら、それは必ず選択の根拠です。</strong></p>
+      <p><span class="correct">正解: B</span></p>
+      <p>ゲートウェイ型は S3 と DynamoDB 専用で無料です。S3 宛ての通信が NAT を通らなくなり、処理料金が消えます。</p>
+      <p><strong>判断軸:</strong> C でも NAT は回避できますが、時間料金とデータ量の料金がかかります。「最もコスト効率が良い」なら B。D はコストは下がってもセキュリティを犠牲にしているので、SAA では選びません。</p>
     </div>
   </details>
 
   <details class="q">
-    <summary><span class="qnum">Q4</span>オンラインゲームのバックエンドを東京と米国の2リージョンで運用している。通信はUDPを使用し、企業ネットワークからも接続されるため、クライアント側のファイアウォールに登録できる<strong>固定のIPアドレス</strong>が必要である。またリージョン障害時には自動的にもう一方へ切り替わってほしい。適切なサービスはどれか。
+    <summary><span class="qnum">Q4</span>Web サーバーのサブネットのネットワークACLで、インバウンドとアウトバウンドの両方に TCP 443 の許可を入れた。セキュリティグループも 443 を許可している。しかしブラウザから接続すると応答が返らない。最も可能性が高い原因はどれか。
       <ul class="opts">
-        <li>A. CloudFront ディストリビューションを作成し、2つのオリジンをオリジングループに設定する</li>
-        <li>B. Route 53 のレイテンシールーティングとヘルスチェックを組み合わせる</li>
-        <li>C. AWS Global Accelerator を作成し、両リージョンのNLBをエンドポイントとして登録する</li>
-        <li>D. 各リージョンにElastic IPを割り当てたNLBを置き、クライアント側で切り替える</li>
+        <li>A. セキュリティグループのアウトバウンドに 443 の許可がない</li>
+        <li>B. ネットワークACLのアウトバウンドで、エフェメラルポート（1024〜65535）を許可していない</li>
+        <li>C. ネットワークACLはステートフルなので、原因は別にある</li>
+        <li>D. ルートテーブルに IGW へのルートがない</li>
       </ul>
     </summary>
     <div class="a">
-      <p><span class="correct">正解: C</span></p>
-      <p>Global Accelerator は<strong>2つの固定Anycast IP</strong>を提供し、<strong>任意のTCP/UDP</strong>を扱い、ヘルスチェックに基づいて健全なリージョンへ短時間で切り替えます。3つの要件すべてに一致します。</p>
-      <p><strong>判断軸:</strong> AはCloudFrontがHTTP/HTTPS専用でUDPを扱えません。Bは切り替え自体はできますが、<strong>DNSベースなのでクライアント側のTTLに依存して遅く、返すIPも固定になりません</strong>。Dは自動切り替えの要件を満たしません。<strong>「UDP」「固定IP」のどちらか1語でもあればGlobal Accelerator</strong>と反射で結び付けてください。</p>
+      <p><span class="correct">正解: B</span></p>
+      <p>サーバーの応答は、ブラウザ側が一時的に開いたポート宛てに送られます。ACL はステートレスなので、帰り道を明示的に許可しない限り通りません。</p>
+      <p><strong>判断軸:</strong> A は誤り。セキュリティグループはステートフルで、帰りは自動で通ります。C は性質が逆です。<strong>「行きは届く、帰りが来ない」はステートレスな ACL を疑う</strong>のが定石です。</p>
     </div>
   </details>
 
   <details class="q">
-    <summary><span class="qnum">Q5</span>S3に置いた静的サイトをCloudFrontで配信している。セキュリティ監査で「利用者がS3のURLを直接指定してオブジェクトを取得できる状態を解消せよ」と指摘された。オブジェクトはSSE-KMSで暗号化されている。適切な対応はどれか。
+    <summary><span class="qnum">Q5</span>VPC-A と VPC-B、VPC-B と VPC-C をそれぞれピアリングした。VPC-A から VPC-C のサーバーに接続できない。今後も VPC が増える前提で、最も適切な対策はどれか。
       <ul class="opts">
-        <li>A. S3バケットポリシーで <code>aws:SourceIp</code> に CloudFront のIPレンジを指定する</li>
-        <li>B. オリジンアクセスアイデンティティ（OAI）を作成し、バケットポリシーで OAI からのみ許可する</li>
-        <li>C. オリジンアクセスコントロール（OAC）を設定し、ブロックパブリックアクセスを有効にしたうえでバケットポリシーで当該ディストリビューションからのみ許可する</li>
-        <li>D. バケットを別リージョンに移動し、CloudFront のオリジンを更新する</li>
+        <li>A. VPC-A のルートテーブルに、VPC-C 宛てで VPC-B 向けピアリングを指すルートを追加する</li>
+        <li>B. Transit Gateway を作成し、すべての VPC をそこに接続する</li>
+        <li>C. VPC-C のセキュリティグループで VPC-A の CIDR を許可する</li>
+        <li>D. VPC-A と VPC-C の CIDR を同じにする</li>
       </ul>
     </summary>
     <div class="a">
-      <p><span class="correct">正解: C</span></p>
-      <p>OACはCloudFrontからのリクエストにSigV4署名を付け、バケットポリシー側でそのディストリビューションだけを許可できます。パブリックアクセスをブロックしたままにできるので、直接アクセスは完全に塞がります。</p>
-      <p><strong>判断軸:</strong> Bも同じ目的の旧機能ですが、<strong>OAIはSSE-KMSで暗号化されたオブジェクトに対応していません</strong>。設問がわざわざ「SSE-KMS」と書いているのは、そこでOAIを落とすためです。Aは管理すべきIPレンジが変動し続け、パブリックアクセス自体も残ります。<strong>一見どうでもよい条件（暗号化方式、プロトコル、将来の台数）が選択肢を1つに絞る鍵になっている</strong>――SAA全体に通じる読み方です。</p>
+      <p><span class="correct">正解: B</span></p>
+      <p>ピアリングは推移しないため、B を経由して A から C へは通れません。A-C 間を直接ピアリングする方法もありますが、「今後も増える」なら Transit Gateway に集約するのが適切です。</p>
+      <p><strong>判断軸:</strong> A はルートを書いても B が中継しないので通りません。D は逆で、CIDR が重なるとピアリング自体ができなくなります。<strong>「多数」「今後増える」「推移的」は Transit Gateway の合図</strong>です。</p>
     </div>
-  </details></section>
+  </details>
+</section>
 
-<section id="s12" data-toc="今日の宿題">
-
-  <span class="h2num">12</span>
+<section id="s11" data-toc="今日の宿題">
+  
+  <span class="h2num">11</span>
   <h2>今日の宿題</h2>
-  <p>ネットワークは手を動かさないと絶対に定着しません。20〜30分でここまでやってください。</p>
+  <p>20分で、ここまでやってください。</p>
 
   <div class="hw">
-    <div class="item"><span class="box"></span><span class="t"><code>notes/network/</code> の README のチェックリストを埋める<small>未着手の項目に、今日わかったことを1行ずつ。網羅しようとしない</small></span></div>
-    <div class="item"><span class="box"></span><span class="t">セキュリティグループ と ネットワークACL の比較表を、資料を見ずに自分で書く<small>最低4行――ステートフル／ステートレス、許可のみ／拒否も可、適用先、評価順。書けなければ04に戻る</small></span></div>
-    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d1-secure.md</code> と <code>notes/00_map/d3-performance.md</code> に追記<small>前者にはSG・NACL・エンドポイントの判断軸、後者にはRoute 53のルーティングポリシーとCloudFront／Global Acceleratorの切り分けを。10の表から、知らなかったものだけ</small></span></div>
-    <div class="item"><span class="box"></span><span class="t">W1のIssueのチェックボックスを2つ埋める<small>「VPC: サブネット、ルートテーブル、IGW、NAT Gateway」と「セキュリティグループ と ネットワークACL の違いを比較表で書く」</small></span></div>
-    <div class="item"><span class="box"></span><span class="t"><code>plan/log.md</code> に1行残す<small>時間と、いちばん腑に落ちなかった箇所。次に読み返す場所の目印になる</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">6つの場面を、資料を閉じて書き出す<small>「どんな依頼で、答えは何だったか」を6行。書けたら、チャットに貼ってもらえれば私が notes/ に清書します</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">書けなかった場面だけ、その節に戻る<small>全部は読み返さない</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">「つながらない」の切り分け順を、何も見ずに言う<small>ルートテーブル → パブリックIP → ACL（行きと帰り）→ セキュリティグループ → OS</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">セキュリティグループとネットワークACLの違いを3つ言う<small>帰りの扱い、拒否が書けるか、付く場所</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">終わったことを伝える<small>Issue のチェックと plan/log.md は私が更新します</small></span></div>
   </div>
 
   <div class="note">
-    <span class="label">週末のハンズオンに向けて</span>
-    <p>週末はVPCをゼロから構築します。手順は「VPC作成 → サブネット4つ → IGWをアタッチ → ルートテーブル2つを作って関連付け → NAT Gatewayをパブリックサブネットに → プライベートのルートテーブルをNATに向ける」。この順序を05の切り分けの順序と見比べてください。<strong>作る順番と、壊れたときに疑う順番はほぼ同じです。</strong>そして<strong>NAT Gateway と Elastic IP は終わったら必ず削除してください。</strong>止めても消さない限り課金が続きます。</p>
-  </div></section>
+    <span class="label">明日のハンズオン（VPC をゼロから作る）</span>
+    <p>今日の場面1〜3を、手で組み立てます。VPC を作る → パブリックとプライベートのサブネットを作る → IGW を付けてパブリック側のルートテーブルに道を書く → NAT Gateway をパブリック側に置いてプライベート側のルートテーブルに道を書く → プライベートの EC2 から <code>curl</code> で外に出られることを確かめる。</p>
+    <p><strong>最後に NAT Gateway を必ず削除してください。</strong>場面2で書いたとおり、止める機能はなく、削除しない限り時間料金がかかり続けます。Elastic IP も一緒に解放します。</p>
+  </div>
+</section>
 
 <footer>
   AWS SAA-C03 / W1 座学<br>
-  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
+  事例は Palo Alto Networks Unit 42 の調査（2021年）に基づく。料金は us-east-1 の公開価格。サービス仕様は AWS 公式ドキュメントによる。
 </footer>
 
 </main>
