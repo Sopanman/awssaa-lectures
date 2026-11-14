@@ -168,9 +168,9 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 
 <header class="masthead">
   <p class="eyebrow">AWS SAA-C03 / W2 座学</p>
-  <h1>コンピューティング ―― 何で動かし、どう増やすか</h1>
-  <p class="standfirst">SAAでは「この要件をEC2で受けるか、Lambdaで受けるか、コンテナで受けるか」が繰り返し問われます。さらに購入オプションの選択はコスト最適化ドメインの中心でもあります。サービスの機能を覚えるのではなく、要件の言葉から選択肢を絞る回路を作ってください。</p>
-  <div class="meta"><span>所要 60-90分</span><span>前提 W1 読了</span><span>ドメイン2・3・4</span></div>
+  <h1>コンピューティング ―― 図で見る8つの依頼</h1>
+  <p class="standfirst">SAA では「何の上で動かすか」「どう払うか」「どう増やすか」が繰り返し問われます。この講義は図が主役です。緑は通る・うまくいく、赤と ✕ は止まる・失敗する、青は自分が決めるもの。文章は図の補足だけにしてあります。</p>
+  <div class="meta"><span>所要 60-80分</span><span>前提 IAM・VPC 講義を読了</span><span>ドメイン2・3・4</span></div>
 </header>
 
 <div class="cols">
@@ -178,478 +178,383 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 <nav class="toc">
   <h2>目次</h2>
   <ol>
-    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
-    <li><a href="#s2"><span class="n">02</span>ファミリー</a></li>
-    <li><a href="#s3"><span class="n">03</span>購入オプション</a></li>
-    <li><a href="#s4"><span class="n">04</span>スポットと配置</a></li>
-    <li><a href="#s5"><span class="n">05</span>ELB三種</a></li>
-    <li><a href="#s6"><span class="n">06</span>スケーリング</a></li>
-    <li><a href="#s7"><span class="n">07</span>Lambda</a></li>
-    <li><a href="#s8"><span class="n">08</span>コンテナと三択</a></li>
-    <li><a href="#s9"><span class="n">09</span>試験での判断軸</a></li>
-    <li><a href="#s10"><span class="n">10</span>確認問題</a></li>
-    <li><a href="#s11"><span class="n">11</span>今日の宿題</a></li>
+    <li><a href="#s1"><span class="n">01</span>全体の地図</a></li>
+    <li><a href="#s2"><span class="n">02</span>場面1 型を選ぶ</a></li>
+    <li><a href="#s3"><span class="n">03</span>場面2 払い方</a></li>
+    <li><a href="#s4"><span class="n">04</span>場面3 中断と配置</a></li>
+    <li><a href="#s5"><span class="n">05</span>場面4 ELB三種</a></li>
+    <li><a href="#s6"><span class="n">06</span>場面5 入れ替わらない</a></li>
+    <li><a href="#s7"><span class="n">07</span>場面6 増やし方</a></li>
+    <li><a href="#s8"><span class="n">08</span>場面7 Lambda</a></li>
+    <li><a href="#s9"><span class="n">09</span>場面8 コンテナ</a></li>
+    <li><a href="#s10"><span class="n">10</span>場面→答えの早見表</a></li>
+    <li><a href="#s11"><span class="n">11</span>確認問題</a></li>
+    <li><a href="#s12"><span class="n">12</span>今日の宿題</a></li>
   </ol>
 </nav>
 
 <main>
 
-<section id="s1" data-toc="ゴール">
-
+<section id="s1" data-toc="全体の地図">
+  
   <span class="h2num">01</span>
-  <h2>この講義のゴール</h2>
-  <p class="lead">W1のIAMは「誰が触れるか」でした。今週は「何の上で動かすか」です。コンピューティングは3つのドメインにまたがって出題されるうえ、選択肢が多いぶん迷いやすい領域です。今日終わったときに、次の3つができていれば合格です。</p>
-  <ul class="goals">
-    <li><span class="tick">01</span><div><strong>購入オプションを、設問の言葉から1つに絞れる。</strong><br>オンデマンド、スポット、Reserved Instance、Savings Plans、専有ホスト。「中断できる」「1年使う」「ライセンス持ち込み」という手がかりで即断できる。</div></li>
-    <li><span class="tick">02</span><div><strong>ALB / NLB / GWLB を、要件の一語で切り分けられる。</strong><br>静的IP、パスベースルーティング、仮想アプライアンス。どの単語が出たらどれか、表を見ずに言える。</div></li>
-    <li><span class="tick">03</span><div><strong>EC2・コンテナ・Lambda の三択に順序をつけられる。</strong><br>実行時間、状態の持ち方、運用の手離れ。この3軸で、設問ごとに消去法が回せる。</div></li>
-  </ul>
-  <div class="note">
-    <span class="label">今週の重心</span>
-    <p>コンピューティングは、ドメイン2（弾力性のあるアーキテクチャ）、ドメイン3（高性能なアーキテクチャ）、ドメイン4（コスト最適化）の三方向から問われます。同じEC2でも、聞かれている角度が違えば正解も変わります。<strong>「安いのはどれか」と「落ちないのはどれか」は別の設問です。</strong>読むときは、その設問がどのドメインから来ているかを先に判定してください。</p>
-  </div></section>
-
-<section id="s2" data-toc="ファミリー">
-
-  <span class="h2num">02</span>
-  <h2>インスタンスファミリー ―― 型番は覚えない</h2>
-  <p class="lead">EC2には数百の型番があります。<em>そのすべてを覚える必要はまったくありません。</em>SAAが問うのは「このワークロードのボトルネックはどこか」という一点で、型番はその答えのラベルにすぎません。</p>
-
-  <h3>ボトルネックからファミリーを引く</h3>
-  <div class="tw"><table>
-    <thead><tr><th>ファミリー</th><th>頭文字</th><th>ボトルネックが</th><th>設問に出る言葉</th></tr></thead>
-    <tbody>
-      <tr><td><strong>汎用</strong></td><td>M / T</td><td>特にどこでもない。CPUとメモリが釣り合っている</td><td>「一般的なWebサーバー」「小規模なアプリケーション」「開発環境」</td></tr>
-      <tr><td><strong>コンピューティング最適化</strong></td><td>C</td><td>CPU。メモリは余っている</td><td>「バッチ処理」「動画のエンコード」「科学計算」「高トラフィックなWebサーバー」「ゲームサーバー」</td></tr>
-      <tr><td><strong>メモリ最適化</strong></td><td>R / X / z</td><td>メモリ。データをすべてRAMに載せたい</td><td>「インメモリデータベース」「大規模なリレーショナルDB」「SAP HANA」「リアルタイムのビッグデータ分析」</td></tr>
-      <tr><td><strong>ストレージ最適化</strong></td><td>I / D / H</td><td>ローカルディスクのIOPSやスループット</td><td>「数十万IOPS」「NoSQLデータベース」「データウェアハウス」「分散ファイルシステム」</td></tr>
-      <tr><td><strong>高速コンピューティング</strong></td><td>P / G / Inf / Trn</td><td>汎用CPUでは足りない並列演算</td><td>「機械学習の学習」「推論」「GPU」「グラフィックスワークロード」</td></tr>
-    </tbody>
-  </table></div>
-
-  <p>この表の使い方は一方向です。設問はまず<strong>業務の言葉</strong>で書かれます。「メモリ最適化インスタンスを使いたい」とは書かれず、「1TBのデータセット全体をメモリに保持して分析する」と書かれます。そこからR系を引くのがこの表の役割です。逆向きに「r6i.4xlargeとは何か」を覚える作業には、投資する価値がありません。</p>
-
-  <h3>T系のバーストだけは仕組みを知っておく</h3>
-  <p>T系（バースト可能パフォーマンスインスタンス）は、他のファミリーと課金の考え方が違います。ベースラインを下回るCPU使用率のあいだに<strong>CPUクレジット</strong>を貯め、負荷が跳ねたときにそれを消費してベースラインを超えた性能を出します。クレジットが尽きると、ベースライン性能まで絞られます。</p>
-  <ul>
-    <li><strong>スタンダードモード</strong>ではクレジットが尽きた時点で性能が落ちます。コストは予測可能です。</li>
-    <li><strong>Unlimitedモード</strong>ではクレジットを超えても性能を維持し、超過分が追加課金されます。既定はインスタンスの世代により異なるため、設問では明示されます。</li>
-  </ul>
-
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「開発環境でうまく動いていたアプリケーションを本番に移したら、しばらくは速いが数時間後に極端に遅くなる」――<strong>T系インスタンスのクレジット枯渇</strong>です。断続的な負荷にはT系が最適ですが、<strong>定常的に高いCPU使用率が続くワークロードにT系を選ぶ選択肢は不正解</strong>になります。この場合はM系かC系に変えるのが正解です。</p>
+  <h2>全体の地図</h2>
+  <p class="lead">工場の生産ラインにたとえると、EC2 が機械、ロードバランサーが仕事を配る係、Auto Scaling が「忙しさに合わせて機械を増減する班長」です。まず、8つの場面がどこの話かを見ます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 340" width="760" height="340" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="インターネットからロードバランサーを通り、Auto Scaling グループの中の2つのAZのEC2に届く。右側にLambdaとコンテナが別の選択肢として並ぶ"><rect x="300" y="8" width="160" height="30" rx="15.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="380.0" y="27.2" font-size="12" fill="var(--ink-2)" text-anchor="middle">インターネット</text><line x1="380" y1="38" x2="380.0" y2="54.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="380.0,64.0 374.5,54.0 385.5,54.0" fill="var(--allow)"/><rect x="290" y="64" width="180" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="380.0" y="84.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ロードバランサー</text><text x="380.0" y="99.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">ALB / NLB / GWLB</text><circle cx="290" cy="64" r="10" fill="var(--accent)"/><text x="290" y="68" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">4</text><rect x="16" y="136" width="504" height="196" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="76" y="156" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">Auto Scaling グループ（台数を自動で増減）</text><circle cx="30" cy="150" r="10" fill="var(--accent)"/><text x="30" y="154" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">5</text><circle cx="54" cy="150" r="10" fill="var(--accent)"/><text x="54" y="154" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">6</text><rect x="32" y="170" width="228" height="146" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="44" y="188" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-a</text><rect x="48" y="204" width="92" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="94.0" y="231.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="152" y="204" width="92" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="198.0" y="231.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="146" y="284" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">型・払い方・置き場所を選ぶ</text><rect x="276" y="170" width="228" height="146" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="288" y="188" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-c</text><rect x="292" y="204" width="92" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="338.0" y="231.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="396" y="204" width="92" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="442.0" y="231.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="390" y="284" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">型・払い方・置き場所を選ぶ</text><circle cx="48" cy="204" r="10" fill="var(--accent)"/><text x="48" y="208" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><circle cx="72" cy="204" r="10" fill="var(--accent)"/><text x="72" y="208" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><circle cx="96" cy="204" r="10" fill="var(--accent)"/><text x="96" y="208" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><polyline points="350,108 350,124 146,124 146.0,160.0" fill="none" stroke="var(--allow)" stroke-width="2" stroke-linejoin="round"/><polygon points="146.0,170.0 140.5,160.0 151.5,160.0" fill="var(--allow)"/><polyline points="410,108 410,124 390,124 390.0,160.0" fill="none" stroke="var(--allow)" stroke-width="2" stroke-linejoin="round"/><polygon points="390.0,170.0 384.5,160.0 395.5,160.0" fill="var(--allow)"/><text x="548" y="130" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">同じ仕事を、サーバーなしで</text><rect x="548" y="146" width="196" height="56" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="646.0" y="172.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">Lambda</text><text x="646.0" y="187.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">関数だけ置く・最大15分</text><circle cx="548" cy="146" r="10" fill="var(--accent)"/><text x="548" y="150" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">7</text><rect x="548" y="222" width="196" height="56" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="646.0" y="248.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ECS / EKS</text><text x="646.0" y="263.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">コンテナ（Fargate も可）</text><circle cx="548" cy="222" r="10" fill="var(--accent)"/><text x="548" y="226" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">8</text><polyline points="470,86 524,86 524,174 538.0,174.0" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="5 4"/><polygon points="548.0,174.0 538.0,179.5 538.0,168.5" fill="var(--ink-3)"/><polyline points="524,174 524,250 538.0,250.0" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="5 4"/><polygon points="548.0,250.0 538.0,255.5 538.0,244.5" fill="var(--ink-3)"/></svg>
   </div>
-
+  <figcaption><strong>この講義の地図。</strong>丸数字は場面の番号。①〜③は EC2 そのもの（型・払い方・置き場所）、④はロードバランサー、⑤⑥は Auto Scaling、⑦⑧は「そもそも EC2 で動かすのか」という選択肢。ALB は EC2 だけでなく Lambda やコンテナにも振り分けられる（点線）。</figcaption>
+</figure>
+  <h3>そもそも EC2 で動かすのか</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 302" width="760" height="302" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="EC2、Fargate、Lambdaの順に、自分で管理する層が減っていく"><text x="160" y="78" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">アプリのコード</text><text x="160" y="118" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">言語ランタイム</text><text x="160" y="158" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">台数の増減</text><text x="160" y="198" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">OS・パッチ</text><text x="160" y="238" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">サーバー（物理・仮想化）</text><text x="266" y="40" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="176" y="56" width="180" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="266" y="78" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分</text><rect x="176" y="96" width="180" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="266" y="118" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分</text><rect x="176" y="136" width="180" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="266" y="158" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（ASG を設計）</text><rect x="176" y="176" width="180" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="266" y="198" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分</text><rect x="176" y="216" width="180" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="266" y="238" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">AWS</text><text x="460" y="40" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Fargate</text><rect x="370" y="56" width="180" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="460" y="78" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分</text><rect x="370" y="96" width="180" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="460" y="118" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（イメージに入れる）</text><rect x="370" y="136" width="180" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="460" y="158" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（タスク数）</text><rect x="370" y="176" width="180" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="460" y="198" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">AWS</text><rect x="370" y="216" width="180" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="460" y="238" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">AWS</text><text x="654" y="40" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Lambda</text><rect x="564" y="56" width="180" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="654" y="78" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（関数だけ）</text><rect x="564" y="96" width="180" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="654" y="118" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">AWS（選ぶだけ）</text><rect x="564" y="136" width="180" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="654" y="158" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">AWS（自動）</text><rect x="564" y="176" width="180" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="654" y="198" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">AWS</text><rect x="564" y="216" width="180" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="654" y="238" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">AWS</text><line x1="176" y1="270" x2="734.0" y2="270.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="744.0,270.0 734.0,275.5 734.0,264.5" fill="var(--ink-3)"/><text x="460" y="292" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">右へ行くほど手離れがよい。代わりに制約（実行時間・OS の自由）が増える</text></svg>
+  </div>
+  <figcaption><strong>青が自分の仕事、灰色が AWS の仕事。</strong>EC2 は OS のパッチから台数の設計まで自分で持つ。Fargate は OS が消え、Lambda はコードだけになる。SAA で「運用負荷を最小に」と書かれていたら右へ寄せる。ただし右ほど「15分まで」「OS をいじれない」といった制約が増える。</figcaption>
+</figure>
   <div class="note">
-    <span class="label">判断軸</span>
-    <p>ファミリーの設問で迷ったら、「<strong>このワークロードで最初に枯渇するリソースは何か</strong>」だけを考えてください。CPUならC、メモリならR、ローカルディスクのIOPSならI。設問文には必ずその手がかりが書かれています。書かれていなければ汎用（M）が答えです。</p>
-  </div></section>
+    <span class="label">この講義の見取り図</span>
+    <p>場面1〜3は<strong>機械そのもの</strong>（どの型を、どう払って、どこに置くか）。場面4〜6は<strong>機械の群れの扱い</strong>（どう配り、どう入れ替え、どう増減するか）。場面7・8は<strong>機械を持たない選択肢</strong>（Lambda とコンテナ）です。
+    コンピューティングはドメイン2（弾力性）・3（性能）・4（コスト）の三方向から問われます。<strong>「安いのはどれか」と「落ちないのはどれか」は別の設問</strong>なので、読むときはどちらを聞かれているかを先に決めてください。</p>
+  </div>
+</section>
 
-<section id="s3" data-toc="購入オプション">
-
-  <span class="h2num">03</span>
-  <h2>購入オプション ―― コスト設問の中心</h2>
-  <p class="lead">ドメイン4の設問の多くは、結局ここに帰着します。6つの選択肢がありますが、<em>選び分けの軸は「どれだけ約束できるか」と「中断を許せるか」の2つだけ</em>です。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th>選択肢</th><th>割引</th><th>約束する内容</th><th>柔軟性</th><th>設問のこの言葉で選ぶ</th></tr></thead>
-    <tbody>
-      <tr><td><strong>オンデマンド</strong></td><td>なし（基準）</td><td>何も約束しない</td><td class="yes">完全に自由</td><td>「短期」「初めてのワークロードで使用量が読めない」「開発・検証」「いつでも停止できること」</td></tr>
-      <tr><td><strong>スポット</strong></td><td class="yes">最大90%</td><td>何も約束しない代わりに中断を受け入れる</td><td>中断される前提</td><td>「中断に耐えられる」「ステートレス」「フォールトトレラント」「バッチ」「柔軟な開始・終了時刻」</td></tr>
-      <tr><td><strong>Standard RI</strong></td><td class="yes">最大72%</td><td>1年または3年、特定の設定で使う</td><td class="no">インスタンスファミリーの変更は不可</td><td>「構成が変わらないと分かっている」「3年間の安定稼働」「割引を最大化」</td></tr>
-      <tr><td><strong>Convertible RI</strong></td><td>Standardより低い</td><td>1年または3年</td><td>ファミリー・OS・テナンシーを交換可能</td><td>「将来インスタンスタイプを変えるかもしれない」「同等以上の額への交換」</td></tr>
-      <tr><td><strong>Compute Savings Plans</strong></td><td class="yes">最大66%</td><td>1年または3年、<strong>1時間あたりの金額</strong></td><td class="yes">リージョン・ファミリー・OS・テナンシーを問わず適用。Fargate と Lambda にも適用</td><td>「将来コンテナやサーバーレスへ移行する可能性」「リージョンをまたいで使う」「最大の柔軟性」</td></tr>
-      <tr><td><strong>EC2 Instance Savings Plans</strong></td><td class="yes">最大72%</td><td>1年または3年、特定リージョンの特定ファミリーへの金額</td><td>そのファミリー内でサイズ・OS・AZは自由</td><td>「リージョンもファミリーも動かさない」「RI並みの割引を、サイズ変更の自由と一緒に」</td></tr>
-      <tr><td><strong>Dedicated Host</strong></td><td>—</td><td>物理サーバーそのものを専有</td><td class="no">最も制約が強い</td><td>「ソケット数・コア数単位のライセンス」「BYOL」「物理サーバーを指定して配置」「規制要件で物理的分離」</td></tr>
-      <tr><td><strong>Dedicated Instance</strong></td><td>—</td><td>物理ハードウェアを専有（ホストは見えない）</td><td>ホストの可視性なし</td><td>「他の顧客とハードウェアを共有しないこと」だけが要件で、ライセンスの話が出てこない</td></tr>
-    </tbody>
-  </table></div>
-
-  <h3>RI と Savings Plans の違いを一文で</h3>
-  <p><strong>RIは「このインスタンスを使う」という約束、Savings Plansは「毎時これだけ払う」という約束です。</strong>この一文がすべてです。RIはインスタンスの属性に紐づくため、構成を変えると割引が当たらなくなります。Savings Plansは金額に紐づくため、その枠内でどう使おうと自由です。SAAでは、この柔軟性の差がそのまま正解の分かれ目になります。</p>
-
+<section id="s2" data-toc="場面1 型を選ぶ">
+  
+  <span class="h2num">02</span>
+  <h2>場面1 ―― 「開発では速かったのに、本番に移したら数時間後に極端に遅くなった」</h2>
+  <p>EC2 には数百の型番がありますが、覚える必要はありません。見るのは「何が最初に足りなくなるか」だけです。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 268" width="760" height="268" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="5つの列。CPUが限界ならC、メモリならRとX、ローカルディスクならIとD、並列演算ならPとG、どこも偏らないならMとT"><text x="380" y="20" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">このワークロードで、最初に足りなくなるのは？</text><rect x="8" y="34" width="142" height="226" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="79" y="58" font-size="12.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">CPU</text><rect x="59" y="72" width="40" height="110" rx="4" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="62" y="80" width="34" height="99" rx="3" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.2"/><text x="79" y="98" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">限界</text><line x1="79" y1="186" x2="79.0" y2="194.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="79.0,204.0 73.5,194.0 84.5,194.0" fill="var(--ink-3)"/><text x="79" y="228" font-size="20" fill="var(--accent)" text-anchor="middle" font-weight="700">C</text><text x="79" y="250" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">バッチ・動画変換</text><rect x="158" y="34" width="142" height="226" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="229" y="58" font-size="12.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">メモリ</text><rect x="209" y="72" width="40" height="110" rx="4" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="212" y="80" width="34" height="99" rx="3" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.2"/><text x="229" y="98" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">限界</text><line x1="229" y1="186" x2="229.0" y2="194.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="229.0,204.0 223.5,194.0 234.5,194.0" fill="var(--ink-3)"/><text x="229" y="228" font-size="20" fill="var(--accent)" text-anchor="middle" font-weight="700">R / X</text><text x="229" y="250" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">インメモリDB</text><rect x="308" y="34" width="142" height="226" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="379" y="58" font-size="12.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">ローカルディスク</text><rect x="359" y="72" width="40" height="110" rx="4" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="362" y="80" width="34" height="99" rx="3" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.2"/><text x="379" y="98" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">限界</text><line x1="379" y1="186" x2="379.0" y2="194.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="379.0,204.0 373.5,194.0 384.5,194.0" fill="var(--ink-3)"/><text x="379" y="228" font-size="20" fill="var(--accent)" text-anchor="middle" font-weight="700">I / D</text><text x="379" y="250" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">大量IOPS・NoSQL</text><rect x="458" y="34" width="142" height="226" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="529" y="58" font-size="12.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">並列演算</text><rect x="509" y="72" width="40" height="110" rx="4" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="512" y="80" width="34" height="99" rx="3" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.2"/><text x="529" y="98" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">限界</text><line x1="529" y1="186" x2="529.0" y2="194.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="529.0,204.0 523.5,194.0 534.5,194.0" fill="var(--ink-3)"/><text x="529" y="228" font-size="20" fill="var(--accent)" text-anchor="middle" font-weight="700">P / G</text><text x="529" y="250" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">機械学習・GPU</text><rect x="608" y="34" width="142" height="226" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="679" y="58" font-size="12.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">どこも偏らない</text><rect x="659" y="72" width="40" height="110" rx="4" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="663" y="122" width="9" height="57" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="674" y="122" width="9" height="57" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="685" y="122" width="9" height="57" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><line x1="679" y1="186" x2="679.0" y2="194.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="679.0,204.0 673.5,194.0 684.5,194.0" fill="var(--ink-3)"/><text x="679" y="228" font-size="20" fill="var(--accent)" text-anchor="middle" font-weight="700">M / T</text><text x="679" y="250" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">Web・開発環境</text></svg>
+  </div>
+  <figcaption><strong>型番は覚えない。</strong>「どのリソースが最初に限界になるか」で頭文字を引くだけ。設問は「1TB のデータをメモリに載せて分析」のように業務の言葉で書かれるので、そこから限界のリソースを読み取る。手がかりが何も書かれていなければ汎用の M。</figcaption>
+</figure>
+  <h3>T系だけは仕組みを知っておく</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 310" width="760" height="310" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="上はCPU使用率、下はCPUクレジットの残高。定常負荷が続くとクレジットが尽き、CPUがベースラインまで絞られる"><text x="70" y="42" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">CPU 使用率</text><line x1="70" y1="50" x2="70" y2="170" stroke="var(--ink-3)" stroke-width="1.2"/><line x1="70" y1="170" x2="730" y2="170" stroke="var(--ink-3)" stroke-width="1.2"/><line x1="70" y1="146.0" x2="730" y2="146.0" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="76" y="140.0" font-size="10.5" fill="var(--warn)" text-anchor="start" font-weight="700">ベースライン 20%</text><polygon points="598.0,68.0 730.0,68.0 730.0,146.0 598.0,146.0" fill="var(--deny-soft)" stroke="none" stroke-width="1.4" stroke-linejoin="round"/><polyline points="70,158.0 290,158.0 301.0,86.0 345,86.0 356.0,158.0 455,158.0 471.5,68.0 730,68.0" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="4 3"/><polyline points="70,158.0 290,158.0 301.0,86.0 345,86.0 356.0,158.0 455,158.0 471.5,68.0 592.5,68.0 598.0,146.0 730,146.0" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/><text x="323.0" y="78.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">一時的な山</text><text x="532.0" y="60.0" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">本番の定常負荷</text><text x="664.0" y="107.6" font-size="13" fill="var(--deny)" text-anchor="middle" font-weight="700">絞られる</text><text x="70" y="198" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">CPU クレジットの残高</text><line x1="70" y1="204" x2="70" y2="284" stroke="var(--ink-3)" stroke-width="1.2"/><line x1="70" y1="284" x2="730" y2="284" stroke="var(--ink-3)" stroke-width="1.2"/><polygon points="70.0,244.0 290.0,220.0 345.0,234.0 455.0,226.0 592.5,284.0 730.0,284.0 730.0,284.0 70.0,284.0" fill="var(--accent-soft)" stroke="none" stroke-width="1.4" stroke-linejoin="round"/><polyline points="70,244 290,220 345,234 455,226 592.5,284 730,284" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/><text x="180" y="226" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">下回る間に貯まる</text><text x="537.5" y="244" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">使い切る</text><line x1="592.5" y1="50" x2="592.5" y2="284" stroke="var(--deny)" stroke-width="1.2" stroke-dasharray="4 4"/><circle cx="592.5" cy="272" r="9" fill="var(--deny)"/><line x1="588.45" y1="267.95" x2="596.55" y2="276.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="588.45" y1="276.05" x2="596.55" y2="267.95" stroke="var(--bg)" stroke-width="2.4"/><text x="664.0" y="274" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">残高ゼロ</text><text x="730" y="302" font-size="10.5" fill="var(--ink-3)" text-anchor="end">時間 →</text></svg>
+  </div>
+  <figcaption><strong>T系は「貯金して使う」インスタンス。</strong>ベースラインを下回る間にクレジットが貯まり（下段の上り）、山が来たら使う。開発環境のような断続的な負荷なら貯金は尽きない。本番で<strong>定常的に高い負荷</strong>が続くと残高がゼロになり、CPU がベースラインまで絞られる（赤い部分）。これが「最初は速いが数時間後に極端に遅くなる」の正体。</figcaption>
+</figure>
   <ul>
-    <li><strong>Compute Savings Plans は Fargate と Lambda にも効きます。</strong>これはRIには絶対にできないことで、設問で「将来コンテナ化を検討している」と書かれていたら、ここが決め手になります。</li>
-    <li><strong>Savings Plans はキャパシティを予約しません。</strong>これは重要な非対称です。容量の確保が要件なら、Savings Plansでは答えになりません。</li>
-    <li>RIのうち、AZを指定した<strong>ゾーンRI</strong>はキャパシティ予約を伴います。リージョンを指定した<strong>リージョナルRI</strong>は割引だけで、容量は保証されません。「割引はいらないが容量だけ確保したい」なら<strong>オンデマンドキャパシティ予約</strong>です。</li>
-    <li>支払い方法は3種類――全額前払い、一部前払い、前払いなし。<strong>前払いが多いほど割引率は上がります。</strong>設問で「初期費用を出せない」と書かれていたら、前払いなしを選びます。割引がゼロになるわけではありません。</li>
+    <li><strong>この場面の答え：</strong>開発環境で使っていた T系のクレジットが、本番の定常負荷で尽きた。<strong>M系か C系に替える</strong>のが正解</li>
+    <li><strong>スタンダードモード：</strong>クレジットが尽きたら絞られる。費用は読める</li>
+    <li><strong>Unlimited モード：</strong>尽きても性能を保ち、超えた分を追加で払う</li>
   </ul>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「1TB のデータをメモリに保持して分析」→ <strong>R系</strong>。「動画のエンコード」→ <strong>C系</strong>。「しばらく速いが数時間後に遅くなる」→ <strong>T系のクレジット枯渇</strong>。定常的に高い CPU 使用率が続くワークロードに T系を選ぶ選択肢は不正解。</p></div>
+</section>
 
+<section id="s3" data-toc="場面2 払い方">
+  
+  <span class="h2num">03</span>
+  <h2>場面2 ―― 「常時動くサーバーと、夜間バッチがある。全体のコストを下げたい」</h2>
+  <p>購入オプションは6種類ありますが、選び分けの軸は<em>「どれだけ先まで約束できるか」と「中断を許せるか」</em>の2つだけです。まず、1つのシステムの中に払い方の違う部分が混ざっていることを見ます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 290" width="760" height="290" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="1日のインスタンス数のグラフ。常に動く4台の底、日中の山、夜間バッチの山の3層に分かれる"><text x="70" y="26" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ある工場システムの、1日のインスタンス数</text><line x1="70" y1="50" x2="70" y2="262" stroke="var(--ink-3)" stroke-width="1.2"/><line x1="70" y1="262" x2="730" y2="262" stroke="var(--ink-3)" stroke-width="1.2"/><text x="70.0" y="280" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">0時</text><text x="235.0" y="280" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">6時</text><text x="400.0" y="280" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">12時</text><text x="565.0" y="280" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">18時</text><text x="730.0" y="280" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">24時</text><rect x="70" y="190" width="660" height="72" rx="0" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="400" y="222" font-size="12.5" fill="var(--accent)" text-anchor="middle" font-weight="700">常に動いている 4台</text><text x="400" y="242" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">→ RI / Savings Plans（1〜3年の約束で割引）</text><polygon points="290.0,190.0 317.5,145.0 372.5,109.0 427.5,100.0 482.5,109.0 537.5,136.0 592.5,172.0 620.0,190.0" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round"/><text x="455.0" y="152" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">日中の増減</text><text x="455.0" y="170" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">→ オンデマンド</text><polygon points="97.5,190.0 111.2,127.0 193.8,127.0 207.5,190.0" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4" stroke-linejoin="round"/><text x="152.5" y="146" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">夜間バッチ</text><text x="152.5" y="164" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">→ スポット</text></svg>
+  </div>
+  <figcaption><strong>1つのシステムを、払い方の違う3層に分ける。</strong>いつも動いている底は約束して割引（RI / Savings Plans）、日中に増減する分はオンデマンド、止まってもやり直せる夜間バッチはスポット。設問の「コスト最適化」は、この切り分けができているかを問うている。</figcaption>
+</figure>
+  <h3>設問を読んだら、上から順に判定する</h3>
+  <div class="ladder">
+    <div class="rung"><span class="no">01</span><span class="q"><strong>物理サーバー単位のライセンス</strong>を持ち込むか<small>「BYOL」「ソケット数」「物理コア」「ホストを指定して配置」</small></span><span class="out deny">はい → Dedicated Host</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">02</span><span class="q"><strong>中断されても、やり直せる</strong>か<small>「ステートレス」「バッチ」「開始時刻が柔軟」。最大90%引き</small></span><span class="out allow">はい → スポット</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">03</span><span class="q"><strong>1〜3年使い続ける</strong>と言えるか<small>「短期」「初めてで量が読めない」「検証」なら言えない</small></span><span class="out deny">いいえ → オンデマンド</span></div>
+    <div class="drop"></div>
+    <div class="rung"><span class="no">04</span><span class="q">将来、<strong>型・リージョン・コンテナ・Lambda</strong> に動くかもしれないか<small>動かないなら EC2 Instance SP か Standard RI（最大72%）</small></span><span class="out allow">はい → Compute Savings Plans</span></div>
+  </div>
+  <div class="terminal">稼働が断続的ならスポットかオンデマンド、常時稼働なら約束して割引</div>
+
+  <h3>RI と Savings Plans の違い</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 290" width="760" height="290" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はRIが特定の型への約束で、型を変えると割引が外れる。右はSavings Plansが毎時の金額への約束で、型を変えても枠内なら割引される"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">RI ＝「この型を使う」という約束</text><rect x="30" y="40" width="170" height="56" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><text x="115" y="64" font-size="14" fill="var(--accent)" text-anchor="middle" font-weight="700">m5.large × 2</text><text x="115" y="84" font-size="10.5" fill="var(--accent)" text-anchor="middle">東京リージョン</text><rect x="30" y="116" width="170" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="115.0" y="137.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">m5.large × 2</text><circle cx="222" cy="133" r="9" fill="var(--allow)"/><polyline points="217.9,133.0 221.1,136.4 226.5,129.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="238" y="137" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">割引が当たる</text><rect x="30" y="162" width="170" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="115.0" y="183.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">c6g.xlarge に変更</text><circle cx="222" cy="179" r="9" fill="var(--deny)"/><line x1="217.95" y1="174.95" x2="226.05" y2="183.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="217.95" y1="183.05" x2="226.05" y2="174.95" stroke="var(--bg)" stroke-width="2.4"/><text x="238" y="183" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">型が違う → 割引なし</text><rect x="30" y="208" width="170" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="115.0" y="229.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Fargate / Lambda</text><circle cx="222" cy="225" r="9" fill="var(--deny)"/><line x1="217.95" y1="220.95" x2="226.05" y2="229.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="217.95" y1="229.05" x2="226.05" y2="220.95" stroke="var(--bg)" stroke-width="2.4"/><text x="238" y="229" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">対象外</text><text x="30" y="274" font-size="10.5" fill="var(--ink-3)" text-anchor="start">ゾーン RI だけはキャパシティ予約も付く</text><line x1="382" y1="14" x2="382" y2="282" stroke="var(--line)" stroke-width="1.2"/><text x="400" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Savings Plans ＝「毎時これだけ払う」約束</text><rect x="410" y="40" width="330" height="40" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><text x="575" y="65" font-size="13.5" fill="var(--accent)" text-anchor="middle" font-weight="700">毎時 $10 分を約束</text><rect x="410" y="90" width="132" height="32" rx="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/><text x="476.0" y="111" font-size="10" fill="var(--ink)" text-anchor="middle" font-weight="700">m5 $4</text><rect x="542" y="90" width="99" height="32" rx="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/><text x="591.5" y="111" font-size="10" fill="var(--ink)" text-anchor="middle" font-weight="700">c6g $3</text><rect x="641" y="90" width="66" height="32" rx="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/><text x="674.0" y="111" font-size="10" fill="var(--ink)" text-anchor="middle" font-weight="700">Fargate $2</text><rect x="707" y="90" width="33" height="32" rx="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/><text x="723.5" y="111" font-size="10" fill="var(--ink)" text-anchor="middle" font-weight="700">λ $1</text><text x="575" y="148" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">型・リージョン・OS を変えても</text><text x="575" y="166" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">合計が枠内なら全部に割引</text><text x="410" y="206" font-size="11" fill="var(--ink)" text-anchor="start">Compute SP：Fargate・Lambda にも効く（最大66%）</text><text x="410" y="228" font-size="11" fill="var(--ink)" text-anchor="start">EC2 Instance SP：ファミリーとリージョンは固定（最大72%）</text><text x="410" y="250" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">どちらもキャパシティは予約しない</text></svg>
+  </div>
+  <figcaption><strong>約束の単位が違う。</strong>RI は「この型を使う」約束なので、型を変えたりコンテナに移ったりすると割引が外れる。Savings Plans は「毎時これだけ払う」約束なので、枠の中なら何に使ってもよい。設問に「将来コンテナやサーバーレスへ移るかも」とあれば Compute Savings Plans。</figcaption>
+</figure>
+  <ul>
+    <li><strong>Convertible RI：</strong>RI のうち、ファミリーや OS を後から交換できる版。割引は Standard RI より小さい</li>
+    <li><strong>前払い：</strong>全額・一部・なしの3種類。前払いが多いほど割引が大きい。「初期費用を出せない」なら前払いなし（割引がゼロになるわけではない）</li>
+    <li><strong>容量だけ確保したい：</strong>割引は要らないなら<strong>オンデマンドキャパシティ予約</strong>。Savings Plans とリージョン RI は容量を予約しない</li>
+  </ul>
   <div class="note warn">
     <span class="label">Dedicated Host と Dedicated Instance を取り違えない</span>
-    <p>どちらも「ハードウェアを他の顧客と共有しない」点は同じです。決定的な差は<strong>物理サーバーが見えるかどうか</strong>。Dedicated Host ではソケット数・物理コア数・ホストIDが見え、同じホストに配置し続けることができます。だから<strong>物理コア単位でライセンスされたソフトウェア（Windows Server、SQL Server、Oracle など）の持ち込みが可能</strong>になります。Dedicated Instance にはこの可視性がなく、BYOLの要件を満たせません。<strong>設問に「ライセンス」「BYOL」「ソケット」「物理コア」が出たら Dedicated Host</strong>、単に「専有ハードウェア」としか書かれていなければ Dedicated Instance です。</p>
+    <p>どちらも「他の顧客とハードウェアを共有しない」。違いは<strong>物理サーバーが見えるかどうか</strong>。Host はソケット数・物理コア数が見えるので、コア単位のライセンス（Windows Server、SQL Server、Oracle など）を持ち込める。<strong>「ライセンス」「BYOL」が出たら Host</strong>、「専有」としか書かれていなければ Instance。</p>
   </div>
-
   <div class="trap">
     <span class="label">最頻出の引っかけ</span>
-    <p>「コストを最小化したい」という一語だけでスポットを選ばせようとする設問が出ます。<strong>直前に「24時間365日稼働する本番データベース」と書かれていないか確認してください。</strong>常時稼働するステートフルなワークロードにスポットは選べません。逆に「コストを最小化」かつ「中断しても再実行できる」と両方書かれていれば、それはスポットを指す明確な合図です。手がかりは常に2つ以上あります。</p>
-  </div></section>
+    <p>「コストを最小化」の一語だけでスポットに飛びつかない。<strong>「24時間365日稼働する本番データベース」と書かれていないか</strong>を確かめる。手がかりは必ず2つ以上ある。「コスト最小」と「中断しても再実行できる」がそろって初めてスポット。</p>
+  </div>
+</section>
 
-<section id="s4" data-toc="スポットと配置">
-
+<section id="s4" data-toc="場面3 中断と配置">
+  
   <span class="h2num">04</span>
-  <h2>スポットの中断と、配置グループ</h2>
-  <p class="lead">スポットと配置グループは、どちらも「インスタンスが物理的にどこで、いつまで動くか」の話です。この2つは設問の性格が近いので、まとめて押さえます。</p>
-
-  <h3>中断は予告される</h3>
-  <p>スポットインスタンスは、EC2側が容量を必要としたときに回収されます。このとき<strong>中断通知が2分前に発行されます</strong>。通知はインスタンスメタデータから読めるほか、EventBridge のイベントとしても受け取れます。アプリケーション側は、この2分でやるべきことを終わらせる設計にします。</p>
-  <ul>
-    <li>処理中のジョブをチェックポイントとして保存する</li>
-    <li>ロードバランサーのターゲットグループから自分を登録解除する</li>
-    <li>キューから取り出したメッセージを、可視性タイムアウトを戻して他のワーカーに渡す</li>
-  </ul>
-  <p>中断動作は<strong>終了・停止・休止（ハイバネート）</strong>から選べます。ただし休止を選んだ場合は休止処理が即座に始まるため、2分の猶予はありません。また、より早い段階の合図として<strong>EC2インスタンスリバランス推奨</strong>があり、中断のリスクが高まった時点で通知されます。2分の通知より前に受け取れるため、余裕をもって退避したい場合はこちらを使います。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th>スポットが向くワークロード</th><th>スポットが向かないワークロード</th></tr></thead>
-    <tbody>
-      <tr><td class="yes">ステートレスなWebサーバー群（オンデマンドと混在させる前提）</td><td class="no">ステートフルなデータベース、セッション情報を持つサーバー</td></tr>
-      <tr><td class="yes">バッチ処理、ETL、EMRのタスクノード</td><td class="no">締め切りが厳格で、やり直しの余地がない処理</td></tr>
-      <tr><td class="yes">CI/CDのビルドエージェント、テスト実行</td><td class="no">ノード固定のライセンスが必要なソフトウェア</td></tr>
-      <tr><td class="yes">動画のエンコード、3Dレンダリング、科学計算</td><td class="no">チェックポイントを持たない長時間の一括処理</td></tr>
-      <tr><td class="yes">機械学習の学習ジョブ（チェックポイントあり）</td><td class="no">顧客向けの単一障害点となるコンポーネント</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="note">
-    <span class="label">実務と試験の接点</span>
-    <p>本番でスポットを使うときは、Auto Scaling グループの<strong>混在インスタンスポリシー</strong>で「オンデマンドをベース容量として確保し、それを超える分をスポットで埋める」構成にします。加えて、割り当て戦略を<strong>容量最適化（capacity-optimized）</strong>にすると、空き容量の多いプールから選ばれるため中断確率が下がります。価格だけを見る戦略より、結果的に安定します。設問で「スポットを使いつつ可用性を確保したい」と来たら、この組み合わせです。</p>
-  </div>
-
-  <h3>配置グループ ―― 物理的な距離を指定する</h3>
-  <p>配置グループは、インスタンスを物理的に<em>寄せるか、散らすか</em>を指定する仕組みです。追加料金はかかりません。3種類あり、目的が正反対のものが混じっています。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th></th><th>クラスター</th><th>スプレッド</th><th>パーティション</th></tr></thead>
-    <tbody>
-      <tr><td><strong>やること</strong></td><td>同じラックに寄せる</td><td>それぞれ別のラックに散らす</td><td>パーティション単位でラックを分ける</td></tr>
-      <tr><td><strong>目的</strong></td><td>ノード間の低レイテンシーと高スループット</td><td>個々のインスタンスの障害を独立させる</td><td>障害の影響をパーティション内に閉じ込める</td></tr>
-      <tr><td><strong>AZ</strong></td><td class="no">単一AZのみ。またげない</td><td class="yes">複数AZにまたがれる</td><td class="yes">複数AZにまたがれる</td></tr>
-      <tr><td><strong>台数の制限</strong></td><td>制限なし（同一AZの容量次第）</td><td class="no">AZあたり最大7インスタンス</td><td>AZあたり最大7パーティション（インスタンス数は無制限）</td></tr>
-      <tr><td><strong>典型</strong></td><td>HPC、ノード間通信が密な分散計算</td><td>少数の重要なサーバー（ドメインコントローラなど）</td><td>HDFS、Cassandra、Kafka のような大規模分散システム</td></tr>
-      <tr><td><strong>設問の言葉</strong></td><td>「ネットワークレイテンシーを最小化」「10Gbps以上のノード間通信」</td><td>「少数のクリティカルなインスタンスを分離」</td><td>「大規模な分散データストア」「レプリカを別のハードウェアに」</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="trap">
-    <span class="label">「7」の使い分け</span>
-    <p>スプレッドとパーティションはどちらも上限が7ですが、<strong>数えている対象が違います</strong>。スプレッドは<strong>インスタンスが</strong>AZあたり7台まで。パーティションは<strong>パーティションが</strong>AZあたり7つまでで、その中に入るインスタンス数に制限はありません。「数百ノードの分散データベースを配置する」という設問でスプレッドを選ぶと不正解です。7台しか置けません。</p>
-  </div>
-
-  <div class="note warn">
-    <span class="label">クラスター配置グループの代償</span>
-    <p>クラスターは単一AZに閉じるため、<strong>AZ障害で全滅します</strong>。「レイテンシーを最小化しつつ高可用性も確保したい」という設問は、要件が矛盾しています。この場合、可用性の要件が優先されるなら配置グループを使わずマルチAZに分散させるのが正解です。<strong>SAAは可用性を優先する試験だ</strong>という原則を思い出してください。</p>
-  </div></section>
-
-<section id="s5" data-toc="ELB三種">
-
-  <span class="h2num">05</span>
-  <h2>ELB ―― 3種類をどう切り分けるか</h2>
-  <p class="lead">Elastic Load Balancing には3つの現行タイプがあります。<em>機能の多さで選ぶのではなく、扱うレイヤーで選びます。</em>設問はほぼ確実に、レイヤーを示す一語を含んでいます。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th></th><th>ALB<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Application Load Balancer</span></th><th>NLB<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Network Load Balancer</span></th><th>GWLB<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Gateway Load Balancer</span></th></tr></thead>
-    <tbody>
-      <tr><td><strong>レイヤー</strong></td><td>L7（アプリケーション）</td><td>L4（トランスポート）</td><td>L3（ネットワーク）</td></tr>
-      <tr><td><strong>プロトコル</strong></td><td>HTTP / HTTPS / gRPC</td><td>TCP / UDP / TLS</td><td>GENEVE（ポート6081）</td></tr>
-      <tr><td><strong>静的IP</strong></td><td class="no">持てない。DNS名で参照する</td><td class="yes">AZごとに静的IP。Elastic IP も割り当て可能</td><td>エンドポイント経由</td></tr>
-      <tr><td><strong>TLS終端</strong></td><td class="yes">可能</td><td class="yes">可能（TLSリスナー）</td><td class="no">対象外</td></tr>
-      <tr><td><strong>ルーティング条件</strong></td><td class="yes">パス、ホスト名、HTTPヘッダー、HTTPメソッド、クエリ文字列、送信元IP</td><td class="no">なし。ポートとプロトコルのみ</td><td class="no">なし。すべてをアプライアンスへ透過的に流す</td></tr>
-      <tr><td><strong>ターゲット</strong></td><td>EC2、IP、<strong>Lambda関数</strong></td><td>EC2、IP、<strong>ALB</strong></td><td>仮想アプライアンス</td></tr>
-      <tr><td><strong>AWS WAF</strong></td><td class="yes">適用できる</td><td class="no">適用できない</td><td class="no">適用できない</td></tr>
-      <tr><td><strong>典型的な要件</strong></td><td>マイクロサービスへのパス振り分け、コンテナ、認証の統合</td><td>極端な低レイテンシー、毎秒数百万リクエスト、UDP、PrivateLink の公開</td><td>サードパーティのファイアウォール／IDS／IPS を透過的に挟む</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>設問のこの一語で決まります。「<strong>静的IP</strong>」「クライアントのファイアウォールにIPを登録」「<strong>UDP</strong>」→ NLB。「<strong>パスごと</strong>に別のサービスへ」「ホスト名で振り分け」「<strong>WAFを付けたい</strong>」→ ALB。「<strong>サードパーティの仮想アプライアンス</strong>」「すべてのトラフィックを検査」→ GWLB。迷ったときは、その要件がHTTPの中身を見ないと実現できないかを自問してください。見る必要があればALB、なければNLBで足ります。</p>
-  </div>
-
-  <h3>ターゲットグループとヘルスチェック</h3>
-  <p>リスナーが受けたリクエストは、ルールに従って<strong>ターゲットグループ</strong>へ送られます。ターゲットグループはロードバランサーとは独立した存在で、ここにヘルスチェックの設定が乗ります。ALBは1つのリスナーから複数のターゲットグループへ、条件に応じて振り分けられます。これがマイクロサービスの入口として使われる理由です。</p>
-  <ul>
-    <li><strong>ターゲットの種類</strong>は instance / ip / lambda / alb の4つ。ip 型はオンプレミスのサーバーもターゲットにできるため、移行中のハイブリッド構成で使われます。</li>
-    <li><strong>ヘルスチェック</strong>は、プロトコル・パス・間隔・タイムアウト・正常しきい値・異常しきい値で構成されます。異常と判定されたターゲットにはトラフィックが送られなくなります。</li>
-    <li><strong>登録解除の遅延（コネクションドレイニング）</strong>は既定300秒。ターゲットを外すとき、処理中のリクエストが終わるのを待ちます。短すぎると処理が途中で切れ、長すぎるとデプロイやスケールインが遅くなります。</li>
-  </ul>
-
-  <div class="trap">
-    <span class="label">ヘルスチェックのパスを甘く見ない</span>
-    <p>「ヘルスチェックのパスに、データベースへの接続確認を含む重い処理を指定する」設計は、DBが一瞬遅れただけで全台が異常判定され、<strong>全滅します</strong>。ヘルスチェック用のエンドポイントは軽量に保つ、というのが実務の定石です。試験でも「すべてのインスタンスが同時に異常になった」という設問の原因として登場します。</p>
-  </div>
-
-  <h3>スティッキーセッションとクロスゾーン負荷分散</h3>
-  <p><strong>スティッキーセッション</strong>は、同じクライアントを同じターゲットに送り続ける機能です。ALBには2種類あります。ロードバランサーが発行するCookieを使う<strong>期間ベース</strong>と、アプリケーションが発行するCookieに従う<strong>アプリケーションベース</strong>。NLBでは送信元IPに基づくスティッキーネスが使えます。</p>
-
-  <div class="note warn">
-    <span class="label">スティッキーは解ではなく回避策</span>
-    <p>SAAの設問でスティッキーセッションが選択肢にあるとき、それが正解になるのは「アプリケーションを改修できない」という制約が明記されている場合だけです。スティッキーにすると<strong>負荷が偏り、スケールインでセッションが失われます</strong>。設計として正しいのは、セッション情報をサーバーの外――<strong>ElastiCache や DynamoDB</strong>――に出して、サーバーを完全にステートレスにすることです。「水平スケールできるようにしたい」という要件が出たら、この外出しが正解です。</p>
-  </div>
-
-  <p><strong>クロスゾーン負荷分散</strong>は、あるAZのノードが他のAZのターゲットにもトラフィックを送れるようにする設定です。既定値がタイプによって違います。</p>
-  <ul>
-    <li><strong>ALB</strong>はロードバランサーのレベルで常に有効です。無効化したい場合はターゲットグループ単位で行います。</li>
-    <li><strong>NLB と GWLB</strong>は既定で無効です。有効化するとAZ間のデータ転送料金が発生します。</li>
-  </ul>
-  <p>無効のままだと、AZごとのターゲット台数が揃っていない場合に負荷が偏ります。AZ-aに2台、AZ-cに8台という構成では、トラフィックがAZ間で50:50に分かれるため、AZ-aの2台が4倍の負荷を受けます。<strong>「AZごとにターゲット数が違う」と書かれていたら、クロスゾーン負荷分散を疑ってください。</strong></p></section>
-
-<section id="s6" data-toc="スケーリング">
-
-  <span class="h2num">06</span>
-  <h2>Auto Scaling ―― 増やすより、減らすほうが難しい</h2>
-  <p class="lead">Auto Scaling グループ（ASG）は、ELBと組んでSAAの中核をなす構成要素です。<em>試験で問われるのは台数の計算ではなく、「なぜ意図どおりに動かないのか」の診断</em>です。</p>
-
+  <h2>場面3 ―― 「スポットで回したい。止められたときに困らないようにしたい」「HPC を速くしたい」</h2>
+  <p>どちらも「インスタンスが物理的にどこで、いつまで動くか」の話です。</p>
   <figure>
-    <div class="fig">
-      <svg viewBox="0 0 860 330" width="860" height="330" role="img" aria-label="ALBが2つのアベイラビリティーゾーンのターゲットグループ経由でAuto Scalingグループ内のEC2インスタンスへトラフィックを分配し、ヘルスチェックの結果がAuto Scalingに戻る構成図">
-        <rect x="300" y="16" width="260" height="52" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
-        <text x="430" y="40" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">Application Load Balancer</text>
-        <text x="430" y="58" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">リスナー → ルール → ターゲットグループ</text>
-
-        <line x1="430" y1="68" x2="430" y2="90" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <line x1="190" y1="90" x2="670" y2="90" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <line x1="190" y1="90" x2="190" y2="120" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M190 120 l-5 -9 h10 z" fill="var(--ink-3)"/>
-        <line x1="670" y1="90" x2="670" y2="120" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M670 120 l-5 -9 h10 z" fill="var(--ink-3)"/>
-
-        <rect x="40" y="124" width="300" height="130" rx="10" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="5 4"/>
-        <text x="56" y="146" font-size="12.5" fill="var(--ink-3)" font-weight="600">アベイラビリティーゾーン a</text>
-        <rect x="64" y="162" width="118" height="46" rx="7" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="123" y="190" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text>
-        <rect x="198" y="162" width="118" height="46" rx="7" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="257" y="190" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text>
-        <rect x="64" y="218" width="252" height="24" rx="5" fill="var(--allow-soft)"/>
-        <text x="190" y="235" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">ヘルスチェック 正常</text>
-
-        <rect x="520" y="124" width="300" height="130" rx="10" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="5 4"/>
-        <text x="536" y="146" font-size="12.5" fill="var(--ink-3)" font-weight="600">アベイラビリティーゾーン c</text>
-        <rect x="544" y="162" width="118" height="46" rx="7" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="603" y="190" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text>
-        <rect x="678" y="162" width="118" height="46" rx="7" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.8"/>
-        <text x="737" y="190" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text>
-        <rect x="544" y="218" width="252" height="24" rx="5" fill="var(--deny-soft)"/>
-        <text x="670" y="235" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">1台が異常 → 切り離し</text>
-
-        <rect x="40" y="276" width="780" height="42" rx="8" fill="var(--accent-soft)"/>
-        <text x="430" y="294" font-size="13" fill="var(--accent)" text-anchor="middle" font-weight="700">Auto Scaling グループ（最小 2 / 希望 4 / 最大 8）</text>
-        <text x="430" y="311" font-size="11.5" fill="var(--accent)" text-anchor="middle">ヘルスチェックタイプに ELB を含めて初めて、異常なインスタンスが入れ替わる</text>
-      </svg>
-    </div>
-    <figcaption>ELBのヘルスチェックは「トラフィックを送るのをやめる」ところまでしか行いません。<strong>インスタンスを入れ替えるのはASGの仕事です。</strong>ASGのヘルスチェックタイプにELBを追加していなければ、異常なインスタンスは切り離されたまま放置されます。この構成の穴が、そのまま設問になります。</figcaption>
-  </figure>
-
-  <h3>起動テンプレート</h3>
-  <p>ASGが新しいインスタンスを作るときの設計図が<strong>起動テンプレート</strong>です。旧来の起動設定（Launch Configuration）は非推奨で、新規に選ぶ理由はありません。</p>
-  <ul>
-    <li>起動テンプレートは<strong>バージョン管理ができます</strong>。設定を変えても過去のバージョンが残り、ロールバックできます。起動設定は一度作ると変更できず、作り直しになります。</li>
-    <li><strong>混在インスタンスポリシー（複数のインスタンスタイプ、オンデマンドとスポットの組み合わせ）は起動テンプレートでしか使えません。</strong>コスト最適化の設問では、ここが決め手になります。</li>
-    <li>T系のUnlimitedモード、Elastic Graphics、専有ホストへの配置なども起動テンプレート側の機能です。</li>
-  </ul>
-
-  <h3>スケーリングポリシーの選び分け</h3>
+  <div class="fig">
+    <svg viewBox="0 0 760 250" width="760" height="250" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="スポットインスタンスの時間軸。リバランス推奨、2分前の中断通知、回収の順に起きる"><line x1="40" y1="120" x2="720" y2="120" stroke="var(--ink-3)" stroke-width="2"/><circle cx="150" cy="120" r="8" fill="var(--warn)"/><text x="150" y="86" font-size="12.5" fill="var(--warn)" text-anchor="middle" font-weight="700">リバランス推奨</text><text x="150" y="104" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">早めの合図（いつ来るかは不定）</text><circle cx="430" cy="120" r="8" fill="var(--deny)"/><text x="430" y="86" font-size="12.5" fill="var(--deny)" text-anchor="middle" font-weight="700">中断通知</text><text x="430" y="104" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">メタデータ・EventBridge で受け取る</text><circle cx="680" cy="120" r="8" fill="var(--deny)"/><text x="680" y="86" font-size="12.5" fill="var(--deny)" text-anchor="middle" font-weight="700">回収</text><text x="680" y="104" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">終了／停止／休止</text><rect x="430" y="130" width="250" height="26" rx="4" fill="var(--deny-soft)" stroke="none" stroke-width="0"/><text x="555" y="148" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">この 2分で片付ける</text><circle cx="444" cy="180" r="8" fill="var(--allow)"/><polyline points="440.4,180.0 443.2,183.0 448.0,177.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="458" y="184" font-size="11.5" fill="var(--ink)" text-anchor="start">途中結果をチェックポイントに保存</text><circle cx="444" cy="206" r="8" fill="var(--allow)"/><polyline points="440.4,206.0 443.2,209.0 448.0,203.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="458" y="210" font-size="11.5" fill="var(--ink)" text-anchor="start">ターゲットグループから自分を外す</text><circle cx="444" cy="232" r="8" fill="var(--allow)"/><polyline points="440.4,232.0 443.2,235.0 448.0,229.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="458" y="236" font-size="11.5" fill="var(--ink)" text-anchor="start">キューのメッセージを他のワーカーに戻す</text><text x="150" y="182" font-size="11" fill="var(--ink-2)" text-anchor="middle">ここで退避を始めれば</text><text x="150" y="200" font-size="11" fill="var(--ink-2)" text-anchor="middle">2分より余裕がある</text><line x1="40" y1="30" x2="710.0" y2="30.0" stroke="var(--ink-3)" stroke-width="1.4"/><polygon points="720.0,30.0 710.0,35.5 710.0,24.5" fill="var(--ink-3)"/><text x="720" y="22" font-size="10.5" fill="var(--ink-3)" text-anchor="end">時間</text></svg>
+  </div>
+  <figcaption><strong>スポットは突然消えるのではなく、予告される。</strong>中断通知から回収まで2分。その間に途中結果を保存し、ロードバランサーから外れ、処理中のメッセージをキューに戻す。もっと早い合図としてリバランス推奨がある。なお中断動作に「休止」を選ぶと、通知と同時に休止が始まるので2分の猶予はない。</figcaption>
+</figure>
   <div class="tw"><table>
-    <thead><tr><th>ポリシー</th><th>やること</th><th>選ぶ手がかり</th></tr></thead>
+    <thead><tr><th>スポットが向く</th><th>スポットが向かない</th></tr></thead>
     <tbody>
-      <tr><td><strong>ターゲット追跡</strong></td><td>指標を目標値に保つように台数を自動調整する。CPU平均40%、ターゲットあたりリクエスト数1000など</td><td>要件が「〜を一定に保ちたい」で書かれている。<strong>迷ったらこれが第一候補</strong></td></tr>
-      <tr><td><strong>ステップスケーリング</strong></td><td>しきい値の超過幅に応じて、段階的に増減量を変える</td><td>「60%を超えたら2台、80%を超えたら4台」のように、<strong>反応の強さを変えたい</strong>と書かれている</td></tr>
-      <tr><td><strong>簡易スケーリング</strong></td><td>1つのアラームで1回の調整。クールダウンが終わるまで次に進めない</td><td>旧世代。AWSも非推奨としており、正解になることは稀</td></tr>
-      <tr><td><strong>スケジュールされたスケーリング</strong></td><td>指定した時刻に希望容量を変える</td><td>「毎朝9時に」「月末のバッチ処理」など、<strong>時刻が既知</strong></td></tr>
-      <tr><td><strong>予測スケーリング</strong></td><td>過去の実績から負荷を予測し、先回りしてスケールアウトする</td><td>「周期的なパターンがある」「起動に時間がかかり、反応が間に合わない」</td></tr>
+      <tr><td class="yes">ステートレスな Web サーバー群（オンデマンドと混在）</td><td class="no">ステートフルな DB、セッションを持つサーバー</td></tr>
+      <tr><td class="yes">バッチ、ETL、CI のビルド、動画変換、レンダリング</td><td class="no">締め切りが厳格で、やり直しが利かない処理</td></tr>
+      <tr><td class="yes">チェックポイントを持つ機械学習の学習</td><td class="no">チェックポイントなしの長時間処理</td></tr>
     </tbody>
   </table></div>
+  <div class="note"><span class="label">スポットを使いつつ可用性も</span>
+    <p>Auto Scaling の<strong>混在インスタンスポリシー</strong>で「オンデマンドを土台に確保し、上乗せ分をスポットで埋める」。割り当て戦略を<strong>容量最適化（capacity-optimized）</strong>にすると、空きの多いプールから選ばれて中断が減る。</p></div>
 
-  <p>予測スケーリングには前提があります。<strong>予測を始めるには最低24時間の履歴が必要で、2週間分あると精度が上がります。</strong>48時間先までを1時間単位で予測し、6時間ごとに予測を更新します。そして重要な性質として、<strong>予測スケーリングはスケールアウトしかしません。</strong>負荷が下がる予測でも台数を減らさないため、スケールインは動的ポリシー（ターゲット追跡など）と併用して実現します。「予測スケーリングだけを設定する」選択肢は、コスト最適化の観点で不完全です。</p>
+  <h3>配置グループ ―― 寄せるか、散らすか</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 270" width="760" height="270" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="3つの配置グループ。クラスターは1つのAZの近いラックに寄せる。スプレッドは1ラックに1台ずつ散らす。パーティションはラックの組ごとに分ける"><text x="12" y="20" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">クラスター：寄せる</text><rect x="16" y="34" width="226" height="176" rx="8" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="28" y="52" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-a だけ</text><rect x="88" y="64" width="34" height="120" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="92.0" y="72" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="92.0" y="90" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="92.0" y="108" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="92.0" y="126" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="92.0" y="144" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="92.0" y="162" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="126" y="64" width="34" height="120" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="130.0" y="72" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="130.0" y="90" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="130.0" y="108" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="130.0" y="126" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="130.0" y="144" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="130.0" y="162" width="26" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="129" y="202" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">ノード間が近い＝速い</text><text x="129" y="234" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">弱点：AZ ごと全滅する</text><text x="129" y="256" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">用途：HPC・密な分散計算</text><text x="264" y="20" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">スプレッド：1ラック1台</text><rect x="268" y="34" width="110" height="176" rx="8" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="278" y="52" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-a</text><rect x="276" y="64" width="26" height="120" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="280.0" y="72" width="18" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="310" y="64" width="26" height="120" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="314.0" y="72" width="18" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="344" y="64" width="26" height="120" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="348.0" y="72" width="18" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="384" y="34" width="110" height="176" rx="8" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="394" y="52" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-c</text><rect x="392" y="64" width="26" height="120" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="396.0" y="72" width="18" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="426" y="64" width="26" height="120" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="430.0" y="72" width="18" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="460" y="64" width="26" height="120" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="464.0" y="72" width="18" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="381" y="202" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">1台の故障が他に及ばない</text><text x="381" y="234" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">AZ あたり最大 7 台</text><text x="381" y="256" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">用途：少数の重要サーバー</text><text x="516" y="20" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">パーティション：組で分ける</text><rect x="520" y="34" width="226" height="176" rx="8" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="532" y="52" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-a</text><rect x="526" y="58" width="66" height="136" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="559" y="72" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">P1</text><rect x="530" y="80" width="28" height="108" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="534.0" y="88" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="534.0" y="106" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="534.0" y="124" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="534.0" y="142" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="534.0" y="160" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="560" y="80" width="28" height="108" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="564.0" y="88" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="564.0" y="106" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="564.0" y="124" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="564.0" y="142" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="564.0" y="160" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="598" y="58" width="66" height="136" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="631" y="72" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">P2</text><rect x="602" y="80" width="28" height="108" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="606.0" y="88" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="606.0" y="106" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="606.0" y="124" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="606.0" y="142" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="606.0" y="160" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="632" y="80" width="28" height="108" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="636.0" y="88" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="636.0" y="106" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="636.0" y="124" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="636.0" y="142" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="636.0" y="160" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="670" y="58" width="66" height="136" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="703" y="72" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">P3</text><rect x="674" y="80" width="28" height="108" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="678.0" y="88" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="678.0" y="106" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="678.0" y="124" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="678.0" y="142" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="678.0" y="160" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="704" y="80" width="28" height="108" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="708.0" y="88" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="708.0" y="106" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="708.0" y="124" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="708.0" y="142" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><rect x="708.0" y="160" width="20" height="12" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="633" y="234" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">AZ あたり 7 パーティション</text><text x="633" y="256" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">台数は無制限・用途：HDFS・Kafka</text></svg>
+  </div>
+  <figcaption><strong>寄せるか、散らすか。</strong>クラスターは同じ AZ の近いラックに寄せて通信を速くする（その代わり AZ 障害で全滅）。スプレッドは1ラックに1台ずつ散らす（AZ あたり <strong>7台</strong>まで）。パーティションはラックの組（P1〜P3）ごとに分け、組の中の台数は無制限（AZ あたり <strong>7パーティション</strong>まで）。同じ「7」でも数えている対象が違う。</figcaption>
+</figure>
+  <div class="note warn">
+    <span class="label">「速く」と「落ちない」が両方書かれていたら</span>
+    <p>クラスターは単一 AZ に閉じるので、AZ 障害で全滅する。「レイテンシーを最小化しつつ高可用性も」という設問で可用性が優先されるなら、配置グループを使わずマルチ AZ に分散する。<strong>SAA は可用性を優先する試験</strong>。数百ノードの分散 DB にスプレッドを選ぶのも不正解（7台しか置けない）。</p>
+  </div>
+</section>
 
-  <h3>ウォームアップ、クールダウン、猶予期間</h3>
-  <p>名前が似た3つの待ち時間があります。<strong>何を待っているのかが、それぞれ違います。</strong></p>
+<section id="s5" data-toc="場面4 ELB三種">
+  
+  <span class="h2num">05</span>
+  <h2>場面4 ―― 「取引先に API を公開したい。相手のファイアウォールに IP を登録してもらう」</h2>
+  <p>ELB は3種類。機能の多さではなく、<em>通信のどこまでを読むか</em>で選びます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 268" width="760" height="268" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="届く通信をIP、ポート、HTTPの中身の3層に分け、GWLBはIPまで、NLBはポートまで、ALBは中身まで読むことを示す"><text x="20" y="64" font-size="12" fill="var(--ink-2)" text-anchor="start" font-weight="700">届く通信</text><rect x="160" y="42" width="170" height="34" rx="0" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="245.0" y="64" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">IP（宛先アドレス）</text><rect x="330" y="42" width="140" height="34" rx="0" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="400.0" y="64" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ポート（443・UDP…）</text><rect x="470" y="42" width="270" height="34" rx="0" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="605.0" y="64" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">HTTP の中身（Host・パス・ヘッダー）</text><text x="245" y="94" font-size="10.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">L3</text><text x="400" y="94" font-size="10.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">L4</text><text x="605" y="94" font-size="10.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">L7</text><rect x="20" y="110" width="120" height="36" rx="6" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="80.0" y="132.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">GWLB</text><rect x="160" y="116" width="170" height="24" rx="4" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4"/><text x="245" y="133" font-size="11" fill="var(--warn)" text-anchor="middle" font-weight="700">IP で受けて丸ごと渡す</text><text x="350" y="133" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700">FW・IDS をまるごと挟む</text><rect x="20" y="160" width="120" height="36" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="80.0" y="182.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NLB</text><rect x="160" y="166" width="310" height="24" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="245" y="183" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">ポートまで見る</text><text x="490" y="183" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700">固定IP・UDP・超低遅延</text><rect x="20" y="210" width="120" height="36" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="80.0" y="232.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ALB</text><rect x="160" y="216" width="580" height="24" rx="4" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="245" y="233" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">中身まで開けて読む</text><text x="605" y="233" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">パス・ホストで振り分け・WAF</text></svg>
+  </div>
+  <figcaption><strong>違いは「どこまで開けて読むか」。</strong>ALB は HTTP の中身（パスやホスト名）まで読むので、内容で振り分けたり WAF を付けたりできる。NLB はポートまでしか見ない代わりに速く、固定 IP を持てて UDP も通す。GWLB は中身を見ずに、通信を丸ごと仮想アプライアンス（他社製 FW など）へ渡す。</figcaption>
+</figure>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 268" width="760" height="268" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はALBがパスやホスト名で3つのターゲットグループに振り分ける。右はNLBがAZごとに固定のElastic IPを持ち、取引先のファイアウォールに登録できる"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">ALB：中身を読んで振り分ける</text><rect x="120" y="40" width="130" height="42" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="185.0" y="59.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ALB</text><text x="185.0" y="74.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">DNS 名でアクセス</text><line x1="185" y1="82" x2="73.7" y2="145.1" stroke="var(--allow)" stroke-width="2"/><polygon points="65.0,150.0 71.0,140.3 76.4,149.9" fill="var(--allow)"/><rect x="10" y="150" width="110" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="65.0" y="169.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ECS タスク</text><text x="65.0" y="184.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">TG-A</text><rect x="81.1" y="110.5" width="45.8" height="16.5" rx="3" fill="var(--surface)"/><text x="104" y="120" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">/api/*</text><line x1="185" y1="82" x2="185.0" y2="140.0" stroke="var(--allow)" stroke-width="2"/><polygon points="185.0,150.0 179.5,140.0 190.5,140.0" fill="var(--allow)"/><rect x="130" y="150" width="110" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="185.0" y="169.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="185.0" y="184.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">TG-B</text><rect x="152.7" y="110.5" width="64.7" height="16.5" rx="3" fill="var(--surface)"/><text x="185" y="120" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">/images/*</text><line x1="185" y1="82" x2="296.3" y2="145.1" stroke="var(--allow)" stroke-width="2"/><polygon points="305.0,150.0 293.6,149.9 299.0,140.3" fill="var(--allow)"/><rect x="250" y="150" width="110" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="305.0" y="169.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">Lambda</text><text x="305.0" y="184.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">TG-C</text><rect x="241.9" y="110.5" width="52.1" height="16.5" rx="3" fill="var(--surface)"/><text x="268" y="120" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">admin.*</text><text x="185" y="230" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">DNS 名の裏の IP は変わる</text><text x="185" y="252" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">→ 相手の FW に IP を登録できない</text><line x1="382" y1="14" x2="382" y2="266" stroke="var(--line)" stroke-width="1.2"/><text x="400" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">NLB：固定 IP で受ける</text><rect x="500" y="36" width="150" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="575.0" y="56.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">取引先のサーバー</text><text x="575.0" y="71.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">FW で宛先 IP を許可制</text><line x1="575" y1="80" x2="575.0" y2="110.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="575.0,120.0 569.5,110.0 580.5,110.0" fill="var(--allow)"/><text x="586" y="104" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">許可リストの IP 宛て</text><rect x="500" y="120" width="150" height="40" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="575.0" y="144.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NLB</text><text x="575" y="184" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">AZ-a：EIP 203.0.113.10</text><text x="575" y="202" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">AZ-c：EIP 203.0.113.20</text><text x="575" y="240" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">IP が変わらない・UDP も通る</text></svg>
+  </div>
+  <figcaption><strong>ALB は振り分けが得意、NLB は固定 IP が得意。</strong>ALB は1つの入口から、パスやホスト名ごとに別のターゲットグループ（コンテナ・EC2・Lambda）へ送れる。ただし DNS 名でしか参照できず、裏の IP は変わる。相手のファイアウォールに IP を登録してもらう必要があるなら、AZ ごとに Elastic IP を持てる NLB。</figcaption>
+</figure>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>ALB</th><th>NLB</th><th>GWLB</th></tr></thead>
+    <tbody>
+      <tr><td><strong>プロトコル</strong></td><td>HTTP / HTTPS / gRPC</td><td>TCP / UDP / TLS</td><td>GENEVE（6081）</td></tr>
+      <tr><td><strong>固定 IP</strong></td><td class="no">持てない（DNS 名）</td><td class="yes">AZ ごと。EIP も可</td><td>エンドポイント経由</td></tr>
+      <tr><td><strong>ターゲット</strong></td><td>EC2・IP・<strong>Lambda</strong></td><td>EC2・IP・<strong>ALB</strong></td><td>仮想アプライアンス</td></tr>
+      <tr><td><strong>WAF</strong></td><td class="yes">付けられる</td><td class="no">付けられない</td><td class="no">付けられない</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note warn">
+    <span class="label">スティッキーセッションは解ではなく回避策</span>
+    <p>同じ客を同じサーバーに送り続ける機能。負荷が偏り、スケールインでセッションが消える。正解になるのは「アプリを改修できない」と明記されたときだけ。設計として正しいのは、セッションを <strong>ElastiCache や DynamoDB</strong> に出してサーバーをステートレスにすること。</p>
+  </div>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「静的 IP」「FW に IP を登録」「UDP」→ <strong>NLB</strong>。「パスごとに別サービスへ」「WAF を付けたい」→ <strong>ALB</strong>。「サードパーティのファイアウォールを透過的に挟む」→ <strong>GWLB</strong>。迷ったら「HTTP の中身を見ないと実現できないか」を自問する。</p></div>
+</section>
+
+<section id="s6" data-toc="場面5 入れ替わらない">
+  
+  <span class="h2num">06</span>
+  <h2>場面5 ―― 「アプリが落ちたのに、インスタンスが入れ替わらない」「一部の台だけ重い」</h2>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 308" width="760" height="308" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="アプリが止まったEC2に対し、ALBは送るのをやめる。ASGの検査がEC2のみなら放置され、ELBも含めれば入れ替わる"><text x="10" y="22" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">ASG の検査：EC2 のみ</text><rect x="110" y="36" width="150" height="36" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="185.0" y="58.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ALB</text><line x1="185" y1="72" x2="185.0" y2="110.0" stroke="var(--deny)" stroke-width="2"/><polygon points="185.0,120.0 179.5,110.0 190.5,110.0" fill="var(--deny)"/><circle cx="185" cy="96" r="9" fill="var(--deny)"/><line x1="180.95" y1="91.95" x2="189.05" y2="100.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="180.95" y1="100.05" x2="189.05" y2="91.95" stroke="var(--bg)" stroke-width="2.4"/><text x="200" y="100" font-size="10.5" fill="var(--deny)" text-anchor="start" font-weight="700">送るのをやめる</text><rect x="120" y="120" width="130" height="70" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.8"/><text x="185" y="142" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="185" y="162" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">OS：動いている</text><text x="185" y="180" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">アプリ：停止</text><line x1="185" y1="190" x2="185" y2="214" stroke="var(--ink-3)" stroke-width="1.4" stroke-dasharray="4 3"/><rect x="20" y="214" width="330" height="36" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="185" y="237" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">Auto Scaling グループ</text><text x="185" y="276" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">OS しか見ない → 正常と判断</text><text x="185" y="296" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">→ 壊れたまま放置される</text><text x="400" y="22" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">ASG の検査：EC2 + ELB</text><rect x="500" y="36" width="150" height="36" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="575.0" y="58.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ALB</text><line x1="575" y1="72" x2="575.0" y2="110.0" stroke="var(--deny)" stroke-width="2"/><polygon points="575.0,120.0 569.5,110.0 580.5,110.0" fill="var(--deny)"/><circle cx="575" cy="96" r="9" fill="var(--deny)"/><line x1="570.95" y1="91.95" x2="579.05" y2="100.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="570.95" y1="100.05" x2="579.05" y2="91.95" stroke="var(--bg)" stroke-width="2.4"/><text x="590" y="100" font-size="10.5" fill="var(--deny)" text-anchor="start" font-weight="700">送るのをやめる</text><rect x="510" y="120" width="130" height="70" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.8"/><text x="575" y="142" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="575" y="162" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">OS：動いている</text><text x="575" y="180" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">アプリ：停止</text><line x1="575" y1="190" x2="575" y2="214" stroke="var(--ink-3)" stroke-width="1.4" stroke-dasharray="4 3"/><rect x="410" y="214" width="330" height="36" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="575" y="237" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">Auto Scaling グループ</text><rect x="660" y="130" width="80" height="44" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="700.0" y="156.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">新しい EC2</text><line x1="700" y1="214" x2="700.0" y2="184.0" stroke="var(--allow)" stroke-width="2"/><polygon points="700.0,174.0 705.5,184.0 694.5,184.0" fill="var(--allow)"/><text x="575" y="276" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">ELB の判定も見る → 異常と判断</text><text x="575" y="296" font-size="12" fill="var(--allow)" text-anchor="middle" font-weight="700">→ 終了して新しい EC2 を起動</text></svg>
+  </div>
+  <figcaption><strong>ELB は「送るのをやめる」だけ。入れ替えるのは ASG。</strong>ASG のヘルスチェックが EC2 のみだと、OS が動いている限り正常と見なされ、アプリが止まったインスタンスがそのまま残る（左）。ヘルスチェックの種類に ELB を加えると、ALB の判定で入れ替わる（右）。</figcaption>
+</figure>
+  <ul>
+    <li><strong>ヘルスチェックはターゲットグループに付く。</strong>パス・間隔・しきい値を設定し、異常と判定された台には送られなくなる</li>
+    <li><strong>登録解除の遅延（既定300秒）：</strong>台を外すとき、処理中のリクエストが終わるのを待つ時間</li>
+  </ul>
+  <div class="trap">
+    <span class="label">ヘルスチェックのパスを重くしない</span>
+    <p>検査用のパスで DB への接続確認までやると、DB が一瞬遅れただけで<strong>全台が同時に異常</strong>になり全滅する。「すべてのインスタンスが同時に異常になった」の原因として出る。</p>
+  </div>
+  <h3>一部の台だけ重い ―― クロスゾーン負荷分散</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 284" width="760" height="284" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="AZ-aに2台、AZ-cに8台のとき、クロスゾーン無効ではAZ-aの各台に25%、有効なら全台に10%ずつ届く"><text x="10" y="22" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">無効：まず AZ で半分に分ける</text><rect x="125" y="36" width="120" height="32" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="185.0" y="56.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NLB</text><rect x="10" y="96" width="112" height="152" rx="8" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="20" y="112" font-size="10.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-a（2台）</text><rect x="130" y="96" width="232" height="152" rx="8" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="140" y="112" font-size="10.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-c（8台）</text><rect x="26" y="138" width="32" height="100" rx="3" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="42" y="132" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">25%</text><rect x="72" y="138" width="32" height="100" rx="3" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="88" y="132" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">25%</text><rect x="142" y="213" width="20" height="25" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="169" y="213" width="20" height="25" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="196" y="213" width="20" height="25" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="223" y="213" width="20" height="25" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="250" y="213" width="20" height="25" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="277" y="213" width="20" height="25" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="304" y="213" width="20" height="25" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="331" y="213" width="20" height="25" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="246" y="205" font-size="10.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">各 6%</text><polyline points="165,68 165,80 66,80 66.0,86.0" fill="none" stroke="var(--deny)" stroke-width="2" stroke-linejoin="round"/><polygon points="66.0,96.0 60.5,86.0 71.5,86.0" fill="var(--deny)"/><rect x="96.5" y="66.5" width="26.9" height="16.5" rx="3" fill="var(--surface)"/><text x="110" y="76" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">50%</text><polyline points="205,68 205,80 246,80 246.0,86.0" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-linejoin="round"/><polygon points="246.0,96.0 240.5,86.0 251.5,86.0" fill="var(--ink-3)"/><rect x="212.6" y="66.5" width="26.9" height="16.5" rx="3" fill="var(--surface)"/><text x="226" y="76" font-size="10.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">50%</text><text x="185" y="272" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">AZ-a の2台が4倍の負荷</text><text x="400" y="22" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">有効：全台で均等に分ける</text><rect x="515" y="36" width="120" height="32" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="575.0" y="56.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NLB</text><rect x="400" y="96" width="112" height="152" rx="8" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="410" y="112" font-size="10.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-a（2台）</text><rect x="520" y="96" width="232" height="152" rx="8" fill="none" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="530" y="112" font-size="10.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-c（8台）</text><rect x="416" y="198" width="32" height="40" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="432" y="192" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">10%</text><rect x="462" y="198" width="32" height="40" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="478" y="192" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">10%</text><rect x="532" y="198" width="20" height="40" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><rect x="559" y="198" width="20" height="40" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><rect x="586" y="198" width="20" height="40" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><rect x="613" y="198" width="20" height="40" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><rect x="640" y="198" width="20" height="40" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><rect x="667" y="198" width="20" height="40" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><rect x="694" y="198" width="20" height="40" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><rect x="721" y="198" width="20" height="40" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><text x="636" y="190" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">各 10%</text><line x1="575" y1="68" x2="575.0" y2="86.0" stroke="var(--allow)" stroke-width="2"/><polygon points="575.0,96.0 569.5,86.0 580.5,86.0" fill="var(--allow)"/><text x="586" y="88" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">全10台に均等</text><text x="575" y="272" font-size="12" fill="var(--allow)" text-anchor="middle" font-weight="700">どの台も同じ負荷</text></svg>
+  </div>
+  <figcaption><strong>無効だと、まず AZ ごとに半分ずつ分けてから、その中で分ける。</strong>AZ ごとの台数が違うと、少ない側の1台あたりの負荷が跳ね上がる（左は AZ-a の各台が 25%、AZ-c は約 6%）。ALB は常に有効、NLB と GWLB は既定で無効（有効にすると AZ 間のデータ転送料金がかかる）。「AZ ごとに台数が違う」と書かれていたら、これを疑う。</figcaption>
+</figure>
+</section>
+
+<section id="s7" data-toc="場面6 増やし方">
+  
+  <span class="h2num">07</span>
+  <h2>場面6 ―― 「毎朝9時に重くなる」「起動しては数分で終了するのを繰り返している」</h2>
+  <p>Auto Scaling で試験に出るのは台数の計算ではなく、<em>「なぜ意図どおりに動かないのか」</em>の診断です。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 256" width="760" height="256" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="同じ1日の負荷に対し、ターゲット追跡は後追い、スケジュールは決まった時刻、予測は先回りで台数を変える"><text x="12" y="20" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">ターゲット追跡</text><polygon points="20.0,154.0 75.5,154.0 94.0,136.0 103.2,82.0 131.0,64.0 158.8,73.0 186.5,100.0 195.8,136.0 214.2,154.0 242.0,154.0 242.0,190.0 20.0,190.0" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2" stroke-linejoin="round"/><line x1="20.0" y1="190" x2="242.0" y2="190" stroke="var(--ink-3)" stroke-width="1.2"/><polyline points="20.0,136 107.9,136 107.9,82 117.1,82 117.1,46 168.0,46 168.0,64 195.8,64 195.8,82 205.0,82 205.0,136 242.0,136 242.0,136" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round"/><text x="131" y="214" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">目標値（CPU 40% など）を保つ</text><text x="131" y="234" font-size="11" fill="var(--ink-3)" text-anchor="middle">迷ったらこれ</text><text x="264" y="20" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">スケジュール</text><polygon points="272.0,154.0 327.5,154.0 346.0,136.0 355.2,82.0 383.0,64.0 410.8,73.0 438.5,100.0 447.8,136.0 466.2,154.0 494.0,154.0 494.0,190.0 272.0,190.0" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2" stroke-linejoin="round"/><line x1="272.0" y1="190" x2="494.0" y2="190" stroke="var(--ink-3)" stroke-width="1.2"/><polyline points="272.0,136 355.2,136 355.2,46 447.8,46 447.8,136 494.0,136 494.0,136" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round"/><text x="383" y="214" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">時刻が分かっている</text><text x="383" y="234" font-size="11" fill="var(--ink-3)" text-anchor="middle">「毎朝9時に」</text><text x="516" y="20" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">予測</text><polygon points="524.0,154.0 579.5,154.0 598.0,136.0 607.2,82.0 635.0,64.0 662.8,73.0 690.5,100.0 699.8,136.0 718.2,154.0 746.0,154.0 746.0,190.0 524.0,190.0" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2" stroke-linejoin="round"/><line x1="524.0" y1="190" x2="746.0" y2="190" stroke="var(--ink-3)" stroke-width="1.2"/><polyline points="524.0,136 593.4,136 593.4,46 699.8,46 699.8,46" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round"/><polyline points="699.8,46 746.0,46" fill="none" stroke="var(--warn)" stroke-width="2.6" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="635" y="214" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">周期から先回りして増やす</text><text x="635" y="234" font-size="11" fill="var(--ink-3)" text-anchor="middle">自分では減らさない</text></svg>
+  </div>
+  <figcaption><strong>灰色が負荷、青い線が台数。</strong>ターゲット追跡は負荷を見て後から追いかける。スケジュールは決まった時刻に切り替える。予測は過去の周期から先回りして増やすが、<strong>自分では減らさない</strong>（黄色の点線）ので、減らす役はターゲット追跡などと組み合わせる。予測を始めるには最低24時間の履歴が要る。</figcaption>
+</figure>
+  <p>ほかに、しきい値の超え方で増やす量を変える<strong>ステップスケーリング</strong>（「60%超で2台、80%超で4台」）がある。古い<strong>簡易スケーリング</strong>が正解になることはまずない。</p>
+
+  <h3>3つの待ち時間</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 214" width="760" height="214" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="アプリの初期化に4分かかるとき、猶予期間が1分だと準備中に異常と判定され起動と終了を繰り返す。5分なら準備完了後に検査され正常"><text x="150" y="26" font-size="10" fill="var(--ink-3)" text-anchor="middle">0分</text><text x="290" y="26" font-size="10" fill="var(--ink-3)" text-anchor="middle">2分</text><text x="430" y="26" font-size="10" fill="var(--ink-3)" text-anchor="middle">4分</text><text x="570" y="26" font-size="10" fill="var(--ink-3)" text-anchor="middle">6分</text><text x="710" y="26" font-size="10" fill="var(--ink-3)" text-anchor="middle">8分</text><text x="14" y="58" font-size="12" fill="var(--ink-2)" text-anchor="start" font-weight="700">新しい EC2</text><rect x="150" y="40" width="280" height="26" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="290.0" y="58" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">アプリの初期化 4分</text><line x1="430" y1="36" x2="430" y2="206" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 4"/><text x="436" y="80" font-size="10.5" fill="var(--ink-3)" text-anchor="start">準備完了</text><text x="14" y="110" font-size="12" fill="var(--deny)" text-anchor="start" font-weight="700">猶予 1分</text><rect x="150" y="92" width="70" height="26" rx="4" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="185.0" y="110" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">猶予</text><circle cx="234" cy="105" r="9" fill="var(--deny)"/><line x1="229.95" y1="100.95" x2="238.05" y2="109.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="229.95" y1="109.05" x2="238.05" y2="100.95" stroke="var(--bg)" stroke-width="2.4"/><text x="250" y="110" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">準備中に検査 → 異常 → 終了 → 起動し直し</text><polyline points="640,118 640,136 160,136 160.0,132.0" fill="none" stroke="var(--deny)" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="4 3"/><polygon points="160.0,122.0 165.5,132.0 154.5,132.0" fill="var(--deny)"/><rect x="341.0" y="144.0" width="118.0" height="17" rx="3" fill="var(--surface)"/><text x="400" y="154" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">これを延々と繰り返す</text><text x="14" y="192" font-size="12" fill="var(--allow)" text-anchor="start" font-weight="700">猶予 5分</text><rect x="150" y="174" width="350" height="26" rx="4" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="325.0" y="192" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">猶予</text><circle cx="514" cy="187" r="9" fill="var(--allow)"/><polyline points="509.9,187.0 513.1,190.4 518.5,183.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="530" y="192" font-size="11.5" fill="var(--allow)" text-anchor="start" font-weight="700">準備完了後に検査 → 正常</text></svg>
+  </div>
+  <figcaption><strong>猶予期間は「起動直後は検査しない」時間。</strong>アプリの初期化（4分）より短いと、準備中のインスタンスが異常と判定されて終了し、代わりが起動してまた同じことが起きる。「起動しては数分で終了する」を繰り返していたら、まずこれを疑う。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th>設定</th><th>何を待つか</th><th>効く場面</th></tr></thead>
     <tbody>
-      <tr><td><strong>クールダウン</strong><br><span style="color:var(--ink-3);font-size:13px">既定 300 秒</span></td><td>次のスケーリング活動を始めるまで、グループ全体を待たせる</td><td>簡易スケーリング用。ターゲット追跡とステップは、クールダウンを待たずにスケールアウトできる</td></tr>
-      <tr><td><strong>インスタンスウォームアップ</strong></td><td>起動したばかりのインスタンスを、指標の集計対象から外す</td><td>ターゲット追跡・ステップ用。<strong>起動直後のCPU100%につられて、さらに台数を増やしてしまう暴走を防ぐ</strong></td></tr>
-      <tr><td><strong>ヘルスチェックの猶予期間</strong><br><span style="color:var(--ink-3);font-size:13px">コンソール既定 300 秒 / CLI・SDK 既定 0 秒</span></td><td>起動したインスタンスを異常と判定し始めるまで待つ</td><td>アプリの初期化に時間がかかる場合。<strong>短すぎると起動と終了を無限に繰り返す</strong></td></tr>
+      <tr><td><strong>ヘルスチェックの猶予期間</strong></td><td>起動直後の台を検査しない</td><td>上の図。短すぎると起動と終了を繰り返す</td></tr>
+      <tr><td><strong>インスタンスウォームアップ</strong></td><td>起動直後の台を指標の集計から外す</td><td>起動直後の CPU 100% につられて、さらに増やす暴走を防ぐ</td></tr>
+      <tr><td><strong>クールダウン</strong>（既定300秒）</td><td>次のスケーリングを始めるまで待つ</td><td>簡易スケーリング用</td></tr>
     </tbody>
   </table></div>
 
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「Auto Scaling グループが新しいインスタンスを起動しては数分で終了し、これを延々と繰り返している」――原因は2つに絞られます。<strong>ヘルスチェックの猶予期間がアプリの起動時間より短い</strong>か、<strong>ヘルスチェックのパスやポートの設定が間違っている</strong>かです。「インスタンスタイプを大きくする」「最大台数を増やす」といった選択肢は、症状にも原因にも対応していません。</p>
+  <h3>終了の前にやること ―― ライフサイクルフック</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 226" width="760" height="226" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="インスタンスの状態遷移。Pending:Wait と Terminating:Wait で処理を割り込ませる"><rect x="12" y="56" width="112" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="68.0" y="79.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">Pending</text><rect x="137" y="56" width="112" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="193.0" y="79.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">Pending:Wait</text><line x1="124" y1="76" x2="127.0" y2="76.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="137.0,76.0 127.0,81.5 127.0,70.5" fill="var(--ink-3)"/><rect x="262" y="56" width="112" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="318.0" y="79.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">InService</text><line x1="249" y1="76" x2="252.0" y2="76.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="262.0,76.0 252.0,81.5 252.0,70.5" fill="var(--ink-3)"/><rect x="387" y="56" width="112" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="443.0" y="79.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">Terminating</text><line x1="374" y1="76" x2="377.0" y2="76.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="387.0,76.0 377.0,81.5 377.0,70.5" fill="var(--ink-3)"/><rect x="512" y="56" width="112" height="40" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="568.0" y="79.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">Terminating:Wait</text><line x1="499" y1="76" x2="502.0" y2="76.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="512.0,76.0 502.0,81.5 502.0,70.5" fill="var(--ink-3)"/><rect x="637" y="56" width="112" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="693.0" y="79.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">Terminated</text><line x1="624" y1="76" x2="627.0" y2="76.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="637.0,76.0 627.0,81.5 627.0,70.5" fill="var(--ink-3)"/><text x="12" y="36" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">スケールアウト（起動）</text><text x="748" y="36" font-size="11" fill="var(--ink-3)" text-anchor="end" font-weight="700">スケールイン（終了）</text><line x1="193" y1="96" x2="193" y2="120" stroke="var(--accent)" stroke-width="1.6"/><rect x="113.0" y="120" width="160" height="66" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="193" y="140" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">起動時のフック</text><text x="193" y="158" font-size="11" fill="var(--ink-2)" text-anchor="middle">設定の投入</text><text x="193" y="175" font-size="11" fill="var(--ink-2)" text-anchor="middle">データの読み込み</text><line x1="568" y1="96" x2="568" y2="120" stroke="var(--accent)" stroke-width="1.6"/><rect x="473.0" y="120" width="190" height="66" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="568" y="140" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">終了時のフック</text><text x="568" y="158" font-size="11" fill="var(--ink-2)" text-anchor="middle">ログを S3 へ退避</text><text x="568" y="175" font-size="11" fill="var(--ink-2)" text-anchor="middle">処理中の仕事を待つ</text><text x="380" y="214" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">処理が終わったら「完了」を通知する。通知がなければタイムアウトで次へ進む</text></svg>
   </div>
+  <figcaption><strong>ライフサイクルフックは、状態の途中に「待った」をかける仕組み。</strong>試験で多いのは終了時のフックで、「スケールインで消える前にローカルのログを S3 に退避したい」はここで実現する。通知は EventBridge や SNS で受け取る。</figcaption>
+</figure>
+  <div class="note"><span class="label">どの台から消されるか（終了ポリシー）</span>
+    <p>既定では<strong>まず AZ 間の台数のバランス</strong>が優先され、台数の多い AZ から消す。その中で古い起動テンプレートの台、課金時間の区切りに近い台の順。「最も古い台を指定したのに、新しい台が消えた」の答えは、AZ のバランスが先に評価されたから。</p></div>
+  <div class="note"><span class="label">起動テンプレート</span>
+    <p>ASG が台を作るときの設計図。バージョン管理ができ、<strong>混在インスタンスポリシー（複数の型、オンデマンドとスポットの組み合わせ）は起動テンプレートでしか使えない</strong>。古い起動設定（Launch Configuration）を新しく選ぶ理由はない。</p></div>
+</section>
 
-  <h3>ライフサイクルフックと終了ポリシー</h3>
-  <p><strong>ライフサイクルフック</strong>は、インスタンスの起動時（Pending:Wait）と終了時（Terminating:Wait）に処理を割り込ませる仕組みです。EventBridge や SNS で通知を受け、処理が終わったら完了を通知します。タイムアウトまでに完了しなければ、既定の動作に進みます。</p>
-  <ul>
-    <li><strong>終了時のフック</strong>が試験では頻出です。「スケールインで終了する前に、ローカルのログをS3へ退避したい」「接続中のユーザーの処理が終わるのを待ちたい」という要件は、すべてここで実現します。</li>
-    <li><strong>起動時のフック</strong>は、設定の投入やウォームアップ用データの読み込みに使います。</li>
-  </ul>
-  <p><strong>終了ポリシー</strong>は、スケールインでどのインスタンスを消すかの規則です。既定（Default）の順序はこうです。まず<strong>AZ間のバランスが最優先</strong>されます。台数が多いAZが選ばれ、その中で古い起動テンプレート／起動設定を使っているものが優先され、次に課金時間の区切りに近いものが選ばれ、それでも並べば無作為です。ほかに OldestInstance、NewestInstance、AllocationStrategy などを指定できます。</p>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>「インスタンスタイプを新しい世代に入れ替えたい」なら <strong>OldestInstance</strong>、「新しく試した構成を先に消して元に戻したい」なら <strong>NewestInstance</strong>。そして<strong>どの終了ポリシーを選んでも、AZ間のバランスが先に評価されます</strong>。「最も古いインスタンスを指定したのに、新しいほうが消えた」という設問の答えはこれです。</p>
-  </div></section>
-
-<section id="s7" data-toc="Lambda">
-
-  <span class="h2num">07</span>
-  <h2>Lambda ―― 制約を先に覚える</h2>
-  <p class="lead">Lambdaは「サーバー管理が不要」という長所より、<em>制約のほうが試験に出ます。</em>制約を知っていれば、「この要件はLambdaでは無理だ」と即座に判定でき、選択肢が半分に減ります。</p>
-
-  <h3>越えられない線</h3>
-  <ul>
-    <li><strong>1回の実行は最大15分（900秒）。</strong>これがもっとも頻出する数字です。15分で終わらない処理をLambdaに載せる選択肢は不正解になります。</li>
-    <li><strong>メモリは128MBから10,240MBまで。</strong>そして<strong>CPU性能はメモリ割り当てに比例します。</strong>1,769MBで1vCPU相当です。「Lambdaの処理が遅い、CPUを増やしたい」という設問の答えは<strong>メモリ割り当てを増やす</strong>で、これは知らないと選べません。</li>
-    <li><strong>/tmp は512MBから10,240MBまで。</strong>それ以上の作業領域が要るなら EFS をマウントします。</li>
-    <li><strong>同期呼び出しのペイロードは6MB。</strong>大きなファイルを渡したい場合は、S3に置いてキーだけを渡します。</li>
-  </ul>
-
-  <div class="note">
-    <span class="label">15分を超えるときの行き先</span>
-    <p>設問で「処理に30分かかる」「数時間のバッチ」と書かれていたら、Lambdaは消えます。代わりに来るのは<strong>AWS Fargate（ECS タスク）、AWS Batch、Step Functions で分割、EC2</strong>のいずれかです。どれになるかは残りの要件で決まります。コンテナ化済みなら Fargate、大量のジョブをキューで捌くなら Batch、複数ステップの調整が要るなら Step Functions です。</p>
+<section id="s8" data-toc="場面7 Lambda">
+  
+  <span class="h2num">08</span>
+  <h2>場面7 ―― 「S3 にファイルが届いたら処理したい。サーバーは持ちたくない」</h2>
+  <p>Lambda は長所より<em>制約のほうが試験に出ます</em>。まず「Lambda で無理か」を判定すると、選択肢が半分に減ります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 214" width="760" height="214" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="Lambdaの4つの上限。実行時間15分、メモリ128MBから10GB、/tmp 10GB、同期ペイロード6MB"><rect x="8" y="14" width="178" height="188" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="97" y="42" font-size="12.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">実行時間</text><text x="97" y="98" font-size="26" fill="var(--accent)" text-anchor="middle" font-weight="700">15分</text><text x="97" y="150" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">900秒まで</text><text x="97" y="170" font-size="11" fill="var(--ink-3)" text-anchor="middle">超えたら別の基盤へ</text><rect x="196" y="14" width="178" height="188" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="285" y="42" font-size="12.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">メモリ</text><text x="285" y="98" font-size="20" fill="var(--accent)" text-anchor="middle" font-weight="700">128MB〜10GB</text><text x="285" y="150" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">CPU はメモリに比例</text><text x="285" y="170" font-size="11" fill="var(--ink-3)" text-anchor="middle">1,769MB で 1vCPU 相当</text><rect x="384" y="14" width="178" height="188" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="473" y="42" font-size="12.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">/tmp</text><text x="473" y="98" font-size="26" fill="var(--accent)" text-anchor="middle" font-weight="700">〜10GB</text><text x="473" y="150" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">足りなければ</text><text x="473" y="170" font-size="11" fill="var(--ink-3)" text-anchor="middle">EFS をマウント</text><rect x="572" y="14" width="178" height="188" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="661" y="42" font-size="12.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">同期ペイロード</text><text x="661" y="98" font-size="26" fill="var(--accent)" text-anchor="middle" font-weight="700">6MB</text><text x="661" y="150" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">大きいものは S3 に置き</text><text x="661" y="170" font-size="11" fill="var(--ink-3)" text-anchor="middle">キーだけ渡す</text></svg>
   </div>
-
-  <h3>同時実行数 ―― 2つの「予約」を混同しない</h3>
-  <p>Lambdaのスケーリングは台数ではなく<strong>同時実行数</strong>で考えます。既定のアカウント上限はリージョンあたり1,000で、引き上げ申請が可能です。この1,000をどう配分するかを制御する仕組みが2つあり、名前が似ているうえに目的が正反対です。</p>
-
+  <figcaption><strong>まず「Lambda では無理か」を判定する。</strong>いちばん出るのは <strong>15分</strong>。30分かかる処理なら Lambda は選択肢から消え、Fargate・AWS Batch・Step Functions（分割）・EC2 が残る。もう1つの定番は「CPU を増やしたい → <strong>メモリを増やす</strong>」。Lambda には CPU の設定項目がない。</figcaption>
+</figure>
+  <h3>一斉に増えて、下流を潰す</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 296" width="760" height="296" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="S3に1000ファイルが届くとLambdaが1000個同時に動きRDSの接続があふれる。予約済み同時実行で50に絞ればRDSは守られる"><text x="10" y="22" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">何もしないと</text><rect x="14" y="48" width="90" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="59.0" y="66.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><text x="59.0" y="81.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">1,000 ファイル</text><line x1="104" y1="68" x2="122.0" y2="68.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="132.0,68.0 122.0,73.5 122.0,62.5" fill="var(--ink-3)"/><rect x="136" y="40" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="146" y="53" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="160" y="40" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="170" y="53" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="184" y="40" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="194" y="53" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="208" y="40" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="218" y="53" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="232" y="40" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="242" y="53" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="136" y="62" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="146" y="75" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="160" y="62" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="170" y="75" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="184" y="62" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="194" y="75" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="208" y="62" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="218" y="75" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="232" y="62" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="242" y="75" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="136" y="84" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="146" y="97" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="160" y="84" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="170" y="97" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="184" y="84" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="194" y="97" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="208" y="84" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="218" y="97" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="232" y="84" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="242" y="97" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="136" y="106" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="146" y="119" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="160" y="106" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="170" y="119" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="184" y="106" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="194" y="119" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="208" y="106" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="218" y="119" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="232" y="106" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="242" y="119" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><text x="196" y="140" font-size="11" fill="var(--ink-2)" text-anchor="middle">同時に 1,000 個</text><line x1="258" y1="68" x2="274.0" y2="68.0" stroke="var(--deny)" stroke-width="2.2"/><polygon points="284.0,68.0 274.0,73.5 274.0,62.5" fill="var(--deny)"/><rect x="286" y="46" width="80" height="44" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><text x="326.0" y="66.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">RDS</text><text x="326.0" y="81.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">接続上限</text><circle cx="326" cy="112" r="9" fill="var(--deny)"/><line x1="321.95" y1="107.95" x2="330.05" y2="116.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="321.95" y1="116.05" x2="330.05" y2="107.95" stroke="var(--bg)" stroke-width="2.4"/><text x="326" y="136" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">接続があふれる</text><line x1="382" y1="14" x2="382" y2="170" stroke="var(--line)" stroke-width="1.2"/><text x="400" y="22" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">予約済み同時実行で上限 50</text><rect x="404" y="48" width="90" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="449.0" y="66.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><text x="449.0" y="81.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">1,000 ファイル</text><line x1="494" y1="68" x2="512.0" y2="68.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="522.0,68.0 512.0,73.5 512.0,62.5" fill="var(--ink-3)"/><rect x="526" y="52" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="536" y="65" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="550" y="52" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="560" y="65" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="574" y="52" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="584" y="65" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="598" y="52" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="608" y="65" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="622" y="52" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="632" y="65" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="526" y="74" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="536" y="87" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="550" y="74" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="560" y="87" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="574" y="74" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="584" y="87" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="598" y="74" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="608" y="87" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><rect x="622" y="74" width="20" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="632" y="87" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">λ</text><text x="586" y="110" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">最大 50 個</text><line x1="648" y1="68" x2="664.0" y2="68.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="674.0,68.0 664.0,73.5 664.0,62.5" fill="var(--allow)"/><rect x="676" y="46" width="80" height="44" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="716.0" y="72.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">RDS</text><text x="586" y="140" font-size="11" fill="var(--ink-2)" text-anchor="middle">残りは待たされ、あとで再試行される</text><text x="586" y="160" font-size="11" fill="var(--ink-2)" text-anchor="middle">または RDS Proxy で接続を束ねる</text><text x="20" y="198" font-size="12" fill="var(--ink-2)" text-anchor="start" font-weight="700">アカウントの同時実行枠（リージョンあたり既定 1,000）</text><rect x="20" y="208" width="144.0" height="34" rx="0" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="92.0" y="230" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">関数A の予約 200</text><rect x="164.0" y="208" width="72.0" height="34" rx="0" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="200.0" y="230" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">関数B 100</text><rect x="236.0" y="208" width="504.0" height="34" rx="0" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="488.0" y="230" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">未予約 700</text><rect x="668" y="208" width="72" height="34" rx="0" fill="none" stroke="var(--deny)" stroke-width="2" stroke-dasharray="4 3"/><text x="704" y="258" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">最低 100 は残す</text><text x="20" y="284" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700">予約＝その関数の「取り分」であり「上限」。追加料金なし</text></svg>
+  </div>
+  <figcaption><strong>Lambda は放っておくと一斉に増える。</strong>下流の RDS や外部 API が受け止めきれないなら、<strong>予約済み同時実行</strong>でその関数の上限を絞るか、<strong>RDS Proxy</strong> で接続を束ねる。予約はアカウント全体の枠（既定 1,000）から切り出すもので、未予約分を最低 100 は残す必要がある。</figcaption>
+</figure>
   <div class="tw"><table>
-    <thead><tr><th></th><th>予約済み同時実行<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Reserved concurrency</span></th><th>プロビジョニング済み同時実行<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Provisioned concurrency</span></th></tr></thead>
+    <thead><tr><th></th><th>予約済み同時実行</th><th>プロビジョニング済み同時実行</th></tr></thead>
     <tbody>
-      <tr><td><strong>やること</strong></td><td>アカウントの枠から、その関数専用の取り分を切り出す</td><td>実行環境を事前に初期化して待機させる</td></tr>
-      <tr><td><strong>下限としての働き</strong></td><td class="yes">他の関数に奪われない容量を確保する</td><td class="yes">最初のリクエストから温まっている</td></tr>
-      <tr><td><strong>上限としての働き</strong></td><td class="yes">その数を超えてスケールしない（スロットリング）</td><td>上限にはならない。超過分は通常どおり起動する</td></tr>
+      <tr><td><strong>やること</strong></td><td>枠から取り分を切り出す（＝上限にもなる）</td><td>実行環境を温めて待たせる</td></tr>
       <tr><td><strong>追加料金</strong></td><td class="yes">なし</td><td class="no">あり</td></tr>
-      <tr><td><strong>解決する問題</strong></td><td>下流のRDSやサードパーティAPIが、Lambdaの急増で潰れるのを防ぐ</td><td>コールドスタートによるレイテンシーのばらつきをなくす</td></tr>
+      <tr><td><strong>解決する問題</strong></td><td>下流の RDS や外部 API が潰れる</td><td>コールドスタートの遅さ</td></tr>
     </tbody>
   </table></div>
-
-  <p>予約済み同時実行を設定するときは、<strong>アカウントの未予約分から100は残さなければなりません。</strong>上限が1,000のアカウントで、1つの関数に1,000を予約することはできません。</p>
-
-  <div class="note warn">
-    <span class="label">RDS を守る設問は定型</span>
-    <p>「S3への大量アップロードがLambdaをトリガーし、Lambdaが一斉にRDSへ接続して接続数の上限に達した」――この設問の正解は<strong>予約済み同時実行で上限を絞る</strong>、または<strong>RDS Proxy で接続をプールする</strong>です。実務では両方やります。「RDSのインスタンスサイズを上げる」は、症状を先送りしているだけで正解になりません。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 170" width="760" height="170" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="初回の呼び出しでは実行環境の作成、ランタイム起動、ハンドラ外のコードを経てからハンドラが動く。2回目はハンドラだけ"><text x="14" y="58" font-size="12" fill="var(--warn)" text-anchor="start" font-weight="700">初回（コールド）</text><rect x="140" y="40" width="150" height="28" rx="0" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4"/><text x="215.0" y="59" font-size="11" fill="var(--warn)" text-anchor="middle" font-weight="700">実行環境の作成</text><rect x="290" y="40" width="130" height="28" rx="0" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4"/><text x="355.0" y="59" font-size="11" fill="var(--warn)" text-anchor="middle" font-weight="700">ランタイム起動</text><rect x="420" y="40" width="160" height="28" rx="0" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4"/><text x="500.0" y="59" font-size="11" fill="var(--warn)" text-anchor="middle" font-weight="700">ハンドラ外のコード</text><rect x="580" y="40" width="120" height="28" rx="0" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="640.0" y="59" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">ハンドラ</text><text x="14" y="108" font-size="12" fill="var(--allow)" text-anchor="start" font-weight="700">2回目（ウォーム）</text><rect x="140" y="90" width="120" height="28" rx="0" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="200" y="109" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">ハンドラ</text><text x="270" y="109" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">すぐ始まる</text><polyline points="140,130 140,138 580,138 580,130" fill="none" stroke="var(--warn)" stroke-width="1.4" stroke-linejoin="round"/><text x="360" y="158" font-size="11" fill="var(--ink-2)" text-anchor="middle">プロビジョニング済み同時実行は、ここを先に済ませて待たせておく（有料）</text></svg>
   </div>
+  <figcaption><strong>遅いのは初回だけ。</strong>ハンドラの外で作った DB 接続や SDK クライアントは、2回目以降の呼び出しで再利用される（費用ゼロの対策）。確実に消したいならプロビジョニング済み同時実行で環境を温めておく。Java なら SnapStart も選択肢。</figcaption>
+</figure>
 
-  <h3>コールドスタート</h3>
-  <p>実行環境が存在しないときは、環境の作成とランタイムの初期化、そしてハンドラ外のコードの実行が発生します。これがコールドスタートです。緩和の手段は段階的です。</p>
-  <ol class="body">
-    <li><strong>ハンドラの外で初期化する。</strong>データベース接続やSDKクライアントをハンドラ外に置けば、温まった環境では再利用されます。コードの書き方だけで効く、費用ゼロの対策です。</li>
-    <li><strong>デプロイパッケージを小さくする。</strong>不要な依存を削り、共通部分は Lambda Layers に出します。</li>
-    <li><strong>プロビジョニング済み同時実行を設定する。</strong>確実ですが課金されます。予測できる負荷に対しては Application Auto Scaling でスケジュールできます。</li>
-  </ol>
-  <p>Javaランタイムには <strong>SnapStart</strong> という選択肢もあり、初期化済みの状態をスナップショットとして再利用します。設問に「Java」と「起動が遅い」が同時に出たらこれです。</p>
-
-  <h3>VPC接続 ―― 最頻出の設計ミス</h3>
-  <p>Lambda関数をVPCに接続すると、VPC内のRDSやElastiCacheにプライベートIPで到達できるようになります。同時に、<strong>その関数はVPCのルーティングに完全に従うようになります。</strong>ここが引っかけの温床です。</p>
-
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「VPCに接続したLambdaから、インターネット上の外部APIを呼べなくなった」――<strong>パブリックサブネットに置いても解決しません。</strong>VPC内のLambdaにはパブリックIPが割り当てられないためです。正解は<strong>プライベートサブネットに配置し、NAT Gateway 経由で出す</strong>ことです。そしてS3やDynamoDBへのアクセスだけが目的なら、NATを使わず<strong>ゲートウェイエンドポイント</strong>を作るほうが安く、これがコスト設問の正解になります。</p>
+  <h3>VPC に入れたら、外へ出られなくなった</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 296" width="760" height="296" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はパブリックサブネットに置いてもLambdaにパブリックIPがないため外へ出られない。右はプライベートサブネットからNAT経由で外へ出る"><text x="4" y="20" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">素朴な案：パブリックサブネットに置く</text><rect x="110" y="32" width="150" height="28" rx="14.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="185.0" y="50.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">外部の SaaS API</text><rect x="150" y="80" width="70" height="28" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="185.0" y="98.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">IGW</text><rect x="10" y="124" width="350" height="160" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/><text x="22" y="142" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">パブリックサブネット</text><rect x="20" y="154" width="170" height="56" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="20" y="154" width="170" height="18" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="28" y="167" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ルートテーブル</text><text x="28" y="187" font-size="10.5" fill="var(--ink-2)" text-anchor="start">10.0.0.0/16</text><text x="182" y="187" font-size="10.5" fill="var(--ink-2)" text-anchor="end">→ local</text><text x="28" y="204" font-size="10.5" fill="var(--accent)" text-anchor="start" font-weight="700">0.0.0.0/0</text><text x="182" y="204" font-size="10.5" fill="var(--accent)" text-anchor="end" font-weight="700">→ IGW</text><rect x="220" y="190" width="120" height="44" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><text x="280.0" y="210.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">Lambda</text><text x="280.0" y="225.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">パブリック IP なし</text><polyline points="280,190 280,94 230.0,94.0" fill="none" stroke="var(--deny)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="220.0,94.0 230.0,88.5 230.0,99.5" fill="var(--deny)"/><circle cx="280" cy="150" r="10" fill="var(--deny)"/><line x1="275.5" y1="145.5" x2="284.5" y2="154.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="275.5" y1="154.5" x2="284.5" y2="145.5" stroke="var(--bg)" stroke-width="2.4"/><text x="394" y="20" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">正解：プライベート ＋ NAT</text><rect x="500" y="32" width="150" height="28" rx="14.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="575.0" y="50.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">外部の SaaS API</text><rect x="540" y="80" width="70" height="28" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="575.0" y="98.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">IGW</text><line x1="575" y1="80" x2="575.0" y2="70.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="575.0,60.0 580.5,70.0 569.5,70.0" fill="var(--allow)"/><rect x="400" y="118" width="350" height="60" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/><text x="412" y="136" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">パブリックサブネット</text><rect x="630" y="132" width="90" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="675.0" y="153.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT</text><rect x="400" y="188" width="350" height="96" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="412" y="206" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">プライベートサブネット</text><rect x="410" y="214" width="170" height="56" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="410" y="214" width="170" height="18" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="418" y="227" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ルートテーブル</text><text x="418" y="247" font-size="10.5" fill="var(--ink-2)" text-anchor="start">10.0.0.0/16</text><text x="572" y="247" font-size="10.5" fill="var(--ink-2)" text-anchor="end">→ local</text><text x="418" y="264" font-size="10.5" fill="var(--accent)" text-anchor="start" font-weight="700">0.0.0.0/0</text><text x="572" y="264" font-size="10.5" fill="var(--accent)" text-anchor="end" font-weight="700">→ NAT</text><rect x="620" y="222" width="110" height="44" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="675.0" y="248.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">Lambda</text><line x1="675" y1="222" x2="675.0" y2="176.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="675.0,166.0 680.5,176.0 669.5,176.0" fill="var(--allow)"/><polyline points="675,132 675,94 620.0,94.0" fill="none" stroke="var(--allow)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="610.0,94.0 620.0,88.5 620.0,99.5" fill="var(--allow)"/></svg>
   </div>
+  <figcaption><strong>VPC に入れた Lambda には、パブリック IP が付かない。</strong>だからパブリックサブネットに置いても外へは出られない（左）。プライベートサブネットに置き、NAT Gateway を出口にする（右）。行き先が S3 や DynamoDB だけなら NAT は要らず、無料のゲートウェイ型エンドポイントで足りる（VPC 講義の場面3）。</figcaption>
+</figure>
 
-  <h3>イベントソースの3つの型</h3>
-  <p>Lambdaの呼び出され方は3種類あり、失敗したときの挙動が違います。ここは設問の前提条件として効いてきます。</p>
+  <h3>呼ばれ方は3種類</h3>
   <div class="tw"><table>
     <thead><tr><th>型</th><th>呼び出し元の例</th><th>失敗したとき</th></tr></thead>
     <tbody>
-      <tr><td><strong>同期呼び出し</strong></td><td>API Gateway、ALB、Cognito、直接呼び出し</td><td>エラーが呼び出し元に返る。リトライは呼び出し元の責任</td></tr>
-      <tr><td><strong>非同期呼び出し</strong></td><td>S3イベント、SNS、EventBridge</td><td>Lambdaが自動で2回リトライする。それでも失敗すればデッドレターキューまたは Lambda の送信先へ</td></tr>
-      <tr><td><strong>イベントソースマッピング</strong></td><td>SQS、Kinesis Data Streams、DynamoDB Streams、Amazon MSK</td><td><strong>Lambda側がポーリングする。</strong>ストリーム系は既定で、成功するかレコードが期限切れになるまでシャードがブロックされる</td></tr>
+      <tr><td><strong>同期</strong></td><td>API Gateway、ALB、直接呼び出し</td><td>エラーが呼び出し元に返る。リトライは呼び出し元の責任</td></tr>
+      <tr><td><strong>非同期</strong></td><td>S3 イベント、SNS、EventBridge</td><td>Lambda が自動で2回リトライ。だめならデッドレターキューか送信先へ</td></tr>
+      <tr><td><strong>イベントソースマッピング</strong></td><td>SQS、Kinesis、DynamoDB Streams</td><td><strong>Lambda 側が取りに行く。</strong>ストリーム系は成功するまでシャードが止まる</td></tr>
     </tbody>
   </table></div>
-
   <div class="note warn">
     <span class="label">SQS と組むときの必須設定</span>
-    <p>SQSをイベントソースにする場合、<strong>キューの可視性タイムアウトを、Lambda関数のタイムアウトより長く設定します。</strong>これを怠ると、関数がまだ処理している最中にメッセージが再び可視化され、同じメッセージが重複して処理されます。AWSは関数タイムアウトの6倍を推奨しています。「メッセージが重複処理される」という設問の原因は、ほぼこれです。</p>
-  </div></section>
-
-<section id="s8" data-toc="コンテナと三択">
-
-  <span class="h2num">08</span>
-  <h2>コンテナ、そして三択の決め方</h2>
-  <p class="lead">ECS・EKS・Fargate は「3つのコンテナサービス」ではありません。<em>ECS と EKS はオーケストレーター、Fargate は実行基盤です。</em>ここを取り違えると、設問の選択肢が読めなくなります。</p>
-
-  <h3>軸が2本ある</h3>
-  <div class="tw"><table>
-    <thead><tr><th></th><th>ECS</th><th>EKS</th></tr></thead>
-    <tbody>
-      <tr><td><strong>正体</strong></td><td>AWS独自のコンテナオーケストレーター</td><td>マネージドな Kubernetes</td></tr>
-      <tr><td><strong>学習コスト</strong></td><td class="yes">低い。AWSのIAMやALBと自然に噛み合う</td><td class="no">高い。Kubernetesの知識が前提</td></tr>
-      <tr><td><strong>コントロールプレーン料金</strong></td><td class="yes">なし</td><td class="no">クラスターごとに発生</td></tr>
-      <tr><td><strong>移植性</strong></td><td>AWSに閉じる</td><td class="yes">Kubernetesのエコシステムをそのまま使える</td></tr>
-      <tr><td><strong>設問の手がかり</strong></td><td>「AWS上でシンプルに」「運用負荷を最小に」「すでにECSを使っている」</td><td>「既存のKubernetesワークロードを移行」「オンプレミスのk8sと運用を揃える」「マルチクラウド」</td></tr>
-    </tbody>
-  </table></div>
-
-  <p>そのうえで、どちらを選んでも<strong>コンテナをどこで走らせるか</strong>をもう一度選びます。これが起動タイプです。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th></th><th>EC2 起動タイプ</th><th>Fargate</th></tr></thead>
-    <tbody>
-      <tr><td><strong>誰がサーバーを管理するか</strong></td><td class="no">自分。パッチ適用、スケーリング、AMI更新</td><td class="yes">AWS。サーバーは見えない</td></tr>
-      <tr><td><strong>課金</strong></td><td>起動しているEC2インスタンスに対して</td><td>タスクが要求したvCPUとメモリに対して、実行時間分</td></tr>
-      <tr><td><strong>コスト効率</strong></td><td class="yes">高密度に詰めれば有利。スポットも使いやすい</td><td>タスクが疎らだと割高になりやすい</td></tr>
-      <tr><td><strong>使えないもの</strong></td><td>—</td><td class="no">GPU、特権コンテナ、ホストのカーネル設定に依存する構成</td></tr>
-      <tr><td><strong>設問の手がかり</strong></td><td>「GPUが必要」「特殊なインスタンスタイプ」「大量のタスクを高密度に」「スポットでコストを下げる」</td><td>「インフラ管理をなくしたい」「運用オーバーヘッドの最小化」「タスクの数が変動する」</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="note">
-    <span class="label">タスクロールとタスク実行ロールは別物</span>
-    <p>ECSには紛らわしい2つのロールがあります。<strong>タスク実行ロール</strong>は、ECSエージェントがECRからイメージを取得し、CloudWatch Logsにログを書くために使います。<strong>タスクロール</strong>は、コンテナの中のアプリケーションがS3やDynamoDBを呼ぶために使います。「コンテナ内のアプリがS3にアクセスできない」という設問の答えは<strong>タスクロール</strong>です。「イメージをプルできない」ならタスク実行ロールです。W1でやったロールの考え方が、そのまま出てきます。</p>
+    <p>キューの<strong>可視性タイムアウトを、関数のタイムアウトより長く</strong>する（AWS の推奨は6倍）。短いと、処理中のメッセージがまた見えるようになり、<strong>同じメッセージが二重に処理される</strong>。</p>
   </div>
+</section>
 
-  <h3>三択を順序づける</h3>
-  <p>ここまでの内容を、設問を読んだときに回す順序に組み直します。上から順に判定してください。</p>
+<section id="s9" data-toc="場面8 コンテナ">
+  
+  <span class="h2num">09</span>
+  <h2>場面8 ―― 「分析アプリをコンテナで動かしたい。Kubernetes の経験者はいない」</h2>
+  <p>ECS・EKS・Fargate は「3つのコンテナサービス」ではありません。<em>ECS と EKS は指揮役（オーケストレーター）、Fargate は動かす場所（実行基盤）</em>です。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 294" width="760" height="294" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="行がECSとEKS、列がEC2起動タイプとFargateの2×2の表。ECSとFargateの組み合わせが最も運用が軽い"><text x="14" y="40" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">行＝組織のスキル</text><text x="305" y="40" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2 起動タイプ</text><text x="305" y="58" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">サーバーを自分で管理</text><text x="601" y="40" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Fargate</text><text x="601" y="58" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">サーバーは見えない</text><text x="14" y="112" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700">ECS</text><text x="14" y="132" font-size="10.5" fill="var(--ink-3)" text-anchor="start">AWS 独自・学習が軽い</text><text x="14" y="212" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700">EKS</text><text x="14" y="232" font-size="10.5" fill="var(--ink-3)" text-anchor="start">Kubernetes</text><rect x="160" y="70" width="290" height="92" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="305" y="122" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">GPU・高密度・スポットで安く</text><rect x="456" y="70" width="290" height="92" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="2"/><text x="601" y="114" font-size="12.5" fill="var(--allow)" text-anchor="middle" font-weight="700">運用が最も軽い</text><text x="601" y="136" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">迷ったらここ</text><rect x="160" y="170" width="290" height="92" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="305" y="222" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">k8s 資産あり＋GPU など</text><rect x="456" y="170" width="290" height="92" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="601" y="222" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">k8s 資産あり＋サーバー管理なし</text><text x="453" y="284" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">列（実行基盤）は、ワークロードの性質で選ぶ</text></svg>
+  </div>
+  <figcaption><strong>選ぶのは2回。</strong>オーケストレーター（ECS か EKS か）は組織のスキルと既存資産で、実行基盤（EC2 起動タイプか Fargate か）はワークロードの性質で決まる。Kubernetes の経験も資産もなく、GPU も要らないなら ECS + Fargate。</figcaption>
+</figure>
+  <p>Fargate で使えないもの：<strong>GPU、特権コンテナ、ホストのカーネル設定に依存する構成</strong>。これらが要るなら EC2 起動タイプ。EKS はクラスターごとにコントロールプレーン料金がかかり、ECS にはない。</p>
+  <h3>ロールは2つある</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 262" width="760" height="262" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="ECSタスクの中でエージェントはタスク実行ロールでECRとCloudWatch Logsを使い、アプリはタスクロールでS3とDynamoDBを使う"><rect x="250" y="64" width="300" height="140" rx="10" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.4" stroke-dasharray="5 4"/><text x="264" y="84" font-size="11.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">ECS タスク</text><rect x="266" y="104" width="126" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="329.0" y="125.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">ECS エージェント</text><text x="329.0" y="140.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">AWS 側の仕組み</text><rect x="408" y="104" width="126" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="471.0" y="125.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">アプリ</text><text x="471.0" y="140.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">コンテナの中</text><rect x="30" y="58" width="130" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="95.0" y="76.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">ECR</text><text x="95.0" y="91.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">イメージを取る</text><rect x="30" y="152" width="130" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="95.0" y="170.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">CloudWatch Logs</text><text x="95.0" y="185.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">ログを書く</text><polyline points="266,118 213,118 213,78 170.0,78.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="160.0,78.0 170.0,72.5 170.0,83.5" fill="var(--warn)"/><polyline points="266,136 213,136 213,172 170.0,172.0" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="160.0,172.0 170.0,166.5 170.0,177.5" fill="var(--warn)"/><text x="200" y="42" font-size="12.5" fill="var(--warn)" text-anchor="middle" font-weight="700">タスク実行ロール</text><rect x="620" y="58" width="120" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="680.0" y="82.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><rect x="620" y="152" width="120" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="680.0" y="176.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">DynamoDB</text><polyline points="534,118 577,118 577,78 610.0,78.0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="620.0,78.0 610.0,83.5 610.0,72.5" fill="var(--accent)"/><polyline points="534,136 577,136 577,172 610.0,172.0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="620.0,172.0 610.0,177.5 610.0,166.5" fill="var(--accent)"/><text x="590" y="42" font-size="12.5" fill="var(--accent)" text-anchor="middle" font-weight="700">タスクロール</text><text x="380" y="230" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">「イメージを取れない／ログが出ない」→ タスク実行ロール</text><text x="380" y="250" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">「アプリが S3 に書けない」→ タスクロール</text></svg>
+  </div>
+  <figcaption><strong>誰が呼ぶかでロールが分かれる。</strong>イメージの取得とログ出力は ECS エージェントの仕事なので<strong>タスク実行ロール</strong>。コンテナの中のアプリが AWS を呼ぶときは<strong>タスクロール</strong>。IAM 講義の「EC2 にロールを付ける」と同じ考え方。</figcaption>
+</figure>
 
+  <h3>Lambda・コンテナ・EC2 の三択</h3>
   <div class="ladder">
     <div class="rung"><span class="no">01</span><span class="q">処理は<strong>15分以内</strong>に終わり、イベント駆動で、状態を持たないか<small>実行時間が読めない、常時起動が必要、なら次へ</small></span><span class="out allow">はい → Lambda</span></div>
     <div class="drop"></div>
-    <div class="rung"><span class="no">02</span><span class="q"><strong>OSやカーネルへの依存</strong>があるか<small>GPU、特権コンテナ、特定のカーネルモジュール、ノード固定ライセンス</small></span><span class="out deny">はい → EC2（またはECS on EC2）</span></div>
+    <div class="rung"><span class="no">02</span><span class="q"><strong>OS やカーネルへの依存</strong>があるか<small>GPU、特権コンテナ、特定のカーネルモジュール、ノード固定ライセンス</small></span><span class="out deny">はい → EC2（または ECS on EC2）</span></div>
     <div class="drop"></div>
-    <div class="rung"><span class="no">03</span><span class="q">アプリケーションは<strong>コンテナ化されている</strong>か<small>されていない、かつ改修できない、ならEC2</small></span><span class="out deny">いいえ → EC2</span></div>
+    <div class="rung"><span class="no">03</span><span class="q">アプリは<strong>コンテナ化されている</strong>か<small>されていない、かつ改修できない、なら EC2</small></span><span class="out deny">いいえ → EC2</span></div>
     <div class="drop"></div>
-    <div class="rung"><span class="no">04</span><span class="q">既存の <strong>Kubernetes</strong> 資産や運用があるか<small>ないなら、運用が軽いECSを選ぶ</small></span><span class="out allow">はい → EKS / いいえ → ECS</span></div>
+    <div class="rung"><span class="no">04</span><span class="q">既存の <strong>Kubernetes</strong> 資産や運用があるか<small>ないなら、運用が軽い ECS</small></span><span class="out allow">はい → EKS / いいえ → ECS</span></div>
     <div class="drop"></div>
-    <div class="rung"><span class="no">05</span><span class="q"><strong>インフラ管理を手放したい</strong>か<small>GPUや高密度の集約が要るならEC2起動タイプ</small></span><span class="out allow">はい → Fargate</span></div>
+    <div class="rung"><span class="no">05</span><span class="q"><strong>インフラ管理を手放したい</strong>か<small>GPU や高密度の集約が要るなら EC2 起動タイプ</small></span><span class="out allow">はい → Fargate</span></div>
   </div>
   <div class="terminal">迷ったら、運用負荷が軽いほうが正解</div>
+  <p>SAA には「運用オーバーヘッドを最小限に」という言葉が繰り返し現れ、そのたびに<strong>よりマネージドな選択肢が正解</strong>になります。EC2 に自前でインストールする案が正解になるのは、他の選択肢が要件を満たせないときだけです。</p>
+</section>
 
-  <p>最後の一行は、丸暗記する価値があります。SAAの設問には「運用オーバーヘッドを最小限に」「管理負荷を減らしたい」という言葉が繰り返し現れ、そのたびに<strong>よりマネージドな選択肢が正解</strong>になります。自前でEC2にインストールする案が正解になるのは、他の選択肢が要件を満たせないときだけです。</p></section>
-
-<section id="s9" data-toc="試験での判断軸">
-
-  <span class="h2num">09</span>
-  <h2>試験での判断軸</h2>
-  <p class="lead">設問文にこの手がかりが出たら、この答えに寄せる――という対応表です。表を眺めるのではなく、左側を読んで右側を思い出す訓練をしてください。</p>
-
+<section id="s10" data-toc="場面→答えの早見表">
+  
+  <span class="h2num">10</span>
+  <h2>場面 → 答えの早見表</h2>
+  <p class="lead">左を読んで右を思い出す訓練に使ってください。実際の設問では、左側の手がかりが2つ3つ重ねて書かれています。1つしか見つからないときは読み落としがあります。</p>
   <div class="judge">
+    <div class="row"><span class="cue">しばらく速いが数時間後に極端に遅くなる</span><span class="arrow">→</span><span class="ans">T系のクレジット枯渇 → M/C系へ</span></div>
     <div class="row"><span class="cue">中断に耐えられるバッチ、コストを最大限下げる</span><span class="arrow">→</span><span class="ans">スポットインスタンス</span></div>
-    <div class="row"><span class="cue">1〜3年使うが将来Fargate・Lambdaにも移る</span><span class="arrow">→</span><span class="ans">Compute Savings Plans</span></div>
-    <div class="row"><span class="cue">リージョンもファミリーも固定で最大の割引</span><span class="arrow">→</span><span class="ans">EC2 Instance Savings Plans</span></div>
+    <div class="row"><span class="cue">1〜3年使うが将来 Fargate・Lambda にも移る</span><span class="arrow">→</span><span class="ans">Compute Savings Plans</span></div>
+    <div class="row"><span class="cue">リージョンもファミリーも固定で最大の割引</span><span class="arrow">→</span><span class="ans">EC2 Instance Savings Plans / Standard RI</span></div>
     <div class="row"><span class="cue">ソケット数・物理コア単位のライセンス持ち込み</span><span class="arrow">→</span><span class="ans">Dedicated Host</span></div>
-    <div class="row"><span class="cue">ノード間の低レイテンシーが要件のHPC</span><span class="arrow">→</span><span class="ans">クラスター配置グループ</span></div>
-    <div class="row"><span class="cue">大規模分散DBをラック障害から守る</span><span class="arrow">→</span><span class="ans">パーティション配置グループ</span></div>
-    <div class="row"><span class="cue">固定IPをクライアントのFWに登録したい／UDP</span><span class="arrow">→</span><span class="ans">NLB</span></div>
-    <div class="row"><span class="cue">パスやホスト名で振り分け／WAFを付けたい</span><span class="arrow">→</span><span class="ans">ALB</span></div>
-    <div class="row"><span class="cue">サードパーティのFW・IDSを透過的に挟む</span><span class="arrow">→</span><span class="ans">GWLB</span></div>
+    <div class="row"><span class="cue">ノード間の低レイテンシーが要件の HPC</span><span class="arrow">→</span><span class="ans">クラスター配置グループ</span></div>
+    <div class="row"><span class="cue">大規模分散 DB をラック障害から守る</span><span class="arrow">→</span><span class="ans">パーティション配置グループ</span></div>
+    <div class="row"><span class="cue">固定 IP を相手の FW に登録したい／UDP</span><span class="arrow">→</span><span class="ans">NLB</span></div>
+    <div class="row"><span class="cue">パスやホスト名で振り分け／WAF を付けたい</span><span class="arrow">→</span><span class="ans">ALB</span></div>
+    <div class="row"><span class="cue">サードパーティの FW・IDS を透過的に挟む</span><span class="arrow">→</span><span class="ans">GWLB</span></div>
+    <div class="row"><span class="cue">アプリが落ちても台が入れ替わらない</span><span class="arrow">→</span><span class="ans">ASG のヘルスチェックに ELB を追加</span></div>
+    <div class="row"><span class="cue">AZ ごとに台数が違い、一部の台だけ重い</span><span class="arrow">→</span><span class="ans">クロスゾーン負荷分散</span></div>
     <div class="row"><span class="cue">毎朝9時に負荷が上がると分かっている</span><span class="arrow">→</span><span class="ans">スケジュールされたスケーリング</span></div>
-    <div class="row"><span class="cue">インスタンスが起動と終了を繰り返す</span><span class="arrow">→</span><span class="ans">ヘルスチェックの猶予期間を延ばす</span></div>
+    <div class="row"><span class="cue">起動と終了を繰り返す</span><span class="arrow">→</span><span class="ans">ヘルスチェックの猶予期間を延ばす</span></div>
     <div class="row"><span class="cue">終了直前にログを退避したい</span><span class="arrow">→</span><span class="ans">ライフサイクルフック（終了時）</span></div>
     <div class="row"><span class="cue">処理に15分以上かかる</span><span class="arrow">→</span><span class="ans">Fargate / AWS Batch / Step Functions</span></div>
-    <div class="row"><span class="cue">下流のRDSをLambdaの同時実行から守る</span><span class="arrow">→</span><span class="ans">予約済み同時実行 / RDS Proxy</span></div>
+    <div class="row"><span class="cue">Lambda の CPU を増やしたい</span><span class="arrow">→</span><span class="ans">メモリの割り当てを増やす</span></div>
+    <div class="row"><span class="cue">下流の RDS を Lambda の同時実行から守る</span><span class="arrow">→</span><span class="ans">予約済み同時実行 / RDS Proxy</span></div>
+    <div class="row"><span class="cue">VPC 内の Lambda から外部 API を呼べない</span><span class="arrow">→</span><span class="ans">プライベートサブネット ＋ NAT Gateway</span></div>
+    <div class="row"><span class="cue">k8s 経験なし・運用を最小に・GPU 不要</span><span class="arrow">→</span><span class="ans">ECS ＋ Fargate</span></div>
+    <div class="row"><span class="cue">コンテナ内のアプリが S3 にアクセスできない</span><span class="arrow">→</span><span class="ans">タスクロール</span></div>
   </div>
+</section>
 
-  <div class="note">
-    <span class="label">左側が2つ以上そろっているか確かめる</span>
-    <p>実際の設問は、この表の左側を1つだけ含むことはめったにありません。「コストを最小化」「中断可能」「ステートレス」のように、同じ方向を指す手がかりが2つ3つ重ねて書かれています。逆に、手がかりが1つしか見つからないときは<strong>読み落としがあります</strong>。設問文を最後まで読み直してください。SAAの長い設問文には、無駄な一文はほとんど含まれていません。</p>
-  </div></section>
-
-<section id="s10" data-toc="確認問題">
-
-  <span class="h2num">10</span>
+<section id="s11" data-toc="確認問題">
+  
+  <span class="h2num">11</span>
   <h2>確認問題</h2>
   <p class="lead">先に自分で答えを決めてから開いてください。当てずっぽうで開くと、この5分が無駄になります。</p>
 
@@ -664,8 +569,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>「中断されてもやり直せる」「開始時刻が柔軟」という2つの手がかりが、スポットを明確に指しています。最大90%の割引が得られ、この要件ではスポット以外に安い選択肢がありません。</p>
-      <p><strong>判断軸:</strong> AとDは1〜3年の継続利用にコミットするもので、夜間だけ動くワークロードでは<strong>コミット分を使い切れず割高</strong>になります。RIやSavings Plansが有利なのは「常時稼働する定常的な使用量」に対してです。<strong>稼働が断続的ならスポットかオンデマンド、常時稼働ならコミット系</strong>――この切り分けを先に行ってください。</p>
+      <p>「中断されてもやり直せる」「開始時刻が柔軟」の2つがスポットを指している。場面2の図の、夜間バッチの山（黄色）そのもの。</p>
+      <p><strong>判断軸:</strong> A と D は1〜3年の約束で、夜間だけ動く仕事では<strong>約束した分を使い切れず割高</strong>になる。約束して割引が効くのは、図の底（常に動いている部分）だけ。</p>
     </div>
   </details>
 
@@ -680,8 +585,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>NLBはAZごとに静的IPを持ち、Elastic IPを割り当てることもできます。「IPアドレスが変わらないこと」という要件を直接満たせるのはNLBだけです。</p>
-      <p><strong>判断軸:</strong> Cは成立しません。<strong>ALBにElastic IPは割り当てられず</strong>、DNS名の背後でIPが変動します。Aはその制約をそのまま踏んでおり要件を満たしません。DのGWLBは仮想アプライアンスを挟むためのもので、APIの公開には使いません。<strong>「静的IP」という語を見た瞬間にNLB</strong>、と反射で結び付けてください。</p>
+      <p>場面4の右の図。NLB は AZ ごとに固定 IP を持ち、Elastic IP も割り当てられる。</p>
+      <p><strong>判断軸:</strong> <strong>ALB には Elastic IP を割り当てられず</strong>、DNS 名の裏で IP が変わる（C は成立しない、A は要件を満たさない）。D の GWLB は仮想アプライアンスを挟むためのもの。<strong>「静的 IP」を見たら NLB</strong>。</p>
     </div>
   </details>
 
@@ -696,8 +601,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: A</span></p>
-      <p>ヘルスチェックタイプがEC2のみの場合、ASGはハイパーバイザーから見たインスタンスの状態しか見ません。OSが動いていればアプリが死んでいても「正常」と判定され、交換されません。<strong>ELBヘルスチェックをASGのヘルスチェックタイプに追加</strong>して初めて、ALBの判定がインスタンスの入れ替えに反映されます。</p>
-      <p><strong>判断軸:</strong> <strong>ELBは「送るのをやめる」だけ、ASGが「入れ替える」</strong>――この役割分担が問われています。Bは交換後の切り離しにかかる時間の話で、交換自体が起きないこの状況とは無関係です。Cは負荷の偏りの話、Dは台数の増減の話で、どちらも症状に対応していません。</p>
+      <p>場面5の左の図そのもの。ASG が EC2 の状態しか見ていないので、OS が動いている限り「正常」と判断して入れ替えない。</p>
+      <p><strong>判断軸:</strong> <strong>ELB は「送るのをやめる」だけ、ASG が「入れ替える」</strong>。B は外すときの待ち時間、C は負荷の偏り、D は台数の増減の話で、症状に対応していない。</p>
     </div>
   </details>
 
@@ -712,8 +617,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>VPCに接続したLambdaにはパブリックIPが割り当てられません。パブリックサブネットに置いてもインターネットへは出られない、というのがこの設問の核心です。プライベートサブネットに配置し、NAT Gateway をインターネットへの出口にするのが定石です。</p>
-      <p><strong>判断軸:</strong> Aは仕様上できません。CはRDSをインターネットに露出させるもので、セキュリティ上の後退です。Dは疎通できていない問題を待ち時間で解こうとしており、原因に触れていません。なお<strong>送信先がS3やDynamoDBだけならNATは不要</strong>で、ゲートウェイエンドポイントを使うほうが安価です。宛先がAWSサービスか外部かで答えが変わります。</p>
+      <p>場面7の VPC の図。VPC に入れた Lambda にはパブリック IP が付かないので、パブリックサブネットに置いても外へ出られない。</p>
+      <p><strong>判断軸:</strong> A は仕様上できない。C は RDS をインターネットにさらす後退。D は待ち時間で解こうとしていて原因に触れていない。<strong>送信先が S3 や DynamoDB だけなら NAT は不要</strong>で、ゲートウェイ型エンドポイントのほうが安い。</p>
     </div>
   </details>
 
@@ -728,33 +633,36 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: C</span></p>
-      <p>Kubernetesの経験がなく、GPUも不要で、タスク数が変動する。この3つがそろえば ECS + Fargate です。オーケストレーターは学習コストの低いECS、実行基盤はサーバー管理の要らないFargate、という2段階の選択がそのまま答えになります。</p>
-      <p><strong>判断軸:</strong> Aは「Kubernetesの経験者がいない」という制約に反し、コントロールプレーン料金も上乗せされます。BとDはEC2の管理が残り、「運用の手間を最小限に」「既存のEC2群は廃止」という要件に逆行します。<strong>ECSかEKSかは組織のスキルで、EC2起動タイプかFargateかはワークロードの性質で決まる</strong>――2本の軸を別々に判定するのが、この種の設問の解き方です。</p>
+      <p>場面8の2×2の、緑のマス。k8s の経験がない → ECS、GPU が要らずサーバー管理をなくしたい → Fargate。</p>
+      <p><strong>判断軸:</strong> A は「k8s の経験者がいない」に反し、コントロールプレーン料金も乗る。B と D は EC2 の管理が残り、「運用の手間を最小限に」「EC2 群は廃止」に逆行する。<strong>行（ECS か EKS か）と列（EC2 か Fargate か）を別々に決める</strong>。</p>
     </div>
-  </details></section>
+  </details>
+</section>
 
-<section id="s11" data-toc="今日の宿題">
-
-  <span class="h2num">11</span>
+<section id="s12" data-toc="今日の宿題">
+  
+  <span class="h2num">12</span>
   <h2>今日の宿題</h2>
-  <p>今週は覚える対象が多いぶん、書き出さないと確実に流れます。30分でここまでやってください。</p>
+  <p>20分で、ここまでやってください。</p>
 
   <div class="hw">
-    <div class="item"><span class="box"></span><span class="t"><code>notes/compute/</code> の README チェックリストを埋める<small>EC2・ELB・Auto Scaling・Lambda・コンテナの各項目。埋まらない行があれば、その節に戻る合図</small></span></div>
-    <div class="item"><span class="box"></span><span class="t">購入オプションの表を、資料を見ずに再現する<small>8行すべてでなくてよい。オンデマンド / スポット / RI / Savings Plans 2種 / Dedicated Host の6つを「設問のどの言葉で選ぶか」付きで</small></span></div>
-    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d2-resilient.md</code> に判断軸を追記<small>09の表から、ELB三種の切り分けと Auto Scaling の3つの待ち時間だけを写す。全部は写さない</small></span></div>
-    <div class="item"><span class="box"></span><span class="t">W2のIssueのチェック項目を埋める<small>「EC2: 購入オプションと配置グループ」「ELB と Auto Scaling」「Lambda とコンテナサービスの選択軸」の3つ</small></span></div>
-    <div class="item"><span class="box"></span><span class="t"><code>plan/log.md</code> に1行残す<small>かかった時間と、いちばん自信がなかった論点を1つ。次週の復習範囲はここから決める</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">8つの場面を、資料を閉じて書き出す<small>「どんな依頼で、答えは何だったか」を8行。書けたら、チャットに貼ってもらえれば私が notes/ に清書します</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">書けなかった場面だけ、その節の図に戻る<small>全部は読み返さない</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">場面2の判定の順を、何も見ずに言う<small>ライセンス → 中断してよいか → 1〜3年使うか → 将来動くか</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">ALB・NLB・GWLB の違いを「どこまで読むか」で言う<small>中身まで / ポートまで / 丸ごと渡す</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">終わったことを伝える<small>Issue のチェックと plan/log.md は私が更新します</small></span></div>
   </div>
 
   <div class="note">
-    <span class="label">週末のハンズオン</span>
-    <p>今週末は<strong>ALB + Auto Scaling グループを自分で組み、動いているインスタンスを1台手動で終了させて挙動を観察します。</strong>見るべきは3点です。ALBがそのターゲットを異常と判定するまでに何秒かかるか。ASGが新しいインスタンスを起動し始めるのはいつか。そしてその間、アクセスが落ちなかったかどうか。<strong>今日読んだ「ヘルスチェックタイプにELBを含めないと交換されない」を、実際に両方の設定で試してみてください。</strong>読んで納得したことと、画面で見たことは別の記憶として残ります。最小台数を2以上にしておくこと、終わったらASGを削除してインスタンスを残さないことだけ、先に頭に入れておいてください。</p>
-  </div></section>
+    <span class="label">週末のハンズオン（IAM ロール ＋ Auto Scaling）</span>
+    <p>ALB と Auto Scaling グループを組み、動いている台を1台手動で終了させて挙動を見ます。見るのは3点。ALB がその台を異常と判定するまで何秒か。ASG が新しい台を起動し始めるのはいつか。その間アクセスが落ちなかったか。<strong>場面5の図の左右（ヘルスチェックに ELB を含める／含めない）を、両方の設定で試してください。</strong></p>
+    <p><strong>最小台数は2以上</strong>にしておくこと。<strong>終わったら ASG を削除</strong>して、インスタンスを残さないこと（ASG を消さずにインスタンスだけ消すと、すぐに作り直される）。</p>
+  </div>
+</section>
 
 <footer>
   AWS SAA-C03 / W2 座学<br>
-  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
+  サービス仕様と数値は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
 </footer>
 
 </main>
