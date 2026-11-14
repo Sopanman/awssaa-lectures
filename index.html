@@ -92,6 +92,12 @@ code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);padding
 .note p:last-child{margin-bottom:0}
 .note .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
 .note.warn{border-left-color:var(--warn)} .note.warn .label{color:var(--warn)}
+/* この場面で初めて出る言葉（正式名称 + 一言） */
+.note.terms{border-left-color:var(--ink-3);max-width:none} .note.terms .label{color:var(--ink-2)}
+.terms dl{display:grid;grid-template-columns:fit-content(12em) 1fr;gap:8px 16px;margin:0}
+.terms dt{font-weight:700} .terms dt small{display:block;font-weight:400;color:var(--ink-3);font-size:12px;line-height:1.4}
+.terms dd{margin:0;color:var(--ink-2)}
+@media (max-width:560px){.terms dl{grid-template-columns:1fr}.terms dd{margin-bottom:8px}}
 
 .trap{background:var(--deny-soft);border:1px solid transparent;border-radius:8px;padding:16px 18px;margin:0 0 20px;max-width:66ch}
 .trap .label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--deny);display:block;margin-bottom:6px;font-weight:600}
@@ -200,7 +206,7 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
   </a>
   <a class="card" href="w2-compute.html">
     <span class="wk">W2</span>
-    <span><span class="ttl">EC2 とスケーリング設計</span><br><span class="dsc">図で見るコンピューティング。インスタンスファミリーとT系のクレジット、購入オプション、スポットの中断、配置グループ、ELB三種、ヘルスチェック、クロスゾーン、スケーリングポリシー、Lambdaの上限と同時実行、コンテナの選び方。</span></span>
+    <span><span class="ttl">EC2 とスケーリング設計</span><br><span class="dsc">図で見るコンピューティング。インスタンスタイプとT系のクレジット、購入オプション、スポットの中断、配置グループ、ロードバランサー（ELB）三種、Auto Scaling、スケーリングポリシー、Lambdaの実行環境と同時実行、コンテナとECS・EKS・Fargate。各場面で初出の用語を正式名称つきで説明。</span></span>
   </a>
   <a class="card" href="w3-storage.html">
     <span class="wk">W3</span>
