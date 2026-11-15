@@ -174,9 +174,9 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 
 <header class="masthead">
   <p class="eyebrow">AWS SAA-C03 / W9 座学</p>
-  <h1>コスト最適化 ―― 課金はどこで発生しているか</h1>
-  <p class="standfirst">出題比率20%のドメイン4は、実は独立した知識が少なく、これまでの各サービスの「安い側の選択肢」を集めたものです。ただしデータ転送料金だけは別で、ここを知らないと解けない設問が確実に出ます。課金がどこで発生するかを地図として持っておくのが今日の目的です。</p>
-  <div class="meta"><span>所要 60-90分</span><span>前提 W1-W5 読了</span><span>ドメイン4 (20%)</span></div>
+  <h1>コスト最適化 ―― 図で見る9つの依頼</h1>
+  <p class="standfirst">出題比率20%のドメイン4は、これまでの各サービスの「安い側の選択肢」を集めたものです。新しく覚えるのは、データ転送料金と、請求を見張る道具だけ。この講義は図が主役です。各場面の最初に「この場面で初めて出る言葉」を置いてあるので、知らない言葉はそこで確かめてから図を見てください。緑は無料・うまくいく、赤と ✕ は有料・失敗する、青は自分が決めるものです。</p>
+  <div class="meta"><span>所要 80-100分</span><span>前提 これまでの7本を読了</span><span>ドメイン4 (20%)</span></div>
 </header>
 
 <div class="cols">
@@ -184,324 +184,454 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 <nav class="toc">
   <h2>目次</h2>
   <ol>
-    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
-    <li><a href="#s2"><span class="n">02</span>設問の型</a></li>
-    <li><a href="#s3"><span class="n">03</span>購入オプション</a></li>
-    <li><a href="#s4"><span class="n">04</span>スポット</a></li>
-    <li><a href="#s5"><span class="n">05</span>データ転送</a></li>
-    <li><a href="#s6"><span class="n">06</span>ストレージ</a></li>
-    <li><a href="#s7"><span class="n">07</span>コンピュート</a></li>
-    <li><a href="#s8"><span class="n">08</span>管理ツール</a></li>
-    <li><a href="#s9"><span class="n">09</span>6つの柱</a></li>
-    <li><a href="#s10"><span class="n">10</span>試験での判断軸</a></li>
-    <li><a href="#s11"><span class="n">11</span>確認問題</a></li>
-    <li><a href="#s12"><span class="n">12</span>今日の宿題</a></li>
+    <li><a href="#s1"><span class="n">01</span>全体の地図</a></li>
+    <li><a href="#s2"><span class="n">02</span>場面1 設問の読み方</a></li>
+    <li><a href="#s3"><span class="n">03</span>場面2 単価を下げる</a></li>
+    <li><a href="#s4"><span class="n">04</span>場面3 スポットの備え</a></li>
+    <li><a href="#s5"><span class="n">05</span>場面4 データ転送</a></li>
+    <li><a href="#s6"><span class="n">06</span>場面5 NAT Gateway</a></li>
+    <li><a href="#s7"><span class="n">07</span>場面6 ストレージ</a></li>
+    <li><a href="#s8"><span class="n">08</span>場面7 量と時間を減らす</a></li>
+    <li><a href="#s9"><span class="n">09</span>場面8 見張る道具</a></li>
+    <li><a href="#s10"><span class="n">10</span>場面9 6つの柱</a></li>
+    <li><a href="#s11"><span class="n">11</span>場面→答えの早見表</a></li>
+    <li><a href="#s12"><span class="n">12</span>確認問題</a></li>
+    <li><a href="#s13"><span class="n">13</span>今日の宿題</a></li>
   </ol>
 </nav>
 
 <main>
 
-<section id="s1" data-toc="ゴール">
-
+<section id="s1" data-toc="全体の地図">
+  
   <span class="h2num">01</span>
-  <h2>この講義のゴール</h2>
-  <p class="lead">ドメイン4は新しいサービスをほとんど覚えません。これまで学んだサービスそれぞれに「安い側の選択肢」があり、それをどういう条件で選ぶかを問われます。唯一の例外がデータ転送料金です。次の3つができていれば合格です。</p>
-  <ul class="goals">
-    <li><span class="tick">01</span><div><strong>データが動いたときに課金されるかどうかを即答できる。</strong><br>同一AZ内、AZ間、リージョン間、インターネット向き、NAT Gateway 経由――それぞれで誰が払うかを地図として持っている。</div></li>
-    <li><span class="tick">02</span><div><strong>ワークロードの説明文から購入オプションを選べる。</strong><br>「常時稼働」「中断に耐えられる」「1年以上使う」「将来インスタンスを変えるかもしれない」という言葉と、オンデマンド／スポット／RI／Savings Plans が結びついている。</div></li>
-    <li><span class="tick">03</span><div><strong>「コストを下げる」設問で、要件を壊す選択肢を弾ける。</strong><br>安いだけの答えと、要件を満たしたうえで安い答えを区別できる。</div></li>
-  </ul>
+  <h2>全体の地図</h2>
+  <p class="lead">工場の経費にたとえると、機械を動かした時間、倉庫に置いた量、運んだ荷物の量の3つに請求書が来ます。AWS も同じで、請求が発生する場所は3種類しかありません。まず言葉をそろえてから、9つの場面がどこの話かを見ます。</p>
+
+  <div class="note terms"><span class="label">この講義の登場人物</span>
+    <dl>
+      <dt>課金<small>料金が発生すること</small></dt><dd>AWS は月末にまとめて請求するが、料金そのものは「使った瞬間」に積み上がっていく。この講義では、積み上がる場所を<strong>メーター</strong>と呼ぶ</dd>
+      <dt>従量課金</dt><dd>使った分だけ払う方式。AWS の料金は基本的にこれ。逆に、先に「1〜3年使う」と約束して単価を下げる買い方もある → 場面2</dd>
+      <dt>データ転送料金</dt><dd>データが AWS の中や外を<strong>移動した量</strong>（GB）にかかる料金。どこからどこへ動いたかで単価が変わる → 場面4・5</dd>
+      <dt>Billing and Cost Management<small>AWS Billing and Cost Management（請求とコスト管理）</small></dt><dd>請求書を見たり、予算を決めたりする、AWS マネジメントコンソールの画面のまとまり → 場面8</dd>
+      <dt>Well-Architected Framework<small>AWS Well-Architected Framework</small></dt><dd>AWS が「良い設計とは何か」を6つの観点（柱）にまとめた考え方。コスト最適化はその1つ → 場面9</dd>
+    </dl>
+  </div>
+
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 272" width="760" height="272" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="請求が発生する場所を、動かした時間、置いた量、動いたデータの3種類に分け、場面の番号を割り当てた地図"><text x="380" y="22" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">請求のメーターが回る場所は、3種類しかない</text><rect x="14" y="38" width="236" height="150" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="30" y="64" font-size="14" fill="var(--accent)" text-anchor="start" font-weight="700">動かした時間</text><text x="30" y="82" font-size="10.5" fill="var(--ink-3)" text-anchor="start">時間 × 単価</text><circle cx="228" cy="59" r="10" fill="var(--accent)"/><text x="228" y="63" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">7</text><circle cx="204" cy="59" r="10" fill="var(--accent)"/><text x="204" y="63" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><circle cx="180" cy="59" r="10" fill="var(--accent)"/><text x="180" y="63" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><text x="30" y="112" font-size="11.5" fill="var(--ink)" text-anchor="start">・EC2・RDS の稼働時間</text><text x="30" y="136" font-size="11.5" fill="var(--ink)" text-anchor="start">・Lambda の実行時間</text><text x="30" y="160" font-size="11.5" fill="var(--ink)" text-anchor="start">・NAT Gateway の時間料金</text><rect x="262" y="38" width="236" height="150" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="278" y="64" font-size="14" fill="var(--accent)" text-anchor="start" font-weight="700">置いた量</text><text x="278" y="82" font-size="10.5" fill="var(--ink-3)" text-anchor="start">GB × 月</text><circle cx="476" cy="59" r="10" fill="var(--accent)"/><text x="476" y="63" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">6</text><text x="278" y="112" font-size="11.5" fill="var(--ink)" text-anchor="start">・S3 のオブジェクト</text><text x="278" y="136" font-size="11.5" fill="var(--ink)" text-anchor="start">・EBS の確保した容量</text><text x="278" y="160" font-size="11.5" fill="var(--ink)" text-anchor="start">・スナップショット</text><rect x="510" y="38" width="236" height="150" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="526" y="64" font-size="14" fill="var(--accent)" text-anchor="start" font-weight="700">動いたデータ</text><text x="526" y="82" font-size="10.5" fill="var(--ink-3)" text-anchor="start">GB × 通った経路</text><circle cx="724" cy="59" r="10" fill="var(--accent)"/><text x="724" y="63" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">5</text><circle cx="700" cy="59" r="10" fill="var(--accent)"/><text x="700" y="63" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">4</text><text x="526" y="112" font-size="11.5" fill="var(--ink)" text-anchor="start">・インターネット向け</text><text x="526" y="136" font-size="11.5" fill="var(--ink)" text-anchor="start">・AZ 間・リージョン間</text><text x="526" y="160" font-size="11.5" fill="var(--ink)" text-anchor="start">・NAT Gateway の処理料金</text><rect x="14" y="204" width="484" height="56" rx="10" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><circle cx="36" cy="232" r="10" fill="var(--accent)"/><text x="36" y="236" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">8</text><text x="56" y="228" font-size="12" fill="var(--ink)" text-anchor="start" font-weight="700">見張る・配る道具（Billing and Cost Management）</text><text x="56" y="247" font-size="10.5" fill="var(--ink-3)" text-anchor="start">Cost Explorer・AWS Budgets・コスト配分タグ など</text><rect x="510" y="204" width="236" height="56" rx="10" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><circle cx="532" cy="232" r="10" fill="var(--accent)"/><text x="532" y="236" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><circle cx="556" cy="232" r="10" fill="var(--accent)"/><text x="556" y="236" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">9</text><text x="576" y="228" font-size="12" fill="var(--ink)" text-anchor="start" font-weight="700">設問の読み方</text><text x="576" y="247" font-size="10.5" fill="var(--ink-3)" text-anchor="start">制約と目的・6つの柱</text></svg>
+  </div>
+  <figcaption><strong>この講義の地図。</strong>丸数字は場面の番号。AWS の請求は「動かした時間」「置いた量」「動いたデータ」のどれかに対して発生する。②③⑦は時間、⑥は量、④⑤はデータの動きを減らす話。①と⑨は設問の読み方、⑧は請求を見張る道具の話。</figcaption>
+</figure>
   <div class="note">
-    <span class="label">なぜ今この順番か</span>
-    <p>コスト最適化を最初に学ぶと、何を削っているのか分からないまま数字だけ覚えることになります。EC2、S3、VPC、RDS を一通り見た今だからこそ、「この構成のどこに課金メーターが回っているか」という見方ができます。逆に、この講義で分からない箇所はコストの理解不足ではなく、そのサービス自体の理解不足です。W1〜W5 に戻ってください。</p>
-  </div></section>
+    <span class="label">この講義の見取り図</span>
+    <p>場面1は<strong>設問の読み方</strong>。場面2・3は<strong>単価を下げる</strong>話（払い方）。場面4・5は<strong>データの動きにかかる料金</strong>で、ここがこの講義の中心です。場面6・7は<strong>量と時間を減らす</strong>話。場面8は<strong>請求を見張る道具</strong>、場面9は SAA 全体を貫く<strong>6つの柱</strong>です。</p>
+    <p>ドメイン4は新しいサービスをほとんど覚えません。分からない箇所が出てきたら、それはコストの理解不足ではなく、そのサービス自体の理解不足です。行き先（「EC2 講義 場面2」など）を書いてあるので、そこへ戻ってください。</p>
+  </div>
+</section>
 
-<section id="s2" data-toc="設問の型">
-
+<section id="s2" data-toc="場面1 設問の読み方">
+  
   <span class="h2num">02</span>
-  <h2>コスト設問の2つの型</h2>
-  <p class="lead">ドメイン4の設問は、ほぼ2つの言い回しに集約されます。どちらの型かを見分けることが、選択肢を絞る最初の一手です。</p>
+  <h2>場面1 ―― 「コストを下げてと言われた。いちばん安い選択肢を選べばいいのでは？」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>要件</dt><dd>設問文に書かれた「満たさなければならない条件」。可用性・耐久性・応答の速さ・保持期間など</dd>
+      <dt>制約と目的</dt><dd><strong>制約</strong>は「〜を維持しながら」のように必ず守る条件。<strong>目的</strong>は「最も〜なのは」のように、その中で良くしたいもの</dd>
+      <dt>可用性</dt><dd>止まらずに使い続けられること（VPC 講義・EC2 講義で既出）。「マルチ AZ」は複数の AZ（アベイラビリティーゾーン：データセンターのまとまり）に分けて置き、1つが落ちても動き続ける構成</dd>
+      <dt>耐久性</dt><dd>データが失われないこと（S3 講義で既出）</dd>
+      <dt>運用負荷<small>運用オーバーヘッド</small></dt><dd>人が手を動かして面倒を見る手間。スクリプトの保守、定期的な手作業、障害対応など</dd>
+      <dt>マネージド</dt><dd>AWS 側が面倒を見てくれること。自前でスクリプトを書く代わりに、設定を1つ有効にするだけで済む機能を指す</dd>
+    </dl>
+  </div>
+
+  <p>ドメイン4の設問は、ほぼ2つの言い回しに集約されます。どちらも「安いものを選ぶ」問題ではなく、<strong>「条件を満たすものの中から安いものを選ぶ」</strong>問題です。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 264" width="760" height="264" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="4つの選択肢を、まず制約を満たすかでふるいにかけ、残った中から安いものを選ぶ表"><rect x="10" y="8" width="740" height="34" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="380" y="30" font-size="12.5" fill="var(--accent)" text-anchor="middle" font-weight="700">設問：「可用性を維持しながら、最もコスト効率が高いのはどれか」</text><text x="24" y="64" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">選択肢</text><text x="330" y="64" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">安さ</text><text x="462" y="64" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">① 制約を満たすか</text><text x="650" y="64" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">② 残った中で安いか</text><rect x="10" y="74" width="740" height="38" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="24" y="98" font-size="12" fill="var(--ink)" text-anchor="start">本番 DB をシングル AZ に変える</text><rect x="300" y="85" width="18" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="322" y="85" width="18" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="344" y="85" width="18" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><circle cx="410" cy="93" r="9" fill="var(--deny)"/><line x1="405.95" y1="88.95" x2="414.05" y2="97.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="405.95" y1="97.05" x2="414.05" y2="88.95" stroke="var(--bg)" stroke-width="2.4"/><text x="426" y="97" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">可用性を壊す</text><text x="650" y="97" font-size="11.5" fill="var(--deny)" text-anchor="middle">比べる前に消える</text><rect x="10" y="120" width="740" height="38" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="24" y="144" font-size="12" fill="var(--ink)" text-anchor="start">本番 DB をスポットで動かす</text><rect x="300" y="131" width="18" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="322" y="131" width="18" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="344" y="131" width="18" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><circle cx="410" cy="139" r="9" fill="var(--deny)"/><line x1="405.95" y1="134.95" x2="414.05" y2="143.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="405.95" y1="143.05" x2="414.05" y2="134.95" stroke="var(--bg)" stroke-width="2.4"/><text x="426" y="143" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">中断される</text><text x="650" y="143" font-size="11.5" fill="var(--deny)" text-anchor="middle">比べる前に消える</text><rect x="10" y="166" width="740" height="38" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.6"/><text x="24" y="190" font-size="12" fill="var(--ink)" text-anchor="start" font-weight="700">RI / Savings Plans を買う</text><rect x="300" y="177" width="18" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="322" y="177" width="18" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="344" y="177" width="18" height="16" rx="3" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><circle cx="410" cy="185" r="9" fill="var(--allow)"/><polyline points="405.9,185.0 409.1,188.4 414.5,181.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="426" y="189" font-size="11.5" fill="var(--allow)" text-anchor="start" font-weight="700">満たす</text><text x="650" y="189" font-size="12" fill="var(--allow)" text-anchor="middle" font-weight="700">これが正解</text><rect x="10" y="212" width="740" height="38" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="24" y="236" font-size="12" fill="var(--ink)" text-anchor="start">オンデマンドのまま</text><rect x="300" y="223" width="18" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="322" y="223" width="18" height="16" rx="3" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><rect x="344" y="223" width="18" height="16" rx="3" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><circle cx="410" cy="231" r="9" fill="var(--allow)"/><polyline points="405.9,231.0 409.1,234.4 414.5,227.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="426" y="235" font-size="11.5" fill="var(--allow)" text-anchor="start" font-weight="700">満たす</text><text x="650" y="235" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">満たすが、高い</text></svg>
+  </div>
+  <figcaption><strong>安い順に並べる前に、制約でふるう。</strong>黄色の四角が多いほど安い。いちばん安い2つは「可用性を維持しながら」という制約を壊しているので、比べる前に消える。残った2つのうち安いほうが正解。コスト最適化とは「要件を満たす構成のうち、最も安いもの」を選ぶことです。</figcaption>
+</figure>
 
   <h3>型1「最もコスト効率が高いのはどれか」</h3>
-  <p>この型で最初にやることは<strong>設問文から要件を抜き出すこと</strong>です。可用性、耐久性、レイテンシ、保持期間、復旧時間は必ず書いてあります。選択肢には、その要件を静かに落とすことで安くしているものが混ざっています。</p>
-  <p>たとえば「本番データベースの可用性を維持しながらコストを下げたい」という設問で「マルチAZ配置をシングルAZに変更する」という選択肢は、安いけれども要件を満たしていません。<em>コスト最適化とは「安くすること」ではなく「要件を満たす構成のうち最も安いものを選ぶこと」です。</em></p>
+  <p>最初にやることは、<strong>設問文から制約を抜き出すこと</strong>です。可用性、耐久性、応答の速さ、保持期間、復旧までの時間は必ず書いてあります。選択肢には、その制約を静かに落とすことで安くしているものが混ざっています。図の上2つがそれです。</p>
 
   <h3>型2「運用負荷を上げずにコストを下げる」</h3>
-  <p>こちらは<strong>運用負荷という第二の軸</strong>が加わった型です。「運用オーバーヘッドを最小限に」「管理を追加せずに」「最小の労力で」という表現が出てきたら、この型です。</p>
-  <p>この型では、自前でスクリプトを書く、cron で定期実行する、担当者が毎月レビューする――といった選択肢が並びます。コスト削減としては正しくても、運用負荷が増えるため不正解です。正解は AWS 側が自動でやってくれるマネージドな機能で、S3 のアクセスパターンが不明なときに「Intelligent-Tiering を有効にする」が選ばれるのはこの軸のためです。</p>
+  <p>こちらは<strong>運用負荷という2つ目の制約</strong>が加わった型です。「運用オーバーヘッドを最小限に」「管理を追加せずに」「最小の労力で」と書かれていたらこの型です。</p>
+  <p>この型では、自前でスクリプトを書く、cron（決まった時刻にプログラムを動かす仕組み）で定期実行する、担当者が毎月レビューする、といった選択肢が並びます。コスト削減としては正しくても、運用負荷が増えるので不正解です。正解は AWS 側が自動でやってくれるマネージドな機能です（例：S3 の Intelligent-Tiering → 場面6）。</p>
 
-  <h3>罠になる選択肢の5パターン</h3>
-  <p>誤答の作られ方には型があります。模試で間違えたときは、自分がどのパターンに引っかかったかを分類しておくと再発が減ります。</p>
-
+  <h3>誤答の作られ方は5通り</h3>
+  <p>模試で間違えたときは、どのパターンに引っかかったかを分類しておくと再発が減ります。行き先の場面も書いておきます。</p>
   <div class="tw"><table>
     <thead><tr><th>パターン</th><th>選択肢の見え方</th><th>見分け方</th></tr></thead>
     <tbody>
-      <tr><td><strong>要件破り</strong></td><td>マルチAZをやめる、バックアップ保持期間を短くする、重要データを One Zone-IA に置く</td><td>設問文の可用性・耐久性の要件と突き合わせる。<strong>設問に書いてある制約は絶対</strong></td></tr>
-      <tr><td><strong>運用負荷の付け替え</strong></td><td>Lambda とスクリプトで自前の自動化を作る、定期的に手動でレビューする</td><td>「運用負荷を上げずに」とあれば不正解。マネージド機能があるならそちらが優先</td></tr>
-      <tr><td><strong>期間のミスマッチ</strong></td><td>3か月のプロジェクトに3年の RI、検証環境に長期コミットメント</td><td>設問に書かれた利用期間とコミットメント期間を比べる</td></tr>
-      <tr><td><strong>特性のミスマッチ</strong></td><td>ステートフルな本番DBをスポットインスタンスで動かす、即時取り出しが必要なデータを Glacier Deep Archive へ</td><td>そのサービスが前提とする使い方から外れていないか</td></tr>
-      <tr><td><strong>隠れコスト</strong></td><td>S3 へのアクセスを NAT Gateway 経由のままにする、少量の通信に Interface エンドポイントを大量に立てる</td><td>時間料金とデータ処理料金が別に乗るものを知っているか。ここが今日の中心</td></tr>
+      <tr><td><strong>要件破り</strong></td><td>マルチ AZ をやめる、バックアップの保持期間を短くする、重要データを One Zone-IA（単一 AZ の S3 クラス、場面6）に置く</td><td>設問文の可用性・耐久性の制約と突き合わせる。<strong>設問に書いてある制約は絶対</strong></td></tr>
+      <tr><td><strong>運用負荷の付け替え</strong></td><td>Lambda とスクリプトで自前の自動化を作る、定期的に手動でレビューする</td><td>「運用負荷を上げずに」とあれば不正解。マネージドな機能があるならそちらが優先</td></tr>
+      <tr><td><strong>期間のミスマッチ</strong></td><td>3か月のプロジェクトに3年の予約、検証環境に長期の約束（場面2）</td><td>設問に書かれた利用期間と、約束の期間を比べる</td></tr>
+      <tr><td><strong>特性のミスマッチ</strong></td><td>本番データベースをスポットで動かす（場面3）、すぐ取り出すデータを Glacier Deep Archive へ（場面6）</td><td>そのサービスが前提とする使い方から外れていないか</td></tr>
+      <tr><td><strong>隠れコスト</strong></td><td>S3 へのアクセスを NAT Gateway 経由のままにする、少量の通信にインターフェース型エンドポイントを大量に立てる（場面5）</td><td>時間料金と処理料金が別に乗るものを知っているか。今日の中心</td></tr>
     </tbody>
   </table></div>
 
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「コストを削減したい」とだけ見て最も安い選択肢を選ぶと外れます。設問文の前半には必ず「99.99%の可用性を維持しながら」「監査のため7年間保持する」といった条件が埋まっています。<strong>後半の「最もコスト効率が高いのは」だけを読んで選ぶ</strong>のが、この分野の最大の失点源です。</p>
-  </div></section>
+  <div class="note warn"><span class="label">最頻出の引っかけ</span>
+    <p>「コストを削減したい」とだけ見て、最も安い選択肢を選ぶと外れます。設問文の前半には必ず「99.99% の可用性を維持しながら」「監査のため7年間保持する」といった制約が埋まっています。<strong>後半の「最もコスト効率が高いのは」だけを読んで選ぶ</strong>のが、この分野の最大の失点源です。</p></div>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「本番データベースの可用性を維持しながらコストを下げたい」で「マルチ AZ 配置をシングル AZ に変更する」→ <strong>要件破りで不正解</strong>。「運用負荷を増やさずに」で「Lambda で毎晩チェックするスクリプトを作る」→ <strong>運用負荷の付け替えで不正解</strong>。選択肢を安い順に並べる前に、制約を破っているものを消す。</p></div>
+</section>
 
-<section id="s3" data-toc="購入オプション">
-
+<section id="s3" data-toc="場面2 単価を下げる">
+  
   <span class="h2num">03</span>
-  <h2>購入オプションを選ぶ</h2>
-  <p class="lead">EC2 の料金は、突き詰めれば「インスタンス時間 × 単価」です。購入オプションは、このうち単価を下げる手段です。使わない時間を減らすのは後の節で扱います。</p>
+  <h2>場面2 ―― 「常時動くサーバーと DB がある。単価を下げたい。将来の構成はまだ決まっていない」</h2>
 
-  <h3>4つの選択肢を1枚に並べる</h3>
-  <p>設問はこの4つのどれを選ぶかを聞いてきます。割引率の大小ではなく<strong>何を差し出して割引を得ているか</strong>で覚えてください。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th>オプション</th><th>差し出すもの</th><th>割引の大きさ</th><th>中断</th><th>キャパシティ確保</th><th>設問に出る言葉</th></tr></thead>
-    <tbody>
-      <tr><td><strong>オンデマンド</strong></td><td>何も差し出さない</td><td>基準（割引なし）</td><td class="no">されない</td><td class="no">保証なし</td><td>「予測できない」「短期」</td></tr>
-      <tr><td><strong>スポット</strong></td><td>中断されない保証</td><td>最大（オンデマンドの数分の一）</td><td class="yes">される（通知あり）</td><td class="no">保証なし</td><td>「中断に耐えられる」「ステートレス」「バッチ」</td></tr>
-      <tr><td><strong>Reserved Instance</strong></td><td>1年または3年の利用コミット、および構成の固定</td><td>大</td><td class="no">されない</td><td>ゾーン指定なら確保できる</td><td>「常時稼働」「安定した使用量」</td></tr>
-      <tr><td><strong>Savings Plans</strong></td><td>1年または3年の<strong>金額</strong>コミット</td><td>大</td><td class="no">されない</td><td class="no">保証しない</td><td>「柔軟性を保ちながら」「Fargate や Lambda も使う」</td></tr>
-    </tbody>
-  </table></div>
-
-  <p>この表で大事なのは「差し出すもの」の列です。スポットは<em>可用性</em>を、RI と Savings Plans は<em>期間の自由</em>を差し出している。差し出せないものが設問に書いてあれば、その選択肢は消えます。</p>
-
-  <h3>Reserved Instance の中身</h3>
-  <p>RI は「このインスタンスを1年（または3年）使い続けます」と宣言して割引を得る仕組みです。物理的な予約ではなく、請求上の割引が稼働インスタンスに自動適用されます。軸は2つあります。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th></th><th>Standard RI</th><th>Convertible RI</th></tr></thead>
-    <tbody>
-      <tr><td><strong>割引率</strong></td><td class="yes">大きい</td><td>Standard より小さい</td></tr>
-      <tr><td><strong>インスタンスファミリーの変更</strong></td><td class="no">できない</td><td class="yes">できる（同等以上の価値への交換）</td></tr>
-      <tr><td><strong>OS・テナンシーの変更</strong></td><td class="no">できない</td><td class="yes">できる</td></tr>
-      <tr><td><strong>途中での売却</strong></td><td class="yes">RI マーケットプレイスで売れる</td><td class="no">売れない</td></tr>
-      <tr><td><strong>向く状況</strong></td><td>構成が固まっていて3年変えない</td><td>世代交代やリファクタリングの可能性がある</td></tr>
-    </tbody>
-  </table></div>
-
-  <p>支払い方法は3つあり、<strong>全額前払い → 一部前払い → 前払いなし</strong>の順に割引が大きくなります。「初期費用を抑えたい」なら前払いなし、「割引を最大化したい」なら全額前払いです。</p>
-
-  <p>もうひとつ、<strong>リージョン指定 RI とゾーン指定 RI</strong>の違いがあります。リージョン指定は AZ を固定せず、同一ファミリー内でサイズをまたいで割引が適用されます（Linux かつ共有テナンシーの場合）。ゾーン指定は AZ を固定する代わりに<strong>キャパシティの予約</strong>が付きます。「特定の AZ でキャパシティを確保したい」ならゾーン指定 RI か、独立した機能であるオンデマンドキャパシティ予約です。</p>
-
-  <div class="note warn">
-    <span class="label">よく混同されるところ</span>
-    <p>「Reserved」という語感から RI は常にキャパシティを予約すると思われがちですが、<strong>リージョン指定 RI は予約しません</strong>。純粋に請求上の割引です。<strong>Savings Plans もどちらの形でも予約しません</strong>。「キャパシティを保証したい」という要件は割引の話と切り離し、オンデマンドキャパシティ予約かゾーン指定 RI を選んでください。</p>
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>購入オプション</dt><dd>EC2 の「払い方」の種類。オンデマンド・スポット・RI・Savings Plans の4つ（EC2 講義 場面2で既出）</dd>
+      <dt>オンデマンド</dt><dd>約束なしで、使った時間だけ定価で払う。割引の基準になる</dd>
+      <dt>スポット<small>スポットインスタンス</small></dt><dd>AWS の余っている EC2 を大幅な割引で借りる払い方。AWS が必要になると回収される（EC2 講義 場面3で既出）→ 場面3</dd>
+      <dt>RI<small>Reserved Instance（リザーブドインスタンス）</small></dt><dd>「この型を1年または3年使う」と約束して割引を得る。物理的に機械を押さえるのではなく、<strong>請求上の割引</strong>が動いている台に自動で当たる</dd>
+      <dt>Savings Plans</dt><dd>「毎時これだけの金額を1年または3年使う」と<strong>金額</strong>を約束して割引を得る。型を約束しないので RI より柔軟</dd>
+      <dt>コミットメント</dt><dd>1年・3年といった「使い続ける約束」のこと。RI と Savings Plans の総称として使う</dd>
+      <dt>キャパシティ予約</dt><dd>割引とは別の話で、「この AZ でこの型を必ず起動できる」ように<strong>台数の枠を確保する</strong>こと</dd>
+      <dt>テナンシー</dt><dd>物理サーバーを他の利用者と共有するか（共有）、自分専用にするか（専有）の区別</dd>
+      <dt>Fargate<small>AWS Fargate</small></dt><dd>コンテナを動かす場所を AWS が用意してくれるサービス（EC2 講義 場面8で既出）</dd>
+      <dt>RDS・ElastiCache・Redshift・OpenSearch Service・DynamoDB</dt><dd>データベース系のサービス（DB 講義で既出）。順に、リレーショナル DB、メモリ上の高速なデータ置き場、分析用のデータウェアハウス、検索・ログ分析、キーで読み書きする DB</dd>
+    </dl>
   </div>
 
-  <h3>Savings Plans の2種類</h3>
-  <p>Savings Plans は「1時間あたりいくら使い続けます」という<strong>金額のコミット</strong>です。タイプではなく金額を約束するので RI より柔軟で、種類は2つあります。</p>
+  <p>EC2 の料金は、突き詰めれば「動かした時間 × 単価」です。購入オプションは、このうち<strong>単価</strong>を下げる手段です。時間のほうを減らす話は場面7で扱います。購入オプションは EC2 講義の場面2・3で図にしたので、ここでは1枚で思い出します。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 240" width="760" height="240" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="オンデマンド、スポット、RI、Savings Plansの4つを、差し出すものと割引の大きさで並べた図"><text x="380" y="20" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">割引は「何かを差し出す」と引き換えにもらう</text><rect x="10" y="34" width="179" height="196" rx="10" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="100" y="58" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">オンデマンド</text><text x="100" y="80" font-size="10" fill="var(--ink-3)" text-anchor="middle">差し出すもの</text><rect x="20" y="88" width="159" height="30" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1"/><text x="100" y="108" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">何も差し出さない</text><text x="100" y="138" font-size="10" fill="var(--ink-3)" text-anchor="middle">割引</text><rect x="66" y="146" width="20" height="16" rx="3" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><rect x="90" y="146" width="20" height="16" rx="3" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><rect x="114" y="146" width="20" height="16" rx="3" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="100" y="188" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">割引なし（基準）</text><text x="100" y="208" font-size="11" fill="var(--ink-2)" text-anchor="middle">予測できない・短期</text><rect x="197" y="34" width="179" height="196" rx="10" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="287" y="58" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">スポット</text><text x="287" y="80" font-size="10" fill="var(--ink-3)" text-anchor="middle">差し出すもの</text><rect x="207" y="88" width="159" height="30" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1"/><text x="287" y="108" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">中断されない保証</text><text x="287" y="138" font-size="10" fill="var(--ink-3)" text-anchor="middle">割引</text><rect x="253" y="146" width="20" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="277" y="146" width="20" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="301" y="146" width="20" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><text x="287" y="188" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">割引は最大</text><text x="287" y="208" font-size="11" fill="var(--ink-2)" text-anchor="middle">中断に耐えられる仕事</text><rect x="384" y="34" width="179" height="196" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="474" y="58" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">RI</text><text x="474" y="80" font-size="10" fill="var(--ink-3)" text-anchor="middle">差し出すもの</text><rect x="394" y="88" width="159" height="30" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1"/><text x="474" y="108" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">1〜3年 ＋ 構成の固定</text><text x="474" y="138" font-size="10" fill="var(--ink-3)" text-anchor="middle">割引</text><rect x="440" y="146" width="20" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="464" y="146" width="20" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="488" y="146" width="20" height="16" rx="3" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="474" y="188" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">割引は大きい</text><text x="474" y="208" font-size="11" fill="var(--ink-2)" text-anchor="middle">常時稼働・構成を変えない</text><rect x="571" y="34" width="179" height="196" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="661" y="58" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Savings Plans</text><text x="661" y="80" font-size="10" fill="var(--ink-3)" text-anchor="middle">差し出すもの</text><rect x="581" y="88" width="159" height="30" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1"/><text x="661" y="108" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">1〜3年の金額の約束</text><text x="661" y="138" font-size="10" fill="var(--ink-3)" text-anchor="middle">割引</text><rect x="627" y="146" width="20" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="651" y="146" width="20" height="16" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><rect x="675" y="146" width="20" height="16" rx="3" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="661" y="188" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">割引は大きい</text><text x="661" y="208" font-size="11" fill="var(--ink-2)" text-anchor="middle">柔軟性を残したい</text></svg>
+  </div>
+  <figcaption><strong>4つの払い方の復習（EC2 講義 場面2・3）。</strong>スポットは「中断されない保証」を、RI と Savings Plans は「期間の自由」を差し出して割引を得る。設問に「中断できない」と書いてあればスポットが消え、「3か月だけ」と書いてあれば RI と Savings Plans が消える。</figcaption>
+</figure>
 
+  <div class="tw"><table>
+    <thead><tr><th>オプション</th><th>差し出すもの</th><th>割引の大きさ</th><th>中断</th><th>キャパシティの確保</th><th>設問に出る言葉</th></tr></thead>
+    <tbody>
+      <tr><td><strong>オンデマンド</strong></td><td>何も差し出さない</td><td>基準（割引なし）</td><td class="yes">されない</td><td class="no">保証なし</td><td>「予測できない」「短期」</td></tr>
+      <tr><td><strong>スポット</strong></td><td>中断されない保証</td><td>最大（オンデマンドの数分の一）</td><td class="no">される（通知あり）</td><td class="no">保証なし</td><td>「中断に耐えられる」「ステートレス」「バッチ」</td></tr>
+      <tr><td><strong>RI</strong></td><td>1年または3年の約束と、構成の固定</td><td>大</td><td class="yes">されない</td><td>AZ を指定した RI なら確保できる</td><td>「常時稼働」「安定した使用量」</td></tr>
+      <tr><td><strong>Savings Plans</strong></td><td>1年または3年の<strong>金額</strong>の約束</td><td>大</td><td class="yes">されない</td><td class="no">確保しない</td><td>「柔軟性を保ちながら」「Fargate や Lambda も使う」</td></tr>
+    </tbody>
+  </table></div>
+  <p>大事なのは「差し出すもの」の列です。差し出せないものが設問に書いてあれば、その選択肢は消えます。「ステートレス」は、処理の途中経過を台の中に持たない（どの台で処理しても同じ結果になる）作りのことです。</p>
+
+  <h3>RI の中身 ―― 3つの軸</h3>
+  <p>RI は EC2 のコンソールの「リザーブドインスタンス」から購入します。買うときに決めることが3つあります。</p>
+  <div class="tw"><table>
+    <thead><tr><th>① 種類</th><th>Standard RI</th><th>Convertible RI</th></tr></thead>
+    <tbody>
+      <tr><td><strong>割引率</strong></td><td class="yes">大きい</td><td>Standard より小さい</td></tr>
+      <tr><td><strong>インスタンスファミリーの変更</strong></td><td class="no">できない</td><td class="yes">できる（同等以上の価値のものへ交換）</td></tr>
+      <tr><td><strong>OS・テナンシーの変更</strong></td><td class="no">できない</td><td class="yes">できる</td></tr>
+      <tr><td><strong>途中での売却</strong></td><td class="yes">RI マーケットプレイスで売れる</td><td class="no">売れない</td></tr>
+      <tr><td><strong>向く状況</strong></td><td>構成が固まっていて3年変えない</td><td>世代交代や作り直しの可能性がある</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><strong>② 支払い方法：</strong>全額前払い・一部前払い・前払いなしの3つ。<strong>先に多く払うほど割引が大きい</strong>。「初期費用を抑えたい」なら前払いなし、「割引を最大にしたい」なら全額前払い（All Upfront）</li>
+    <li><strong>③ 範囲：</strong><strong>リージョン指定 RI</strong> は AZ を固定せず、同じファミリーの中でサイズをまたいで割引が当たる（Linux かつ共有テナンシーの場合）。<strong>ゾーン指定 RI</strong> は AZ を固定する代わりに、<strong>キャパシティ予約</strong>が付く</li>
+  </ul>
+  <div class="note warn"><span class="label">「Reserved」でも台数は押さえていない</span>
+    <p>名前の印象から、RI は常に台数の枠を確保すると思われがちですが、<strong>リージョン指定 RI は確保しません</strong>。純粋に請求上の割引です。<strong>Savings Plans もキャパシティは確保しません。</strong>「特定の AZ で必ず起動できるようにしたい」という要件は割引と切り離して考え、<strong>オンデマンドキャパシティ予約</strong>（EC2 の「キャパシティーの予約」から作る、割引なしで枠だけ確保する機能）か、ゾーン指定 RI を選びます。</p></div>
+
+  <h3>Savings Plans の2種類</h3>
+  <p>Savings Plans は Billing and Cost Management の「Savings Plans」から購入します。型ではなく金額を約束するので、個々のインスタンスには紐づかず、割引額が最も大きくなる利用へ自動で当たります。管理の手間も RI より少なくて済みます。</p>
   <div class="tw"><table>
     <thead><tr><th></th><th>Compute Savings Plans</th><th>EC2 Instance Savings Plans</th></tr></thead>
     <tbody>
-      <tr><td><strong>割引率</strong></td><td>Compute のほうが小さい</td><td class="yes">こちらが大きい</td></tr>
+      <tr><td><strong>割引率</strong></td><td>EC2 Instance より小さい</td><td class="yes">こちらが大きい</td></tr>
       <tr><td><strong>インスタンスファミリー</strong></td><td class="yes">自由に変えられる</td><td class="no">指定したファミリーに固定</td></tr>
       <tr><td><strong>リージョン</strong></td><td class="yes">またげる</td><td class="no">指定したリージョンに固定</td></tr>
-      <tr><td><strong>インスタンスサイズ・OS・テナンシー</strong></td><td class="yes">自由</td><td class="yes">自由</td></tr>
-      <tr><td><strong>対象サービス</strong></td><td class="yes">EC2 に加えて Fargate と Lambda もカバー</td><td class="no">EC2 のみ</td></tr>
-      <tr><td><strong>向く状況</strong></td><td>構成が変わる、サーバーレスへの移行を進めている</td><td>使うファミリーとリージョンが決まっている</td></tr>
+      <tr><td><strong>サイズ・OS・テナンシー</strong></td><td class="yes">自由</td><td class="yes">自由</td></tr>
+      <tr><td><strong>対象サービス</strong></td><td class="yes">EC2 に加えて Fargate と Lambda も</td><td class="no">EC2 のみ</td></tr>
+      <tr><td><strong>向く状況</strong></td><td>構成が変わる、サーバーレスへ移行中</td><td>使うファミリーとリージョンが決まっている</td></tr>
     </tbody>
   </table></div>
+  <p><strong>Compute は広く浅く、EC2 Instance は狭く深く。</strong>設問に「Fargate」「Lambda」が出てきたら、選べるのは Compute Savings Plans だけです。</p>
 
-  <p><strong>Compute は広く浅く、EC2 Instance は狭く深く。</strong>設問に「Fargate」「Lambda」が出てきたら Compute Savings Plans しか選べません。逆に「今後もこのファミリーを使い続ける」「リージョンは固定」なら、割引の大きい EC2 Instance Savings Plans が正解です。</p>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>RI と Savings Plans のどちらかを選ばせる設問では、<strong>柔軟性を求める言葉が出ていれば Savings Plans</strong>です。Savings Plans は個々のインスタンスに紐づかず、最も割引額の大きいリソースへ自動で適用されるため、管理の手間も少なくて済みます。</p>
-  </div>
-
-  <h3>ワークロードの言葉から逆引きする</h3>
-  <ul>
-    <li><strong>「24時間365日稼働、今後3年間は構成を変えない」</strong> → Standard RI（3年・全額前払い）または EC2 Instance Savings Plans。</li>
-    <li><strong>「常時稼働だが、来年タイプを見直すかもしれない」</strong> → Convertible RI または Compute Savings Plans。</li>
-    <li><strong>「夜間に走るバッチ、失敗しても翌朝やり直せる」</strong> → スポット。</li>
-        <li><strong>「ベースラインは一定で、日中だけ増える」</strong> → ベースライン分を RI か Savings Plans、増分をオンデマンドまたはスポットで賄う<em>組み合わせ</em>。この型はよく正解になります。</li>
-  </ul></section>
-
-<section id="s4" data-toc="スポット">
-
-  <span class="h2num">04</span>
-  <h2>スポットに向くもの、向かないもの</h2>
-  <p class="lead">スポットインスタンスは、AWS の余剰キャパシティを大幅な割引で使う仕組みです。余剰がなくなれば取り上げられる――この一点で向き不向きは判断できます。</p>
-
-  <h3>中断はどう起きるか</h3>
-  <p>キャパシティが必要になると AWS はインスタンスを回収します。このとき<strong>2分前に中断通知</strong>がインスタンスメタデータと EventBridge 経由で届き、アプリケーションはその間に状態を保存し、ロードバランサーから外れ、ジョブをキューへ戻します。さらに早い段階で中断の可能性を知らせる<strong>キャパシティ再調整の推奨</strong>もあり、Auto Scaling グループと組み合わせれば先回りして代替を立ち上げられます。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th>向く</th><th>向かない</th></tr></thead>
-    <tbody>
-      <tr><td class="yes">ステートレスな Web/API のスケールアウト分</td><td class="no">ステートフルなデータベース、プライマリノード</td></tr>
-      <tr><td class="yes">バッチ処理、ETL、データ変換</td><td class="no">中断すると最初からやり直しになる長時間処理</td></tr>
-      <tr><td class="yes">CI/CD のビルドエージェント</td><td class="no">ライセンスがホストに固定された商用ソフトウェア</td></tr>
-      <tr><td class="yes">EMR のタスクノード、コンテナのワーカー</td><td class="no">EMR のマスターノード、コアノード</td></tr>
-      <tr><td class="yes">動画エンコード、シミュレーション、レンダリング</td><td class="no">締め切りが厳格でやり直す時間がない処理</td></tr>
-    </tbody>
-  </table></div>
-
-  <h3>中断への備え</h3>
-  <ol class="body">
-    <li><strong>チェックポイント。</strong>途中経過を定期的に S3 や EFS に書き出し、再開できるようにします。「長時間のバッチをスポットで動かしたい」の正解はたいていこれです。</li>
-    <li><strong>キューで作業単位を管理する。</strong>SQS に作業を入れ、可視性タイムアウトで、完了しなかった作業が自動的に別のインスタンスへ渡るようにします。中断を検知しなくても処理が失われません。</li>
-    <li><strong>容量プールを分散する。</strong>スポットの空きはインスタンスタイプと AZ の組み合わせ（容量プール）ごとに独立しています。<strong>複数のタイプと複数の AZ を指定する</strong>ほど同時に枯れる確率が下がる――これが Spot Fleet や EC2 Fleet、混在インスタンスポリシーの核心です。</li>
-    <li><strong>割り当て戦略をキャパシティ最適化にする。</strong>最安値優先（lowest-price）は単価の安いプールを選びますが、そこは枯渇しやすい。<strong>キャパシティ最適化（capacity-optimized）</strong>は空きの多いプールを選ぶため中断されにくく、「中断を最小化したい」という設問ではこちらです。</li>
-    <li><strong>オンデマンドと混ぜる。</strong>Auto Scaling グループでは「ベース台数はオンデマンド、超過分の何%をスポット」と指定できます。最低限の可用性を確保しつつスケールアウト分だけ安くする定番です。</li>
-  </ol>
-
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「コストを最小化したい」とだけ見るとスポットが正解に見えます。しかし<strong>「ミッションクリティカル」「中断できない」「常に稼働している必要がある」</strong>があれば即座に消えます。逆に<strong>「フォールトトレラント」「中断に耐えられる」「時間に余裕がある」</strong>は、出題者がスポットを選ばせるために置いたサインです。</p>
-  </div>
-
-  <div class="note">
-    <span class="label">コンテナの場合</span>
-    <p>ECS と EKS では <strong>Fargate Spot</strong> が使えます。サーバーを管理せずスポットの割引を得る選択肢で、「運用負荷を上げずにコンテナのコストを下げたい」の正解です。中断される性質は同じです。</p>
-  </div></section>
-
-<section id="s5" data-toc="データ転送">
-
-  <span class="h2num">05</span>
-  <h2>データ転送料金の地図</h2>
-  <p class="lead">この節が今日の中心です。データ転送料金は他のサービスの知識からは導けない独立した知識で、「なぜこの構成のほうが安いのか」という形で必ず問われます。一度地図にしてしまえば、あとは当てはめるだけです。</p>
-
-  <h3>まず4つの境界を覚える</h3>
-  <p>データがどこを越えたかで課金が決まります。境界は内側から「同一 AZ」「AZ 間」「リージョン間」「インターネット」の4つです。</p>
-
+  <h3>データベースは、データベースの予約で下げる</h3>
+  <p>ここからが EC2 講義になかった話です。Savings Plans の名前に「Compute」「EC2 Instance」と付いているとおり、これらはコンピュートの割引です。常時動く RDS や ElastiCache には効きません。データベース系のサービスは、それぞれ自分の予約の仕組みを持っています。</p>
   <figure>
-    <div class="fig">
-      <svg viewBox="0 0 860 380" width="860" height="380" role="img" aria-label="データ転送の課金境界を示す入れ子の図。内側から同一AZは無料、AZ間は往復とも課金、リージョン間は送信側で課金、インターネット境界は外向きが課金で内向きが無料。右側にNAT Gateway、Interfaceエンドポイント、Gatewayエンドポイント、CloudFrontの追加料金の有無を示す。">
-        <rect x="20" y="16" width="500" height="344" rx="12" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.6"/>
-        <text x="40" y="42" font-size="12.5" fill="var(--deny)" font-weight="700">インターネット境界 ―― 外向きは課金 / 内向きは無料</text>
-
-        <rect x="44" y="58" width="452" height="284" rx="10" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.6"/>
-        <text x="64" y="84" font-size="12.5" fill="var(--warn)" font-weight="700">リージョン間 ―― 送信側で課金</text>
-
-        <rect x="68" y="100" width="404" height="214" rx="10" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="5 4"/>
-        <text x="88" y="126" font-size="12.5" fill="var(--ink-2)" font-weight="700">AZ 間 ―― 往復とも課金</text>
-
-        <rect x="92" y="142" width="356" height="148" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.6"/>
-        <text x="112" y="168" font-size="12.5" fill="var(--allow)" font-weight="700">同一 AZ・プライベート IP ―― 無料</text>
-
-        <rect x="112" y="186" width="140" height="46" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="182" y="215" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text>
-        <rect x="288" y="186" width="140" height="46" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="358" y="215" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text>
-        <line x1="256" y1="209" x2="284" y2="209" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M284 209 l-9 -5 v10 z" fill="var(--ink-3)"/>
-        <path d="M256 209 l9 -5 v10 z" fill="var(--ink-3)"/>
-        <text x="270" y="262" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">パブリック IP を経由すると同一 AZ でも課金</text>
-
-        <text x="540" y="30" font-size="12.5" fill="var(--ink-2)" font-weight="700">この上に乗る追加料金</text>
-
-        <rect x="540" y="44" width="300" height="58" rx="8" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/>
-        <text x="558" y="68" font-size="13.5" fill="var(--ink)" font-weight="700">NAT Gateway</text>
-        <text x="558" y="87" font-size="11.5" fill="var(--ink-3)">時間料金 ＋ 処理データ量あたりの料金</text>
-
-        <rect x="540" y="114" width="300" height="58" rx="8" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/>
-        <text x="558" y="138" font-size="13.5" fill="var(--ink)" font-weight="700">Interface エンドポイント</text>
-        <text x="558" y="157" font-size="11.5" fill="var(--ink-3)">AZ ごとの時間料金 ＋ 処理データ量</text>
-
-        <rect x="540" y="184" width="300" height="58" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.6"/>
-        <text x="558" y="208" font-size="13.5" fill="var(--ink)" font-weight="700">Gateway エンドポイント</text>
-        <text x="558" y="227" font-size="11.5" fill="var(--ink-3)">S3 / DynamoDB のみ。追加料金なし</text>
-
-        <rect x="540" y="254" width="300" height="58" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.6"/>
-        <text x="558" y="278" font-size="13.5" fill="var(--ink)" font-weight="700">AWS オリジン → CloudFront</text>
-        <text x="558" y="297" font-size="11.5" fill="var(--ink-3)">オリジンからの取得に転送料金なし</text>
-      </svg>
-    </div>
-    <figcaption>内側ほど安く、外側ほど高い。左の4層とは<strong>別枠で</strong>、右側の仕掛けを通ると時間料金と処理料金が上乗せされます。「安くする」とは、データを内側に留めるか、右側の課金装置を外すかです。</figcaption>
-  </figure>
-
-  <h3>原則を言葉で確認する</h3>
-  <div class="tw"><table>
-    <thead><tr><th>データの動き</th><th>課金</th><th>設問での意味</th></tr></thead>
-    <tbody>
-      <tr><td>インターネットから AWS へ（インバウンド）</td><td class="yes">原則無料</td><td>取り込みは安く、出すのが高い。移行時の転送コストを心配する選択肢は的外れ</td></tr>
-      <tr><td>AWS からインターネットへ（アウトバウンド）</td><td class="no">課金</td><td>コスト削減設問の主戦場。CloudFront やキャッシュで削る</td></tr>
-      <tr><td>同一 AZ 内、プライベート IP での通信</td><td class="yes">無料</td><td>同じ AZ に寄せると安い。ただし可用性とのトレードオフになる</td></tr>
-      <tr><td>同一 AZ 内でも、パブリック IP や Elastic IP 経由</td><td class="no">課金</td><td>同じ VPC にいるのに公開エンドポイント名で呼ぶ構成ミスが設問になる</td></tr>
-      <tr><td>AZ をまたぐ通信（同一リージョン）</td><td class="no">課金。しかも送信側・受信側の双方向</td><td>マルチ AZ 構成のコストはここに出る。可用性のために払う費用</td></tr>
-      <tr><td>リージョンをまたぐ通信</td><td class="no">課金（送信元リージョン側）</td><td>クロスリージョンレプリケーション、DR 構成のコスト</td></tr>
-      <tr><td>同一リージョンの AWS サービス間（S3 から EC2 など）</td><td class="yes">同一 AZ なら無料</td><td>同じリージョンに置くのはレイテンシだけでなくコストの理由もある</td></tr>
-      <tr><td>AWS のオリジンから CloudFront へ</td><td class="yes">無料</td><td>オリジン側の転送料金がなくなり、配信は CloudFront の料金体系になる</td></tr>
-    </tbody>
-  </table></div>
-
-  <p><strong>「インバウンド無料、アウトバウンド課金」</strong>――この非対称性がすべての出発点です。だから「オンプレミスから数十テラバイトを移行する」設問で転送コストを心配する選択肢は的外れになり、「解析結果を社外に大量配信する」設問ではコストが論点になります。</p>
-
-  <h3>CloudFront を挟むと何が安くなるか</h3>
-  <p>CloudFront を前に置くと、コストの構造が2か所で変わります。第一に、<strong>オリジン（S3 や EC2、ALB）から CloudFront への転送は無料</strong>です。第二に、エンドユーザーへの配信は CloudFront の料金体系になり、直接インターネットに出す場合より単価が低く設定されています。キャッシュが効けばオリジンへのリクエスト自体も減ります。「静的コンテンツを世界中に配信していて転送コストが高い」という設問の答えは、ほぼ確実に CloudFront です。</p>
-
-  <h3>NAT Gateway ―― この講義でいちばん出るところ</h3>
-  <p>NAT Gateway には<strong>起動時間に対する料金</strong>と<strong>通過データ量に対する処理料金</strong>の2つがかかります。重要なのは、処理料金が<em>アウトバウンド転送料金とは別に上乗せで</em>かかることです。外に出るデータは二重取りになります。</p>
-  <p>また、AZ ごとに NAT Gateway を置くのが可用性の定石ですが、時間料金は AZ の数だけ増えます。1つにまとめれば他の AZ からの通信が AZ 間転送料金を生みます。<strong>冗長性を取るか、時間料金を取るか</strong>のトレードオフです。</p>
-
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「プライベートサブネットの EC2 が S3 に大量のデータを書き込んでいる。NAT Gateway のコストが想定以上に高い。運用負荷を増やさずにコストを下げる方法は？」――<strong>答えは S3 用の Gateway エンドポイントを作成し、ルートテーブルを向けることです。</strong>追加料金がなく、S3 への通信が NAT Gateway を通らなくなるため処理料金も転送料金も消えます。形を変えて何度も出ます。</p>
-    <p>誤答としてよく並ぶのは「NAT インスタンスに置き換える」（運用負荷が増え可用性も落ちる）、「VPC ピアリングを設定する」（S3 は対象外）、「Interface エンドポイントを作る」（S3 でも使えるが時間料金と処理料金がかかる）です。</p>
+  <div class="fig">
+    <svg viewBox="0 0 760 270" width="760" height="270" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はEC2・Fargate・Lambdaの割引。右はRDS、ElastiCache、Redshift、OpenSearch Service、DynamoDBがそれぞれ自分の予約を持つことを示す"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">コンピュートの割引</text><text x="330" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">それ以外は、サービスごとに予約を買う</text><rect x="10" y="36" width="96" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="58.0" y="57.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><line x1="106" y1="53" x2="116.0" y2="53.0" stroke="var(--accent)" stroke-width="1.8"/><polygon points="126.0,53.0 116.0,58.5 116.0,47.5" fill="var(--accent)"/><rect x="128" y="36" width="176" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="216" y="58" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">RI / Savings Plans</text><rect x="10" y="80" width="96" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="58.0" y="101.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Fargate</text><line x1="106" y1="97" x2="116.0" y2="97.0" stroke="var(--accent)" stroke-width="1.8"/><polygon points="126.0,97.0 116.0,102.5 116.0,91.5" fill="var(--accent)"/><rect x="128" y="80" width="176" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="216" y="102" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">Compute Savings Plans</text><rect x="10" y="124" width="96" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="58.0" y="145.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Lambda</text><line x1="106" y1="141" x2="116.0" y2="141.0" stroke="var(--accent)" stroke-width="1.8"/><polygon points="126.0,141.0 116.0,146.5 116.0,135.5" fill="var(--accent)"/><rect x="128" y="124" width="176" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="216" y="146" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">Compute Savings Plans</text><line x1="316" y1="12" x2="316" y2="262" stroke="var(--line)" stroke-width="1.2"/><rect x="330" y="36" width="166" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="413.0" y="57.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">RDS・Aurora</text><line x1="496" y1="53" x2="506.0" y2="53.0" stroke="var(--accent)" stroke-width="1.8"/><polygon points="516.0,53.0 506.0,58.5 506.0,47.5" fill="var(--accent)"/><rect x="518" y="36" width="232" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="634" y="58" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">リザーブド DB インスタンス</text><rect x="330" y="80" width="166" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="413.0" y="101.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ElastiCache</text><line x1="496" y1="97" x2="506.0" y2="97.0" stroke="var(--accent)" stroke-width="1.8"/><polygon points="516.0,97.0 506.0,102.5 506.0,91.5" fill="var(--accent)"/><rect x="518" y="80" width="232" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="634" y="102" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">リザーブドノード</text><rect x="330" y="124" width="166" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="413.0" y="145.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Redshift</text><line x1="496" y1="141" x2="506.0" y2="141.0" stroke="var(--accent)" stroke-width="1.8"/><polygon points="516.0,141.0 506.0,146.5 506.0,135.5" fill="var(--accent)"/><rect x="518" y="124" width="232" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="634" y="146" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">リザーブドノード</text><rect x="330" y="168" width="166" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="413.0" y="189.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">OpenSearch Service</text><line x1="496" y1="185" x2="506.0" y2="185.0" stroke="var(--accent)" stroke-width="1.8"/><polygon points="516.0,185.0 506.0,190.5 506.0,179.5" fill="var(--accent)"/><rect x="518" y="168" width="232" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="634" y="190" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">リザーブドインスタンス</text><rect x="330" y="212" width="166" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="413.0" y="233.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">DynamoDB</text><line x1="496" y1="229" x2="506.0" y2="229.0" stroke="var(--accent)" stroke-width="1.8"/><polygon points="516.0,229.0 506.0,234.5 506.0,223.5" fill="var(--accent)"/><rect x="518" y="212" width="232" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="634" y="234" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">リザーブドキャパシティ</text><circle cx="24" cy="196" r="9" fill="var(--deny)"/><line x1="19.95" y1="191.95" x2="28.05" y2="200.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="19.95" y1="200.05" x2="28.05" y2="191.95" stroke="var(--bg)" stroke-width="2.4"/><text x="40" y="192" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">Compute / EC2 Instance</text><text x="40" y="210" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">Savings Plans は右側には効かない</text><text x="10" y="248" font-size="10.5" fill="var(--ink-3)" text-anchor="start">どれも 1年または3年の約束で割引を得る</text></svg>
   </div>
+  <figcaption><strong>データベースは、データベースの予約で下げる。</strong>Compute Savings Plans と EC2 Instance Savings Plans が効くのは左側だけ。常時動く RDS のコストを下げたいなら、RDS のコンソールで<strong>リザーブド DB インスタンス</strong>を買う。名前は違っても「1〜3年使う約束で単価を下げる」仕組みは同じ。</figcaption>
+</figure>
+  <p>買う場所は各サービスのコンソールです（RDS なら RDS のコンソールの「リザーブドインスタンス」）。考え方は EC2 の RI と同じで、<strong>「常時稼働」「1年以上使う」データベース</strong>が対象です。開発用にときどき起動するだけのデータベースを予約すると、場面1の「期間のミスマッチ」になります。DynamoDB のリザーブドキャパシティは、読み書きの量をあらかじめ決めておく方式（プロビジョンドモード、DB 講義）で使うときの予約です。</p>
 
-  <h3>VPC エンドポイントの2種類</h3>
-  <div class="tw"><table>
-    <thead><tr><th></th><th>Gateway エンドポイント</th><th>Interface エンドポイント（PrivateLink）</th></tr></thead>
-    <tbody>
-      <tr><td><strong>対象サービス</strong></td><td class="no">S3 と DynamoDB のみ</td><td class="yes">多数の AWS サービス、および他社・自社の公開サービス</td></tr>
-      <tr><td><strong>実体</strong></td><td>ルートテーブルのエントリ</td><td>サブネット内の ENI（プライベート IP を持つ）</td></tr>
-      <tr><td><strong>料金</strong></td><td class="yes">追加料金なし</td><td class="no">AZ ごとの時間料金 ＋ 処理データ量あたりの料金</td></tr>
-      <tr><td><strong>オンプレミスから利用</strong></td><td class="no">できない</td><td class="yes">できる（Direct Connect / VPN 経由）</td></tr>
-      <tr><td><strong>コスト設問での位置</strong></td><td>S3・DynamoDB の NAT 迂回はこれ一択</td><td>他サービスで NAT を避けたいとき。通信量が少ないと割高になる</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>S3 か DynamoDB が相手なら Gateway エンドポイント、それ以外なら Interface エンドポイント。ただしオンプレミスから VPC 経由で S3 に届かせたい場合は Gateway エンドポイントが使えず、<strong>Interface エンドポイントが正解</strong>です。「オンプレミス」の一語で答えが変わります。</p>
-  </div>
-
-  <h3>その他、転送料金が論点になる構成</h3>
+  <h3>この場面の答え ―― 言葉から逆引きする</h3>
   <ul>
-    <li><strong>VPC ピアリング。</strong>接続そのものに時間料金はなく、通過データに通常の AZ 間・リージョン間の転送料金が適用されます（同一 AZ 内なら無料）。</li>
-    <li><strong>Direct Connect。</strong>ポートの時間料金がかかる一方、アウトバウンドの転送単価はインターネット経由より低く設定されています。「オンプレミスとの継続的な大量転送」ではコストの理由でも正解になります。</li>
-  </ul></section>
+    <li><strong>「24時間365日稼働、今後3年間は構成を変えない」</strong> → Standard RI（3年・全額前払い）または EC2 Instance Savings Plans</li>
+    <li><strong>「常時稼働だが、来年タイプを見直すかもしれない」</strong> → Convertible RI または Compute Savings Plans。<strong>この場面の EC2 の答えはこれ</strong></li>
+    <li><strong>「常時動く RDS の料金を下げたい」</strong> → リザーブド DB インスタンス。<strong>この場面の DB の答えはこれ</strong></li>
+    <li><strong>「夜間に走るバッチ、失敗しても翌朝やり直せる」</strong> → スポット（場面3）</li>
+    <li><strong>「土台は一定で、日中だけ増える」</strong> → 土台の分を RI か Savings Plans、増える分をオンデマンドかスポットで賄う<em>組み合わせ</em>。この型はよく正解になる（EC2 講義 場面2の図）</li>
+  </ul>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>RI と Savings Plans のどちらかを選ばせる設問では、<strong>柔軟性を求める言葉が出ていれば Savings Plans</strong>。「Fargate や Lambda に移る予定」→ <strong>Compute Savings Plans</strong>。「キャパシティを保証したい」→ <strong>オンデマンドキャパシティ予約かゾーン指定 RI</strong>（割引の話ではない）。「3か月だけ使う」→ 1年・3年の約束はすべて不正解。</p></div>
+</section>
 
-<section id="s6" data-toc="ストレージ">
+<section id="s4" data-toc="場面3 スポットの備え">
+  
+  <span class="h2num">04</span>
+  <h2>場面3 ―― 「夜間バッチをスポットにしたい。止められても困らないようにしたい」</h2>
 
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>中断通知</dt><dd>スポットが回収される<strong>2分前</strong>に届く知らせ。EC2 の中から読める情報（インスタンスメタデータ）と、EventBridge（AWS 内の出来事を通知として流すサービス、疎結合の講義で既出）の両方に届く</dd>
+      <dt>リバランス推奨<small>キャパシティ再調整の推奨</small></dt><dd>中断通知より早い段階で「回収される可能性が高まった」と知らせる合図</dd>
+      <dt>ステートフル</dt><dd>処理の途中経過やデータを台の中に持っていること。台が消えると失われる。データベースが代表例</dd>
+      <dt>チェックポイント</dt><dd>長い処理の途中経過を、定期的に台の外（S3 や EFS）へ書き出しておくこと</dd>
+      <dt>SQS<small>Amazon Simple Queue Service</small></dt><dd>仕事（メッセージ）を順番待ちの列に入れておくサービス。<strong>可視性タイムアウト</strong>は、ある台が取り出した仕事を他の台から一時的に見えなくする時間（EC2 講義 場面7、疎結合の講義で既出）</dd>
+      <dt>容量プール</dt><dd>スポットの空きを数える単位。<strong>インスタンスタイプ × AZ</strong> の組み合わせごとに別々</dd>
+      <dt>割り当て戦略</dt><dd>複数の容量プールのうち、どこからスポットを取るかの決め方</dd>
+      <dt>Auto Scaling グループ（ASG）</dt><dd>EC2 の台数を自動で保ったり増減したりするまとまり（EC2 講義 場面5で既出）</dd>
+      <dt>Spot Fleet・EC2 Fleet</dt><dd>複数のタイプ・AZ・購入オプションをまとめて指定し、必要な台数をそろえてもらう EC2 の機能</dd>
+      <dt>EMR<small>Amazon EMR</small></dt><dd>大量のデータを多数の台で分散処理するサービス。全体を指揮する<strong>マスターノード</strong>、データを持つ<strong>コアノード</strong>、計算だけする<strong>タスクノード</strong>がある</dd>
+    </dl>
+  </div>
+
+  <p>スポットは「AWS の余りを安く借りる。余りがなくなれば取り上げられる」という仕組みでした（EC2 講義 場面3の時間軸の図）。向き不向きは、この一点で判断できます。<strong>取り上げられたときに、失われるものがあるかどうか</strong>です。</p>
+  <div class="tw"><table>
+    <thead><tr><th>向く（台が消えても失われない）</th><th>向かない（台が消えると失われる・困る）</th></tr></thead>
+    <tbody>
+      <tr><td class="yes">ステートレスな Web / API の、増やした分の台</td><td class="no">ステートフルなデータベース、プライマリノード</td></tr>
+      <tr><td class="yes">バッチ処理、ETL（データの抽出・変換・格納）</td><td class="no">中断すると最初からやり直しになる長時間処理</td></tr>
+      <tr><td class="yes">CI/CD（ビルドやテストの自動実行）の作業用の台</td><td class="no">ライセンスが物理サーバーに固定された商用ソフトウェア</td></tr>
+      <tr><td class="yes">EMR のタスクノード、コンテナのワーカー</td><td class="no">EMR のマスターノード、コアノード</td></tr>
+      <tr><td class="yes">動画エンコード、シミュレーション、レンダリング</td><td class="no">締め切りが厳格で、やり直す時間がない処理</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>備え1・2 ―― 途中経過と仕事を、台の外に出す</h3>
+  <p>右の列の「向かない」仕事も、失われるものを台の外に出せば左の列に移せます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 222" width="760" height="222" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はスポットの台が途中経過をS3やEFSに保存し、回収されても新しい台が続きから再開する。右はSQSのキューに仕事を置き、処理中に回収されても別の台に同じ仕事が渡る"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">チェックポイント ＝ 途中経過を外に書き出す</text><rect x="20" y="40" width="120" height="40" rx="6" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="80.0" y="58.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">スポットの台</text><text x="80.0" y="73.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">60% まで処理</text><circle cx="140" cy="40" r="10" fill="var(--deny)"/><line x1="135.5" y1="35.5" x2="144.5" y2="44.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="135.5" y1="44.5" x2="144.5" y2="35.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="80" y1="80" x2="80.0" y2="102.0" stroke="var(--accent)" stroke-width="2"/><polygon points="80.0,112.0 74.5,102.0 85.5,102.0" fill="var(--accent)"/><text x="92" y="100" font-size="10.5" fill="var(--accent)" text-anchor="start" font-weight="700">定期的に保存</text><rect x="20" y="114" width="120" height="40" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="80.0" y="132.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 / EFS</text><text x="80.0" y="147.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">途中経過</text><line x1="140" y1="134" x2="208.0" y2="134.0" stroke="var(--allow)" stroke-width="2"/><polygon points="218.0,134.0 208.0,139.5 208.0,128.5" fill="var(--allow)"/><rect x="220" y="114" width="130" height="40" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="285.0" y="132.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">新しい台</text><text x="285.0" y="147.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">60% から再開</text><text x="20" y="186" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">保存していなければ 0% からやり直し</text><text x="20" y="206" font-size="11" fill="var(--ink-2)" text-anchor="start">「長時間のバッチをスポットで」の答え</text><line x1="380" y1="12" x2="380" y2="216" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">キュー ＝ 仕事を1件ずつ外に置く</text><rect x="398" y="60" width="96" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="446.0" y="80.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">SQS</text><text x="446.0" y="95.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">キュー</text><line x1="494" y1="72" x2="558.3" y2="54.6" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="568.0,52.0 559.8,59.9 556.9,49.3" fill="var(--ink-3)"/><rect x="570" y="34" width="150" height="38" rx="6" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="645.0" y="57.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">スポットの台 A</text><circle cx="720" cy="34" r="10" fill="var(--deny)"/><line x1="715.5" y1="29.5" x2="724.5" y2="38.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="715.5" y1="38.5" x2="724.5" y2="29.5" stroke="var(--bg)" stroke-width="2.4"/><text x="645" y="90" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">処理中に回収 → 完了の報告なし</text><line x1="494" y1="96" x2="559.0" y2="127.6" stroke="var(--allow)" stroke-width="2"/><polygon points="568.0,132.0 556.6,132.6 561.4,122.7" fill="var(--allow)"/><rect x="570" y="114" width="150" height="38" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="645.0" y="137.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">スポットの台 B</text><text x="645" y="170" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">可視性タイムアウト後に同じ仕事が届く</text><text x="398" y="206" font-size="11" fill="var(--ink-2)" text-anchor="start">中断を検知しなくても、仕事は失われない</text></svg>
+  </div>
+  <figcaption><strong>「止められても困らない」を作る2つの形。</strong>左：1つの長い仕事は、途中経過を S3 や EFS に書き出しておく（チェックポイント）。右：細かい仕事の集まりは SQS に入れておく。処理中の台が回収されると完了の報告が来ないので、可視性タイムアウト（EC2 講義 場面7）が過ぎたら別の台に同じ仕事が渡る。</figcaption>
+</figure>
+
+  <h3>備え3・4 ―― 同時に枯れないように散らす</h3>
+  <p>スポットを起動するときは、ASG の起動設定（混在インスタンスポリシー）や Spot Fleet・EC2 Fleet で、使ってよいタイプと AZ を<strong>複数</strong>指定し、割り当て戦略を選びます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 274" width="760" height="274" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="3つのインスタンスタイプと3つのAZの組み合わせで9つの容量プールがあり、最安値優先は空きの少ないプールを、キャパシティ最適化は空きの多いプールを選ぶ"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">容量プール ＝ インスタンスタイプ × AZ ごとの「空き」</text><text x="198" y="48" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">AZ-a</text><text x="310" y="48" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">AZ-c</text><text x="422" y="48" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">AZ-d</text><text x="128" y="90" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">m5.large</text><rect x="150" y="58" width="96" height="52" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><rect x="158" y="88" width="80" height="12" rx="3" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1"/><rect x="158" y="88" width="68.0" height="12" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="198" y="78" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">空き 多</text><rect x="262" y="58" width="96" height="52" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><rect x="270" y="88" width="80" height="12" rx="3" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1"/><rect x="270" y="88" width="40.0" height="12" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="310" y="78" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">空き</text><rect x="374" y="58" width="96" height="52" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="2"/><rect x="382" y="88" width="80" height="12" rx="3" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1"/><rect x="382" y="88" width="12.0" height="12" rx="3" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1"/><text x="422" y="78" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">空き 少</text><text x="128" y="152" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">c5.large</text><rect x="150" y="120" width="96" height="52" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><rect x="158" y="150" width="80" height="12" rx="3" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1"/><rect x="158" y="150" width="48.0" height="12" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="198" y="140" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">空き</text><rect x="262" y="120" width="96" height="52" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><rect x="270" y="150" width="80" height="12" rx="3" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1"/><rect x="270" y="150" width="32.0" height="12" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="310" y="140" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">空き</text><rect x="374" y="120" width="96" height="52" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="2"/><rect x="382" y="150" width="80" height="12" rx="3" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1"/><rect x="382" y="150" width="72.0" height="12" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1"/><text x="422" y="140" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">空き 多</text><text x="128" y="214" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">r5.large</text><rect x="150" y="182" width="96" height="52" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><rect x="158" y="212" width="80" height="12" rx="3" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1"/><rect x="158" y="212" width="24.0" height="12" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="198" y="202" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">空き</text><rect x="262" y="182" width="96" height="52" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><rect x="270" y="212" width="80" height="12" rx="3" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1"/><rect x="270" y="212" width="56.0" height="12" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="310" y="202" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">空き</text><rect x="374" y="182" width="96" height="52" rx="6" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><rect x="382" y="212" width="80" height="12" rx="3" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1"/><rect x="382" y="212" width="44.0" height="12" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/><text x="422" y="202" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">空き</text><text x="504" y="62" font-size="12" fill="var(--deny)" text-anchor="start" font-weight="700">最安値優先（lowest-price）</text><text x="504" y="82" font-size="11" fill="var(--ink-2)" text-anchor="start">いちばん安いプールを選ぶ</text><text x="504" y="100" font-size="11" fill="var(--ink-2)" text-anchor="start">→ 空きが少なく、枯れやすい</text><line x1="498" y1="78" x2="484.0" y2="78.0" stroke="var(--deny)" stroke-width="1.8"/><polygon points="474.0,78.0 484.0,72.5 484.0,83.5" fill="var(--deny)"/><text x="504" y="148" font-size="12" fill="var(--allow)" text-anchor="start" font-weight="700">キャパシティ最適化</text><text x="504" y="168" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">（capacity-optimized）</text><text x="504" y="188" font-size="11" fill="var(--ink-2)" text-anchor="start">空きの多いプールを選ぶ</text><text x="504" y="206" font-size="11" fill="var(--ink-2)" text-anchor="start">→ 中断されにくい</text><line x1="498" y1="146" x2="484.0" y2="146.0" stroke="var(--allow)" stroke-width="1.8"/><polygon points="474.0,146.0 484.0,140.5 484.0,151.5" fill="var(--allow)"/><text x="380" y="262" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">タイプと AZ を複数指定するほど、全部が同時に枯れる確率は下がる</text></svg>
+  </div>
+  <figcaption><strong>スポットの空きは、タイプと AZ の組み合わせごとに別々。</strong>この1マスを<strong>容量プール</strong>と呼ぶ。1種類のタイプ・1つの AZ だけを指定すると、そのプールが枯れた瞬間に全台が回収される。複数のタイプと AZ を指定し、割り当て戦略を<strong>キャパシティ最適化</strong>にすると、空きの多いプールから取るので中断されにくい。</figcaption>
+</figure>
+
+  <h3>備え5 ―― オンデマンドと混ぜる</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 222" width="760" height="222" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="Auto Scalingグループの10台のうち、ベースの2台と超過分の25パーセントがオンデマンド、残り6台がスポット"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Auto Scaling グループ（ASG）の中身　希望 10台の例</text><rect x="10" y="34" width="740" height="122" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="6 4"/><rect x="26" y="62" width="62" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="57" y="82" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="57" y="98" font-size="8.5" fill="var(--accent)" text-anchor="middle" font-weight="700">オンデマンド</text><rect x="98" y="62" width="62" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="129" y="82" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="129" y="98" font-size="8.5" fill="var(--accent)" text-anchor="middle" font-weight="700">オンデマンド</text><rect x="170" y="62" width="62" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="201" y="82" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="201" y="98" font-size="8.5" fill="var(--accent)" text-anchor="middle" font-weight="700">オンデマンド</text><rect x="242" y="62" width="62" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="273" y="82" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="273" y="98" font-size="8.5" fill="var(--accent)" text-anchor="middle" font-weight="700">オンデマンド</text><rect x="314" y="62" width="62" height="44" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.6"/><text x="345" y="82" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="345" y="98" font-size="8.5" fill="var(--warn)" text-anchor="middle" font-weight="700">スポット</text><rect x="386" y="62" width="62" height="44" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.6"/><text x="417" y="82" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="417" y="98" font-size="8.5" fill="var(--warn)" text-anchor="middle" font-weight="700">スポット</text><rect x="458" y="62" width="62" height="44" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.6"/><text x="489" y="82" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="489" y="98" font-size="8.5" fill="var(--warn)" text-anchor="middle" font-weight="700">スポット</text><rect x="530" y="62" width="62" height="44" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.6"/><text x="561" y="82" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="561" y="98" font-size="8.5" fill="var(--warn)" text-anchor="middle" font-weight="700">スポット</text><rect x="602" y="62" width="62" height="44" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.6"/><text x="633" y="82" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="633" y="98" font-size="8.5" fill="var(--warn)" text-anchor="middle" font-weight="700">スポット</text><rect x="674" y="62" width="62" height="44" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.6"/><text x="705" y="82" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="705" y="98" font-size="8.5" fill="var(--warn)" text-anchor="middle" font-weight="700">スポット</text><line x1="26" y1="122" x2="160" y2="122" stroke="var(--accent)" stroke-width="2"/><text x="93" y="142" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">ベース 2台（必ずオンデマンド）</text><line x1="170" y1="122" x2="736" y2="122" stroke="var(--ink-3)" stroke-width="2"/><text x="453" y="142" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">ベースを超える 8台 ＝ オンデマンド 25% ＋ スポット 75%</text><circle cx="24" cy="180" r="9" fill="var(--allow)"/><polyline points="19.9,180.0 23.1,183.4 28.5,176.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="40" y="184" font-size="11.5" fill="var(--ink)" text-anchor="start">スポットが全部回収されても、オンデマンドの 4台は残る</text><circle cx="24" cy="206" r="9" fill="var(--allow)"/><polyline points="19.9,206.0 23.1,209.4 28.5,202.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="40" y="210" font-size="11.5" fill="var(--ink)" text-anchor="start">増やした分の大半はスポットなので、スケールアウトの費用が安い</text></svg>
+  </div>
+  <figcaption><strong>全部をスポットにしない。</strong>ASG の「混在インスタンスポリシー」で、ベースの台数はオンデマンド、それを超える分の何%をスポットにするかを決められる。最低限の台数を守りつつ、増減する分だけ安くする定番の形。</figcaption>
+</figure>
+
+  <ul>
+    <li><strong>この場面の答え：</strong>夜間バッチは途中経過を S3 に書き出す（チェックポイント）か、仕事を SQS に入れる。タイプと AZ を複数指定し、割り当て戦略をキャパシティ最適化にする</li>
+    <li><strong>中断通知の2分でやること：</strong>途中結果を保存する、ロードバランサーから外れる、やりかけの仕事をキューへ戻す。リバランス推奨を ASG と組み合わせると、回収される前に代わりの台を立ち上げられる</li>
+    <li><strong>コンテナの場合：</strong>ECS と EKS（コンテナを指揮するサービス、EC2 講義 場面8）では <strong>Fargate Spot</strong> が使える。サーバーを管理せずにスポットの割引を得る選択肢で、「運用負荷を上げずにコンテナのコストを下げたい」の正解。中断される性質は同じ</li>
+  </ul>
+  <div class="note warn"><span class="label">最頻出の引っかけ</span>
+    <p>「コストを最小化したい」とだけ見るとスポットが正解に見えます。しかし<strong>「ミッションクリティカル」「中断できない」「常に稼働している必要がある」</strong>があれば即座に消えます。逆に<strong>「フォールトトレラント（一部が壊れても全体は動き続ける）」「中断に耐えられる」「時間に余裕がある」</strong>は、出題者がスポットを選ばせるために置いた手がかりです。</p></div>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「長時間のバッチをスポットで動かしたい」→ <strong>チェックポイント</strong>。「スポットの中断を最小化したい」→ <strong>キャパシティ最適化（capacity-optimized）</strong>と、複数のタイプ・AZ。「最低限の台数は確保しつつ安く」→ <strong>ベースをオンデマンド、超過分をスポット</strong>。「EMR をスポットで」→ <strong>タスクノードだけ</strong>。</p></div>
+</section>
+
+<section id="s5" data-toc="場面4 データ転送">
+  
+  <span class="h2num">05</span>
+  <h2>場面4 ―― 「請求を見たら、データ転送の料金が思ったより高い」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>インバウンド / アウトバウンド</dt><dd>AWS から見て、入ってくる通信がインバウンド、出ていく通信がアウトバウンド</dd>
+      <dt>リージョン・AZ</dt><dd>リージョンは「東京」「大阪」のような地域。AZ はその中のデータセンターのまとまり（VPC 講義で既出）</dd>
+      <dt>プライベート IP / パブリック IP</dt><dd>VPC の中だけで通じる住所がプライベート IP、インターネットから届く住所がパブリック IP。<strong>Elastic IP</strong> は変わらないパブリック IP（VPC 講義・EC2 講義で既出）</dd>
+      <dt>DNS 名</dt><dd>IP アドレスの代わりに使う名前。EC2 には、インターネット向けの<strong>パブリック DNS 名</strong>と、VPC の中だけで使える<strong>内部（プライベート）の DNS 名</strong>の両方が付く</dd>
+      <dt>インターネットゲートウェイ</dt><dd>VPC とインターネットをつなぐ出入口（VPC 講義で既出）</dd>
+      <dt>CloudFront<small>Amazon CloudFront</small></dt><dd>世界各地の拠点にコンテンツの写し（<strong>キャッシュ</strong>）を置き、利用者の近くから配るサービス。配るもとのサーバーを<strong>オリジン</strong>と呼ぶ（VPC 講義で既出）</dd>
+      <dt>クロスリージョンレプリケーション</dt><dd>S3 のオブジェクトを別のリージョンのバケットへ自動で複製する機能（S3 講義で既出）</dd>
+    </dl>
+  </div>
+
+  <p>この場面と次の場面5が、今日の中心です。データ転送料金は、他のサービスの知識からは導けません。ただし決まりは単純で、<strong>データがどの境界を越えたか</strong>で料金が決まります。境界は内側から「同じ AZ」「AZ 間」「リージョン間」「インターネット」の4つです。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 444" width="760" height="444" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="東京リージョンのVPCに2つのAZがあり、同じAZ内、AZ間、リージョン間、インターネットとの出入り、NAT Gateway経由、ゲートウェイ型エンドポイント経由、CloudFront経由の8本の矢印を無料と有料で色分けした経路図"><rect x="10" y="96" width="110" height="190" rx="10" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="65" y="180" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">インターネット</text><text x="65" y="198" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">（利用者）</text><rect x="150" y="56" width="440" height="262" rx="10" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><text x="578" y="76" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">東京リージョン</text><rect x="162" y="84" width="276" height="222" rx="10" fill="var(--inset)" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="6 4"/><text x="174" y="102" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">VPC</text><rect x="172" y="110" width="256" height="86" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="418" y="126" font-size="10.5" fill="var(--ink-3)" text-anchor="end" font-weight="700">AZ-a</text><rect x="172" y="206" width="256" height="90" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="3 3"/><text x="418" y="222" font-size="10.5" fill="var(--ink-3)" text-anchor="end" font-weight="700">AZ-c</text><rect x="182" y="140" width="84" height="40" rx="6" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="224.0" y="158.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT</text><text x="224.0" y="173.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">Gateway</text><rect x="292" y="140" width="54" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="319.0" y="164.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="368" y="140" width="54" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="395.0" y="164.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="182" y="238" width="84" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="224.0" y="261.9" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">公開サーバー</text><rect x="368" y="238" width="54" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="395.0" y="262.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="472" y="238" width="104" height="40" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="524.0" y="262.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><rect x="612" y="198" width="138" height="120" rx="10" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><text x="681" y="218" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">大阪リージョン</text><rect x="634" y="238" width="94" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="681.0" y="256.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><text x="681.0" y="271.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">複製先</text><rect x="462" y="6" width="124" height="38" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="524.0" y="29.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">CloudFront</text><line x1="357.0" y1="160.0" x2="356.0" y2="160.0" stroke="var(--allow)" stroke-width="2"/><polygon points="346.0,160.0 356.0,154.5 356.0,165.5" fill="var(--allow)"/><line x1="357.0" y1="160.0" x2="358.0" y2="160.0" stroke="var(--allow)" stroke-width="2"/><polygon points="368.0,160.0 358.0,165.5 358.0,154.5" fill="var(--allow)"/><circle cx="357" cy="124" r="10" fill="var(--allow)"/><text x="357" y="128" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><line x1="395.0" y1="209.0" x2="395.0" y2="190.0" stroke="var(--deny)" stroke-width="2"/><polygon points="395.0,180.0 400.5,190.0 389.5,190.0" fill="var(--deny)"/><line x1="395.0" y1="209.0" x2="395.0" y2="228.0" stroke="var(--deny)" stroke-width="2"/><polygon points="395.0,238.0 389.5,228.0 400.5,228.0" fill="var(--deny)"/><circle cx="412" cy="200" r="10" fill="var(--deny)"/><text x="412" y="204" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><line x1="576" y1="258" x2="624.0" y2="258.0" stroke="var(--deny)" stroke-width="2"/><polygon points="634.0,258.0 624.0,263.5 624.0,252.5" fill="var(--deny)"/><circle cx="603" cy="240" r="10" fill="var(--deny)"/><text x="603" y="244" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><line x1="120" y1="248" x2="172.0" y2="248.0" stroke="var(--allow)" stroke-width="2"/><polygon points="182.0,248.0 172.0,253.5 172.0,242.5" fill="var(--allow)"/><circle cx="140" cy="230" r="10" fill="var(--allow)"/><text x="140" y="234" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">4</text><line x1="182" y1="268" x2="130.0" y2="268.0" stroke="var(--deny)" stroke-width="2"/><polygon points="120.0,268.0 130.0,262.5 130.0,273.5" fill="var(--deny)"/><circle cx="162" cy="286" r="10" fill="var(--deny)"/><text x="162" y="290" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">5</text><line x1="292" y1="160" x2="276.0" y2="160.0" stroke="var(--warn)" stroke-width="2"/><polygon points="266.0,160.0 276.0,154.5 276.0,165.5" fill="var(--warn)"/><line x1="182" y1="160" x2="130.0" y2="160.0" stroke="var(--warn)" stroke-width="2"/><polygon points="120.0,160.0 130.0,154.5 130.0,165.5" fill="var(--warn)"/><circle cx="140" cy="142" r="10" fill="var(--warn)"/><text x="140" y="146" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">6</text><line x1="422" y1="258" x2="462.0" y2="258.0" stroke="var(--allow)" stroke-width="2"/><polygon points="472.0,258.0 462.0,263.5 462.0,252.5" fill="var(--allow)"/><circle cx="450" cy="284" r="10" fill="var(--allow)"/><text x="450" y="288" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">7</text><rect x="432" y="250" width="12" height="16" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><line x1="524" y1="238" x2="524.0" y2="54.0" stroke="var(--allow)" stroke-width="2"/><polygon points="524.0,44.0 529.5,54.0 518.5,54.0" fill="var(--allow)"/><circle cx="540" cy="150" r="10" fill="var(--allow)"/><text x="540" y="154" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">8</text><polyline points="462,25 65,25 65.0,86.0" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/><polygon points="65.0,96.0 59.5,86.0 70.5,86.0" fill="var(--accent)"/><text x="260" y="18" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">配信は CloudFront の料金</text><circle cx="22" cy="346" r="10" fill="var(--allow)"/><text x="22" y="350" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><text x="40" y="350" font-size="11.5" fill="var(--ink)" text-anchor="start">同じ AZ・プライベート IP ―― 無料</text><circle cx="394" cy="346" r="10" fill="var(--deny)"/><text x="394" y="350" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><text x="412" y="350" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700">AZ 間 ―― 有料（送る側・受ける側の両方）</text><circle cx="22" cy="374" r="10" fill="var(--deny)"/><text x="22" y="378" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><text x="40" y="378" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700">リージョン間 ―― 有料（送る側）</text><circle cx="394" cy="374" r="10" fill="var(--allow)"/><text x="394" y="378" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">4</text><text x="412" y="378" font-size="11.5" fill="var(--ink)" text-anchor="start">インターネット → AWS ―― 無料</text><circle cx="22" cy="402" r="10" fill="var(--deny)"/><text x="22" y="406" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">5</text><text x="40" y="406" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700">AWS → インターネット ―― 有料</text><circle cx="394" cy="402" r="10" fill="var(--warn)"/><text x="394" y="406" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">6</text><text x="412" y="406" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700">NAT Gateway 経由 ―― 時間＋処理料金が上乗せ</text><circle cx="22" cy="430" r="10" fill="var(--allow)"/><text x="22" y="434" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">7</text><text x="40" y="434" font-size="11.5" fill="var(--ink)" text-anchor="start">ゲートウェイ型エンドポイント ―― 追加料金なし</text><circle cx="394" cy="430" r="10" fill="var(--allow)"/><text x="394" y="434" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">8</text><text x="412" y="434" font-size="11.5" fill="var(--ink)" text-anchor="start">S3 → CloudFront ―― 無料</text></svg>
+  </div>
+  <figcaption><strong>データ転送料金の地図。</strong>緑の矢印は無料、赤は有料、黄色は「転送料金とは別に上乗せ」。内側（同じ AZ）ほど安く、外側（別の AZ・別のリージョン・インターネット）ほど高い。安くする方法は2つしかない。<strong>データを内側に留める</strong>か、<strong>有料の矢印を緑の矢印に付け替える</strong>（⑥→⑦、⑤→⑧）。</figcaption>
+</figure>
+
+  <div class="tw"><table>
+    <thead><tr><th>図の番号</th><th>データの動き</th><th>料金</th><th>設問での意味</th></tr></thead>
+    <tbody>
+      <tr><td>①</td><td>同じ AZ の中、プライベート IP での通信</td><td class="yes">無料</td><td>同じ AZ に寄せると安い。ただし可用性と引き換えになる</td></tr>
+      <tr><td>―</td><td>同じ AZ の中でも、パブリック IP や Elastic IP を経由</td><td class="no">有料</td><td>同じ VPC にいるのに公開用の名前で呼ぶ構成ミスが設問になる（下の図）</td></tr>
+      <tr><td>②</td><td>AZ をまたぐ通信（同じリージョン）</td><td class="no">有料。送る側・受ける側の両方</td><td>マルチ AZ 構成のコストはここに出る。可用性のために払う費用</td></tr>
+      <tr><td>③</td><td>リージョンをまたぐ通信</td><td class="no">有料（送る側のリージョン）</td><td>クロスリージョンレプリケーション、災害対策の構成のコスト</td></tr>
+      <tr><td>④</td><td>インターネットから AWS へ（インバウンド）</td><td class="yes">原則無料</td><td>取り込みは安い。移行のときに転送コストを心配する選択肢は的外れ</td></tr>
+      <tr><td>⑤</td><td>AWS からインターネットへ（アウトバウンド）</td><td class="no">有料</td><td>コスト削減設問の主戦場。CloudFront やキャッシュで削る</td></tr>
+      <tr><td>―</td><td>同じリージョンの AWS サービス間（EC2 と S3 など）</td><td class="yes">同じリージョン内なら転送料金なし</td><td>同じリージョンに置くのは、速さだけでなくコストの理由もある</td></tr>
+      <tr><td>⑧</td><td>AWS のオリジンから CloudFront へ</td><td class="yes">無料</td><td>オリジン側の転送料金がなくなり、配信は CloudFront の料金体系になる</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>「入るのは無料、出るのは有料」</strong>。この非対称がすべての出発点です。だから「オンプレミス（自社の設備）から数十テラバイトを移行する」設問で転送コストを心配する選択肢は的外れになり、「解析結果を社外に大量に配信する」設問ではコストが論点になります。⑥と⑦は場面5で扱います。</p>
+
+  <h3>同じ VPC の中なのに、有料になる呼び方</h3>
+  <p>表の2行目です。相手をどの名前（IP アドレス）で呼ぶかは、アプリの設定ファイルに書く接続先で決まります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 248" width="760" height="248" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左は同じVPCの中なのにパブリックIPで呼ぶため、通信がインターネットゲートウェイを回って有料になる。右はプライベートIPで呼ぶため同じAZ内は無料"><rect x="10" y="62" width="350" height="176" rx="10" fill="var(--inset)" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="6 4"/><text x="24" y="82" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">VPC（同じ AZ）</text><rect x="34" y="150" width="110" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="89.0" y="170.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">Web 層</text><text x="89.0" y="185.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">EC2</text><rect x="226" y="150" width="110" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="281.0" y="170.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">内部 API</text><text x="281.0" y="185.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">EC2</text><rect x="105" y="10" width="160" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="185.0" y="30.7" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">インターネットゲートウェイ</text><polyline points="89,150 89,27 95.0,27.0" fill="none" stroke="var(--deny)" stroke-width="2" stroke-linejoin="round"/><polygon points="105.0,27.0 95.0,32.5 95.0,21.5" fill="var(--deny)"/><polyline points="265,27 281,27 281.0,140.0" fill="none" stroke="var(--deny)" stroke-width="2" stroke-linejoin="round"/><polygon points="281.0,150.0 275.5,140.0 286.5,140.0" fill="var(--deny)"/><rect x="137.0" y="102.0" width="96.0" height="17" rx="3" fill="var(--deny-soft)"/><text x="185" y="112" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">有料（往復とも）</text><text x="185" y="220" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">パブリック DNS 名・パブリック IP で呼ぶ</text><rect x="400" y="62" width="350" height="176" rx="10" fill="var(--inset)" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="6 4"/><text x="414" y="82" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">VPC（同じ AZ）</text><rect x="424" y="150" width="110" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="479.0" y="170.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">Web 層</text><text x="479.0" y="185.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">EC2</text><rect x="616" y="150" width="110" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="671.0" y="170.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">内部 API</text><text x="671.0" y="185.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">EC2</text><line x1="534" y1="172" x2="606.0" y2="172.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="616.0,172.0 606.0,177.5 606.0,166.5" fill="var(--allow)"/><rect x="560.0" y="132.0" width="30.0" height="17" rx="3" fill="var(--allow-soft)"/><text x="575" y="142" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">無料</text><text x="575" y="220" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">プライベート IP（内部の DNS 名）で呼ぶ</text></svg>
+  </div>
+  <figcaption><strong>同じ VPC にいるのに、外回りで呼んでいる。</strong>相手をパブリック DNS 名や Elastic IP で指定すると、同じ AZ の中でも転送料金がかかる（左）。呼び先をプライベート IP か内部の DNS 名に変えるだけで、同じ AZ 内は無料になる（右）。構成も可用性も変えずに済む。</figcaption>
+</figure>
+
+  <h3>外へ出す量が多いなら、CloudFront を挟む</h3>
+  <p>CloudFront は、CloudFront のコンソールで「ディストリビューション」（配信の設定のまとまり）を作り、オリジンに S3 や ALB を指定して使います。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 222" width="760" height="222" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はS3から利用者へ直接配り、インターネット向け転送料金がかかる。右はCloudFrontを挟み、S3からCloudFrontは無料、利用者へはCloudFrontの料金になる"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">S3 から直接配る</text><rect x="20" y="70" width="110" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="75.0" y="90.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><text x="75.0" y="105.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">オリジン</text><line x1="130" y1="92" x2="240.0" y2="92.0" stroke="var(--deny)" stroke-width="2.4"/><polygon points="250.0,92.0 240.0,97.5 240.0,86.5" fill="var(--deny)"/><rect x="252" y="70" width="104" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="304.0" y="90.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">利用者</text><text x="304.0" y="105.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">世界中</text><rect x="175.0" y="66.0" width="30.0" height="17" rx="3" fill="var(--deny-soft)"/><text x="190" y="76" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">有料</text><text x="188" y="142" font-size="11" fill="var(--ink-2)" text-anchor="middle">インターネット向けの転送料金が</text><text x="188" y="160" font-size="11" fill="var(--ink-2)" text-anchor="middle">配った GB の分だけかかる</text><line x1="380" y1="12" x2="380" y2="216" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">CloudFront を前に置く</text><rect x="398" y="70" width="90" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="443.0" y="90.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><text x="443.0" y="105.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">オリジン</text><line x1="488" y1="92" x2="526.0" y2="92.0" stroke="var(--allow)" stroke-width="2.4"/><polygon points="536.0,92.0 526.0,97.5 526.0,86.5" fill="var(--allow)"/><rect x="538" y="70" width="104" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="590.0" y="90.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">CloudFront</text><text x="590.0" y="105.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">キャッシュ</text><line x1="642" y1="92" x2="670.0" y2="92.0" stroke="var(--accent)" stroke-width="2.4"/><polygon points="680.0,92.0 670.0,97.5 670.0,86.5" fill="var(--accent)"/><rect x="682" y="70" width="68" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="716.0" y="96.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">利用者</text><rect x="497.0" y="50.0" width="30.0" height="17" rx="3" fill="var(--allow-soft)"/><text x="512" y="60" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">無料</text><text x="661" y="60" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">CloudFront の料金</text><circle cx="408" cy="146" r="8" fill="var(--allow)"/><polyline points="404.4,146.0 407.2,149.0 412.0,143.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="422" y="150" font-size="11" fill="var(--ink)" text-anchor="start">オリジン → CloudFront の転送は無料</text><circle cx="408" cy="170" r="8" fill="var(--allow)"/><polyline points="404.4,170.0 407.2,173.0 412.0,167.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="422" y="174" font-size="11" fill="var(--ink)" text-anchor="start">利用者への配信は、直接より単価が低い</text><circle cx="408" cy="194" r="8" fill="var(--allow)"/><polyline points="404.4,194.0 407.2,197.0 412.0,191.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="422" y="198" font-size="11" fill="var(--ink)" text-anchor="start">キャッシュが効けばオリジンに取りに行かない</text></svg>
+  </div>
+  <figcaption><strong>CloudFront を挟むと、料金の構造が2か所で変わる。</strong>オリジン（S3・EC2・ALB）から CloudFront までは無料になり、利用者への配信は CloudFront の料金体系に変わる。「静的コンテンツを世界中に配信していて転送コストが高い」という設問の答えは、ほぼ CloudFront。</figcaption>
+</figure>
+
+  <ul>
+    <li><strong>この場面の答え：</strong>請求の内訳で、どの矢印が太いかを見る。インターネット向け（⑤）が多いなら CloudFront、AZ 間（②）が多いなら呼び方と配置、NAT Gateway（⑥）が多いなら場面5</li>
+    <li><strong>AZ 間の料金は、なくせばよいとは限らない：</strong>全部を1つの AZ に寄せれば②は消えるが、その AZ が落ちたら全滅する。可用性が制約に書かれていたら「要件破り」（場面1）</li>
+  </ul>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「静的コンテンツを世界中に配信していて転送コストが高い」→ <strong>CloudFront</strong>。「同じ VPC 内の通信をパブリック DNS 名（Elastic IP）で行っている」→ <strong>プライベート IP・内部の DNS 名に変える</strong>。「オンプレミスから大量のデータを取り込む。転送料金を抑えるには」→ インバウンドは無料なので、<strong>転送料金は論点ではない</strong>。</p></div>
+</section>
+
+<section id="s6" data-toc="場面5 NAT Gateway">
+  
   <span class="h2num">06</span>
-  <h2>ストレージのコストを削る</h2>
-  <p class="lead">ストレージのコスト削減は「置き場所を変える」「使っていないものを消す」の2つです。設問では前者が圧倒的に多く、S3 のストレージクラス選択が本丸です。</p>
+  <h2>場面5 ―― 「プライベートサブネットから S3 に大量に書いている。NAT Gateway の料金が請求の大半を占めている」</h2>
 
-  <h3>S3 のストレージクラスをどう選ぶか</h3>
-  <p>ストレージクラスは<strong>保管料金と取り出しコスト（料金と時間）のトレードオフ</strong>です。保管が安いほど取り出しに料金と時間がかかります。設問が与えてくるのは「アクセス頻度」「取り出しにどれだけ待てるか」「その AZ が落ちたら困るか」の3点です。</p>
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>プライベートサブネット</dt><dd>インターネットから直接は届かない、VPC の中の区画（VPC 講義で既出）</dd>
+      <dt>NAT Gateway<small>Network Address Translation Gateway</small></dt><dd>プライベートサブネットの台が<strong>外へ出ていく</strong>ための出口。パブリックサブネットに置く（VPC 講義で既出）</dd>
+      <dt>ルートテーブル</dt><dd>「この宛先への通信は、ここへ送る」を書いた行き先の表。サブネットごとに関連付ける（VPC 講義で既出）</dd>
+      <dt>VPC エンドポイント</dt><dd>VPC の中から AWS のサービスへ、インターネットを通らずに届くための入口。次の2種類がある（VPC 講義で既出）</dd>
+      <dt>ゲートウェイ型エンドポイント<small>Gateway エンドポイント</small></dt><dd><strong>ルートテーブルに行き先を1行足す</strong>方式。使えるのは S3 と DynamoDB だけ。追加料金なし</dd>
+      <dt>インターフェース型エンドポイント<small>Interface エンドポイント（AWS PrivateLink）</small></dt><dd><strong>サブネットの中に窓口（ENI）を置く</strong>方式。多くのサービスで使える。時間料金と処理料金がかかる</dd>
+      <dt>ENI<small>Elastic Network Interface</small></dt><dd>VPC の中の仮想的なネットワークの差し込み口。プライベート IP を持つ</dd>
+      <dt>NAT インスタンス</dt><dd>NAT Gateway と同じ役目を、自分で用意した EC2 にさせる古い方法。自分で面倒を見る必要がある</dd>
+      <dt>VPC ピアリング</dt><dd>2つの VPC を直接つなぐ接続（VPC 講義で既出）</dd>
+      <dt>Direct Connect・VPN</dt><dd>オンプレミスと AWS をつなぐ手段。Direct Connect は専用線、VPN はインターネット上の暗号化した通り道（VPC 講義で既出）</dd>
+    </dl>
+  </div>
 
+  <p>NAT Gateway は、VPC のコンソールで作ってパブリックサブネットに置き、プライベートサブネットのルートテーブルに「それ以外の宛先（0.0.0.0/0）→ NAT Gateway」と書いて使います。便利ですが、<strong>通ったデータの量にも料金がかかる</strong>ことが見落とされます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 252" width="760" height="252" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="プライベートサブネットのEC2がNAT Gatewayを通ってVPCの外に出る経路に、時間料金、処理料金、転送料金の3つのメーターが付いている"><rect x="10" y="30" width="420" height="150" rx="10" fill="var(--inset)" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="6 4"/><text x="24" y="50" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">VPC</text><rect x="24" y="62" width="180" height="104" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="36" y="80" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">プライベートサブネット</text><rect x="54" y="98" width="120" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="114.0" y="118.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="114.0" y="133.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">パブリック IP なし</text><rect x="232" y="62" width="184" height="104" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.6"/><text x="244" y="80" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">パブリックサブネット</text><rect x="262" y="98" width="124" height="44" rx="6" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="324.0" y="124.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT Gateway</text><line x1="174" y1="120" x2="252.0" y2="120.0" stroke="var(--warn)" stroke-width="2.2"/><polygon points="262.0,120.0 252.0,125.5 252.0,114.5" fill="var(--warn)"/><line x1="386" y1="120" x2="550.0" y2="120.0" stroke="var(--warn)" stroke-width="2.2"/><polygon points="560.0,120.0 550.0,125.5 550.0,114.5" fill="var(--warn)"/><rect x="562" y="98" width="188" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="656.0" y="118.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3・外部の API</text><text x="656.0" y="133.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">VPC の外</text><circle cx="324" cy="196" r="11" fill="var(--surface)" stroke="var(--warn)" stroke-width="2"/><text x="324" y="200" font-size="12" fill="var(--warn)" text-anchor="middle" font-weight="700">¥</text><text x="324" y="223" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">① 時間料金</text><line x1="324" y1="142" x2="324" y2="185" stroke="var(--warn)" stroke-width="1.2" stroke-dasharray="3 3"/><circle cx="218" cy="196" r="11" fill="var(--surface)" stroke="var(--warn)" stroke-width="2"/><text x="218" y="200" font-size="12" fill="var(--warn)" text-anchor="middle" font-weight="700">¥</text><text x="218" y="223" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">② 処理料金</text><line x1="218" y1="120" x2="218" y2="185" stroke="var(--warn)" stroke-width="1.2" stroke-dasharray="3 3"/><circle cx="474" cy="196" r="11" fill="var(--surface)" stroke="var(--deny)" stroke-width="2"/><text x="474" y="200" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">¥</text><text x="474" y="223" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">③ 転送料金</text><line x1="474" y1="120" x2="474" y2="185" stroke="var(--deny)" stroke-width="1.2" stroke-dasharray="3 3"/><text x="324" y="240" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">動いている間ずっと</text><text x="218" y="240" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">通した GB ごと</text><text x="474" y="240" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">行き先がインターネットのとき</text><text x="656" y="190" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">②は③とは別にかかる</text><text x="656" y="210" font-size="11" fill="var(--ink-2)" text-anchor="middle">大量のデータを通すと</text><text x="656" y="228" font-size="11" fill="var(--ink-2)" text-anchor="middle">②が請求の大半になる</text></svg>
+  </div>
+  <figcaption><strong>NAT Gateway には、メーターが3つ付いている。</strong>①は置いてあるだけでかかる時間料金。②は通ったデータ量にかかる処理料金。③は行き先がインターネットのときのふつうの転送料金。見落としやすいのは②で、行き先が同じリージョンの S3 でも、NAT Gateway を通ったというだけでかかる。</figcaption>
+</figure>
+  <p>S3 は VPC の外にあるサービスです。プライベートサブネットの EC2 から S3 に書き込むと、何も設定していなければ通信は NAT Gateway を通ります。日次で数テラバイトを書けば、②の処理料金がそのまま数テラバイト分かかります。</p>
+
+  <h3>S3 行きだけ、別の道を通す</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 246" width="760" height="246" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はEC2からS3への通信がNAT Gatewayを通り処理料金がかかる。右はルートテーブルにS3行きの1行を足し、ゲートウェイ型エンドポイントを通るので追加料金がない"><text x="10" y="22" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">変更前：S3 へ行くのに NAT Gateway を通る</text><rect x="10" y="34" width="250" height="196" rx="10" fill="var(--inset)" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="6 4"/><text x="22" y="54" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">VPC</text><rect x="26" y="70" width="100" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="76.0" y="88.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="76.0" y="103.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">プライベート</text><rect x="26" y="176" width="100" height="40" rx="6" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="76.0" y="200.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT Gateway</text><rect x="280" y="104" width="76" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="318.0" y="130.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><rect x="138" y="64" width="114" height="39" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="138" y="64" width="114" height="18" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="146" y="77" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ルートテーブル</text><text x="146" y="97" font-size="10.5" fill="var(--deny)" text-anchor="start" font-weight="700">0.0.0.0/0</text><text x="244" y="97" font-size="10.5" fill="var(--deny)" text-anchor="end" font-weight="700">→ NAT</text><line x1="76" y1="110" x2="76.0" y2="166.0" stroke="var(--deny)" stroke-width="2.2"/><polygon points="76.0,176.0 70.5,166.0 81.5,166.0" fill="var(--deny)"/><polyline points="126,196 318,196 318.0,158.0" fill="none" stroke="var(--deny)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="318.0,148.0 323.5,158.0 312.5,158.0" fill="var(--deny)"/><rect x="184.0" y="166.0" width="52.0" height="17" rx="3" fill="var(--deny-soft)"/><text x="210" y="176" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">処理料金</text><line x1="380" y1="12" x2="380" y2="240" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">変更後：ゲートウェイ型エンドポイントを通る</text><rect x="398" y="34" width="250" height="196" rx="10" fill="var(--inset)" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="6 4"/><text x="410" y="54" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">VPC</text><rect x="414" y="70" width="100" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="464.0" y="88.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="464.0" y="103.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">プライベート</text><rect x="414" y="176" width="100" height="40" rx="6" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="464.0" y="200.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">NAT Gateway</text><rect x="668" y="104" width="76" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="706.0" y="130.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><rect x="526" y="64" width="114" height="56" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><rect x="526" y="64" width="114" height="18" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="534" y="77" font-size="10.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ルートテーブル</text><text x="534" y="97" font-size="10.5" fill="var(--ink-2)" text-anchor="start">0.0.0.0/0</text><text x="632" y="97" font-size="10.5" fill="var(--ink-2)" text-anchor="end">→ NAT</text><text x="534" y="114" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">S3 の範囲</text><text x="632" y="114" font-size="10.5" fill="var(--allow)" text-anchor="end" font-weight="700">→ vpce</text><rect x="642" y="118" width="12" height="16" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><polyline points="514,100 522,100 522,126 632.0,126.0" fill="none" stroke="var(--allow)" stroke-width="2.2" stroke-linejoin="round"/><polygon points="642.0,126.0 632.0,131.5 632.0,120.5" fill="var(--allow)"/><line x1="654" y1="126" x2="658.0" y2="126.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="668.0,126.0 658.0,131.5 658.0,120.5" fill="var(--allow)"/><rect x="547.0" y="140.0" width="74.0" height="17" rx="3" fill="var(--allow-soft)"/><text x="584" y="150" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">追加料金なし</text><text x="464" y="166" font-size="10.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">通らない</text></svg>
+  </div>
+  <figcaption><strong>ルートテーブルに1行足すだけ。</strong>S3 用のゲートウェイ型エンドポイントを作ってルートテーブルに関連付けると、「S3 の範囲 → vpce（エンドポイント）」の1行が増える。S3 宛ての通信は NAT Gateway を通らなくなり、処理料金が消える。エンドポイント自体に料金はかからない。NAT Gateway は他の宛先のために残す。</figcaption>
+</figure>
+  <p>ゲートウェイ型エンドポイントは、VPC のコンソールの「エンドポイント」から作り、対象のルートテーブルを選ぶだけです。アプリ側の変更は要りません。</p>
+
+  <div class="note warn"><span class="label">最頻出の引っかけ</span>
+    <p>「プライベートサブネットの EC2 が S3 に大量のデータを書き込んでいる。NAT Gateway のコストが想定以上に高い。運用負荷を増やさずにコストを下げる方法は？」――<strong>答えは S3 用のゲートウェイ型エンドポイントを作り、ルートテーブルに関連付けることです。</strong>形を変えて何度も出ます。</p>
+    <p>誤答としてよく並ぶのは、「NAT インスタンスに置き換える」（運用負荷が増え、可用性も落ちる）、「VPC ピアリングを設定する」（S3 はピアリングの相手にならない）、「インターフェース型エンドポイントを作る」（S3 でも使えるが、時間料金と処理料金がかかる）です。</p></div>
+
+  <h3>エンドポイントの2種類を、コストで比べる</h3>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>ゲートウェイ型</th><th>インターフェース型（PrivateLink）</th></tr></thead>
+    <tbody>
+      <tr><td><strong>対象サービス</strong></td><td class="no">S3 と DynamoDB のみ</td><td class="yes">多数の AWS サービスと、他社・自社が公開するサービス</td></tr>
+      <tr><td><strong>実体</strong></td><td>ルートテーブルの1行</td><td>サブネットの中の ENI（プライベート IP を持つ）</td></tr>
+      <tr><td><strong>料金</strong></td><td class="yes">追加料金なし</td><td class="no">AZ ごとの時間料金 ＋ 処理したデータ量の料金</td></tr>
+      <tr><td><strong>オンプレミスから使う</strong></td><td class="no">できない</td><td class="yes">できる（Direct Connect / VPN 経由）</td></tr>
+      <tr><td><strong>コスト設問での位置</strong></td><td>S3・DynamoDB で NAT を避けるならこれ一択</td><td>他のサービスで NAT を避けたいとき。通信量が少ないと割高になる</td></tr>
+    </tbody>
+  </table></div>
+  <p>仕組みの違い（道を1本足すのか、窓口を置くのか）は VPC 講義 場面3 を見てください。ここで覚えるのは料金の違いです。</p>
+
+  <h3>NAT Gateway を何個置くか</h3>
+  <p>NAT Gateway は1つの AZ の中に置かれます。AZ ごとに1つずつ置くのが可用性の定石ですが、①の時間料金は AZ の数だけ増えます。1つにまとめれば、他の AZ の台からの通信が AZ をまたぐので、場面4の②（AZ 間の転送料金）がかかり、その AZ が落ちると全体が外へ出られなくなります。<strong>冗長性を取るか、時間料金を取るか</strong>の引き換えです。設問に可用性の制約があれば、AZ ごとに置くほうが正解です。</p>
+
+  <h3>ほかに転送料金が論点になる構成</h3>
+  <ul>
+    <li><strong>VPC ピアリング：</strong>接続そのものに時間料金はない。通ったデータに、ふつうの AZ 間・リージョン間の転送料金がかかる（同じ AZ 内なら無料）</li>
+    <li><strong>Direct Connect：</strong>ポート（接続口）の時間料金がかかる一方、アウトバウンドの転送単価はインターネット経由より低い。「オンプレミスとの継続的な大量転送」では、コストの理由でも正解になる</li>
+  </ul>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「NAT Gateway のコストが高い」＋「相手は S3 か DynamoDB」→ <strong>ゲートウェイ型エンドポイント</strong>。相手がそれ以外（SQS・ECR・Systems Manager など）→ <strong>インターフェース型エンドポイント</strong>。「オンプレミスから VPC 経由で S3 に届かせたい」→ ゲートウェイ型は使えないので<strong>インターフェース型</strong>。「オンプレミス」の一語で答えが変わる。</p></div>
+</section>
+
+<section id="s7" data-toc="場面6 ストレージ">
+  
+  <span class="h2num">07</span>
+  <h2>場面6 ―― 「オブジェクトは増えていないのに、S3 の料金が増え続ける」「止めたのに課金されている」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>ストレージクラス</dt><dd>S3 の保管の「等級」。保管料金と、取り出しやすさが違う（S3 講義で既出）</dd>
+      <dt>取り出し料金・最低保管期間</dt><dd>安いクラスに付く条件。読み出すたびにかかる料金と、「最低これだけは置く」と見なされる日数（早く消しても残りの日数分を請求される）</dd>
+      <dt>Intelligent-Tiering<small>S3 Intelligent-Tiering</small></dt><dd>オブジェクトごとのアクセス状況を AWS が見張り、自動で安い階層へ移すストレージクラス</dd>
+      <dt>ライフサイクルルール</dt><dd>「◯日たったら安いクラスへ移す（<strong>移行</strong>）」「◯日たったら消す（<strong>失効</strong>）」を自動でやらせる、S3 バケットの設定</dd>
+      <dt>バージョニング</dt><dd>上書きや削除をしても古い版を残す、S3 バケットの設定。最新の版が<strong>現行バージョン</strong>、古い版が<strong>非現行バージョン</strong></dd>
+      <dt>マルチパートアップロード</dt><dd>大きなファイルを分割して送り、最後に1つにまとめる S3 のアップロード方法</dd>
+      <dt>EBS<small>Amazon Elastic Block Store</small></dt><dd>EC2 に付けるディスク。1つ1つを<strong>ボリューム</strong>、ある時点の写しを<strong>スナップショット</strong>と呼ぶ（S3 講義で既出）</dd>
+      <dt>プロビジョニング</dt><dd>使う前に「これだけ確保する」と容量や性能を決めて用意すること</dd>
+      <dt>gp2・gp3・io1・io2・st1・sc1</dt><dd>EBS のボリュームタイプ。gp は汎用の SSD、io は高性能の SSD、st1・sc1 は安価な HDD</dd>
+      <dt>IOPS・スループット</dt><dd>ディスクの性能の数え方。1秒あたりの読み書きの回数が IOPS、1秒あたりに流せるデータ量がスループット</dd>
+      <dt>Data Lifecycle Manager<small>Amazon Data Lifecycle Manager（DLM）</small></dt><dd>EBS スナップショットの作成と古い世代の削除を、決めた方針どおりに自動でやるサービス</dd>
+    </dl>
+  </div>
+
+  <p>ストレージの料金は「置いた量 × 置いた期間」です。減らす方法は<strong>「安い置き場所に移す」「要らないものを消す」</strong>の2つしかありません。</p>
+
+  <h3>安い置き場所に移す ―― S3 のストレージクラス</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 316" width="760" height="316" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="S3の6つのストレージクラスを左から右へ並べ、保管料金が下がるほど最低保管期間と取り出しの待ち時間が増えることを示す"><text x="118" y="62" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">保管料金</text><text x="118" y="78" font-size="10" fill="var(--ink-3)" text-anchor="end">（イメージ）</text><text x="118" y="190" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">最低保管期間</text><text x="118" y="220" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">取り出しの待ち</text><rect x="152" y="50" width="54" height="100" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><line x1="130" y1="150" x2="228" y2="150" stroke="var(--ink-3)" stroke-width="1.1"/><text x="179" y="22" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Standard</text><text x="179" y="190" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">なし</text><text x="179" y="220" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">ミリ秒</text><rect x="257" y="88" width="54" height="62" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><line x1="235" y1="150" x2="333" y2="150" stroke="var(--ink-3)" stroke-width="1.1"/><text x="284" y="22" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Standard-IA</text><text x="284" y="190" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">30日</text><text x="284" y="220" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">ミリ秒</text><rect x="362" y="100" width="54" height="50" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><line x1="340" y1="150" x2="438" y2="150" stroke="var(--ink-3)" stroke-width="1.1"/><text x="389" y="22" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">One Zone-IA</text><text x="389" y="36" font-size="9.5" fill="var(--deny)" text-anchor="middle" font-weight="700">単一 AZ</text><text x="389" y="190" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">30日</text><text x="389" y="220" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">ミリ秒</text><rect x="467" y="116" width="54" height="34" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><line x1="445" y1="150" x2="543" y2="150" stroke="var(--ink-3)" stroke-width="1.1"/><text x="494" y="22" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier</text><text x="494" y="36" font-size="9.5" fill="var(--ink-2)" text-anchor="middle">Instant Retrieval</text><text x="494" y="190" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">90日</text><text x="494" y="220" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">ミリ秒</text><rect x="572" y="128" width="54" height="22" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><line x1="550" y1="150" x2="648" y2="150" stroke="var(--ink-3)" stroke-width="1.1"/><text x="599" y="22" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier</text><text x="599" y="36" font-size="9.5" fill="var(--ink-2)" text-anchor="middle">Flexible Retrieval</text><text x="599" y="190" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">90日</text><text x="599" y="220" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">数分〜数時間</text><rect x="677" y="140" width="54" height="10" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><line x1="655" y1="150" x2="753" y2="150" stroke="var(--ink-3)" stroke-width="1.1"/><text x="704" y="22" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier</text><text x="704" y="36" font-size="9.5" fill="var(--ink-2)" text-anchor="middle">Deep Archive</text><text x="704" y="190" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">180日</text><text x="704" y="220" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">半日</text><line x1="130" y1="244" x2="742.0" y2="244.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="752.0,244.0 742.0,249.5 742.0,238.5" fill="var(--ink-3)"/><text x="441" y="264" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">右へ行くほど保管は安い。代わりに、取り出し料金・最低保管期間・待ち時間が増える</text><rect x="130" y="278" width="622" height="30" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.2"/><text x="441" y="298" font-size="11" fill="var(--warn)" text-anchor="middle" font-weight="700">アクセス頻度が分からない・変わる → Intelligent-Tiering が自動で階層を移す（取り出し料金なし）</text></svg>
+  </div>
+  <figcaption><strong>保管が安いクラスほど、取り出すときに高くつく。</strong>棒の高さは保管料金のイメージ（実際の比率ではない）。設問が与えるのは「どれくらい読むか」「何秒待てるか」「その AZ が落ちたら困るか」の3点。最低保管期間より早く消したり移したりすると、残りの日数分も請求される。詳しくは S3 講義。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th>クラス</th><th>選ぶ条件</th><th>注意点</th></tr></thead>
     <tbody>
-      <tr><td><strong>S3 Standard</strong></td><td>頻繁にアクセスする。パターンが分かっていて高頻度</td><td>取り出し料金なし。保管が最も高い</td></tr>
-      <tr><td><strong>Intelligent-Tiering</strong></td><td class="yes">アクセスパターンが<strong>分からない、あるいは変わる</strong></td><td>オブジェクトごとのモニタリング料金がかかる。<strong>取り出し料金はかからない</strong></td></tr>
-      <tr><td><strong>Standard-IA</strong></td><td>アクセスは少ないが、必要なときは即座に取り出す</td><td>最低保管期間 30 日、取り出し料金あり、最小課金オブジェクトサイズあり</td></tr>
-      <tr><td><strong>One Zone-IA</strong></td><td>アクセスは少なく、<strong>失われても再生成できる</strong>データ</td><td class="no">単一 AZ。AZ 障害でデータが失われる。本番の唯一のコピーには使わない</td></tr>
-      <tr><td><strong>Glacier Instant Retrieval</strong></td><td>たまにしかアクセスしないが、必要なときはミリ秒で取り出す</td><td>最低保管期間 90 日</td></tr>
-      <tr><td><strong>Glacier Flexible Retrieval</strong></td><td>年に数回、数分から数時間待てる</td><td>最低保管期間 90 日。取り出しには時間がかかる</td></tr>
-      <tr><td><strong>Glacier Deep Archive</strong></td><td class="yes">法令対応のアーカイブ。年に一度あるかどうか、取り出しに半日待てる</td><td>最低保管期間 180 日。最安だが最も待つ</td></tr>
+      <tr><td><strong>S3 Standard</strong></td><td>頻繁に読む。パターンが分かっていて高頻度</td><td>取り出し料金なし。保管は最も高い</td></tr>
+      <tr><td><strong>Intelligent-Tiering</strong></td><td class="yes">アクセスのパターンが<strong>分からない、または変わる</strong></td><td>オブジェクトごとの監視料金がかかる。<strong>取り出し料金はかからない</strong></td></tr>
+      <tr><td><strong>Standard-IA</strong></td><td>あまり読まないが、要るときはすぐ取り出す</td><td>最低保管期間 30日、取り出し料金あり、小さいオブジェクトは一定サイズあるものとして課金</td></tr>
+      <tr><td><strong>One Zone-IA</strong></td><td>あまり読まず、<strong>失っても作り直せる</strong>データ</td><td class="no">単一 AZ。AZ の障害でデータが失われる。本番の唯一のコピーには使わない</td></tr>
+      <tr><td><strong>Glacier Instant Retrieval</strong></td><td>めったに読まないが、要るときはミリ秒で取り出す</td><td>最低保管期間 90日</td></tr>
+      <tr><td><strong>Glacier Flexible Retrieval</strong></td><td>年に数回。数分から数時間待てる</td><td>最低保管期間 90日</td></tr>
+      <tr><td><strong>Glacier Deep Archive</strong></td><td class="yes">法令対応の長期保管。年に1度あるかどうか、半日待てる</td><td>最低保管期間 180日。最も安いが最も待つ</td></tr>
     </tbody>
   </table></div>
+  <div class="note"><span class="label">Intelligent-Tiering か、ライフサイクルか</span>
+    <p>どちらも「古くなったら安いほうへ」を自動でやる機能ですが、使い分けは明確です。設問に<strong>「予測できない」「変化する」</strong>とあれば Intelligent-Tiering。<strong>「30日後にはアクセスされなくなる」のように日数が書いてあれば</strong>、ライフサイクルルールで Standard-IA に移すほうが安く、Intelligent-Tiering は不正解です。</p></div>
 
-
-  <div class="note">
-    <span class="label">Intelligent-Tiering が正解になる条件</span>
-    <p>Intelligent-Tiering は<strong>アクセスパターンが不明または変動する</strong>ときに選びます。設問に「30日後にアクセスされなくなる」と書いてあれば、ライフサイクルで Standard-IA に移すほうが安く、Intelligent-Tiering は不正解です。判断の言葉は<strong>「予測できない」「変化する」</strong>。明確な日数が書いてあればライフサイクルです。</p>
+  <h3>要らないものを消す ―― 見えないのに課金されるもの</h3>
+  <p>「オブジェクトは増えていないのに料金が増える」の答えは、一覧に見えないところにあります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 252" width="760" height="252" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="S3バケットの中に、一覧に見える3つのオブジェクトのほかに、非現行バージョンと不完全なマルチパートアップロードの断片が見えないまま課金されている"><rect x="10" y="10" width="740" height="232" rx="10" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><text x="26" y="34" font-size="12" fill="var(--ink-2)" text-anchor="start" font-weight="700">S3 バケット（バージョニング有効）</text><rect x="26" y="48" width="216" height="180" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="40" y="70" font-size="11.5" fill="var(--allow)" text-anchor="start" font-weight="700">一覧に見えるもの</text><rect x="40" y="82" width="188" height="34" rx="5" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="54" y="104" font-size="11.5" fill="var(--ink)" text-anchor="start">report.csv</text><rect x="40" y="126" width="188" height="34" rx="5" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="54" y="148" font-size="11.5" fill="var(--ink)" text-anchor="start">photo.jpg</text><rect x="40" y="170" width="188" height="34" rx="5" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="54" y="192" font-size="11.5" fill="var(--ink)" text-anchor="start">log-1101.gz</text><rect x="262" y="48" width="228" height="180" rx="8" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="276" y="70" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">見えないが課金される ①</text><text x="276" y="90" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">非現行バージョン</text><rect x="280" y="104" width="150" height="28" rx="5" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.2" stroke-dasharray="4 3"/><rect x="290" y="112" width="150" height="28" rx="5" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.2" stroke-dasharray="4 3"/><rect x="300" y="120" width="150" height="28" rx="5" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.2" stroke-dasharray="4 3"/><rect x="310" y="128" width="150" height="28" rx="5" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="385" y="147" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">report.csv（古い版）</text><text x="276" y="188" font-size="10.5" fill="var(--ink-2)" text-anchor="start">上書き・削除しても</text><text x="276" y="206" font-size="10.5" fill="var(--ink-2)" text-anchor="start">古い版がすべて残る</text><rect x="510" y="48" width="226" height="180" rx="8" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="524" y="70" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">見えないが課金される ②</text><text x="524" y="90" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">不完全なマルチパート</text><text x="524" y="108" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">アップロードの断片</text><rect x="524" y="122" width="34" height="28" rx="4" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="541" y="141" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">1</text><rect x="564" y="122" width="34" height="28" rx="4" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="581" y="141" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">2</text><rect x="604" y="122" width="34" height="28" rx="4" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="621" y="141" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">3</text><rect x="644" y="122" width="34" height="28" rx="4" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="661" y="141" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">?</text><rect x="684" y="122" width="34" height="28" rx="4" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="701" y="141" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">?</text><text x="524" y="188" font-size="10.5" fill="var(--ink-2)" text-anchor="start">途中で失敗した分割アップ</text><text x="524" y="206" font-size="10.5" fill="var(--ink-2)" text-anchor="start">ロードの断片が残り続ける</text></svg>
   </div>
-
-  <h3>ライフサイクルルールと、消し忘れの回収</h3>
-  <p>ライフサイクルには<strong>移行（transition）</strong>と<strong>失効（expiration）</strong>の2つのアクションがあります。「保持期間を過ぎたら削除」なら失効、「古くなったら安いクラスへ」なら移行です。</p>
-  <p>もうひとつ設問に出るのが<strong>不完全なマルチパートアップロードの削除</strong>です。分割アップロードの途中で失敗すると断片が残って課金され続け、しかもオブジェクト一覧には現れません。ライフサイクルルールで一定日数後に中止・削除するのが定石です。</p>
-
+  <figcaption><strong>「オブジェクトは増えていないのに料金が増える」の正体。</strong>バージョニングを有効にすると、上書きや削除のたびに古い版（非現行バージョン）が残り、すべて課金される。分割アップロードが途中で失敗すると、届いた断片が一覧に出ないまま残る。どちらもライフサイクルルールで消す。</figcaption>
+</figure>
+  <p>どちらも、S3 バケットの「管理」タブにあるライフサイクルルールで片付けます。ルールに書けることは、現行バージョンの移行と失効、<strong>非現行バージョンの移行と失効</strong>、<strong>不完全なマルチパートアップロードの中止</strong>です。JSON で書くと次の形になります。</p>
   <div class="code">
     <div class="cap">コストの穴を塞ぐライフサイクル設定の骨格</div>
 <pre>{
@@ -525,178 +655,275 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
   ]
 }</pre>
   </div>
+  <p>「保持期間を過ぎたら削除」なら失効（Expiration）、「古くなったら安いクラスへ」なら移行（Transitions）です。</p>
+  <div class="note"><span class="label">どこに何があるか分からないとき</span>
+    <p>「まずコストの内訳を見えるようにしたい」段階では、S3 のコンソールにある <strong>S3 Storage Lens</strong>（バケットをまたいで使用状況と改善の提案を見せる機能）や <strong>S3 Storage Class Analysis</strong>（アクセスの実績から「何日で移すとよいか」を提案する機能）が答えです。</p></div>
 
-  <p>バージョニングを有効にしたバケットでは<strong>古いバージョンも課金対象</strong>です。削除したつもりのオブジェクトが非現行バージョンとして残るため、非現行バージョンの移行と失効もルールに入れます。「オブジェクト数は増えていないのに S3 のコストが増え続ける」という設問の答えは、バージョニングか不完全なマルチパートアップロードです。</p>
-
-  <div class="note">
-    <span class="label">どこに何があるか分からないとき</span>
-    <p>「まずコストの内訳を可視化したい」段階では、<strong>S3 Storage Lens</strong>（バケット横断の利用状況と推奨）や <strong>S3 Storage Class Analysis</strong>（アクセスパターンから移行日数を提案）が答えです。</p>
+  <h3>EBS ―― 確保した分に払っている</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 222" width="760" height="222" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左は100GiBのEBSボリュームに10GiBしか入っていなくても100GiB分請求されること。右はgp2からgp3に変えると同じ容量で安くなり、IOPSを容量と別に決められること"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">EBS は「確保した容量」に課金される</text><rect x="30" y="44" width="300" height="44" rx="6" fill="var(--inset)" stroke="var(--deny)" stroke-width="1.6"/><rect x="30" y="44" width="30" height="44" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="45" y="110" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">使用 10 GiB</text><text x="195" y="71" font-size="12" fill="var(--ink-3)" text-anchor="middle">空き 90 GiB</text><line x1="30" y1="124" x2="330" y2="124" stroke="var(--deny)" stroke-width="1.5"/><line x1="30" y1="118" x2="30" y2="130" stroke="var(--deny)" stroke-width="1.5"/><line x1="330" y1="118" x2="330" y2="130" stroke="var(--deny)" stroke-width="1.5"/><text x="180" y="146" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">請求は 100 GiB 分</text><text x="30" y="180" font-size="11" fill="var(--ink-2)" text-anchor="start">S3 は置いた分だけ。EBS は確保した分すべて。</text><text x="30" y="198" font-size="11" fill="var(--ink-2)" text-anchor="start">スナップショットは増分（変わったブロックだけ）</text><line x1="380" y1="12" x2="380" y2="216" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">gp2 → gp3 に変える</text><rect x="398" y="40" width="168" height="126" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.4"/><text x="482" y="62" font-size="14" fill="var(--ink)" text-anchor="middle" font-weight="700">gp2</text><text x="482" y="88" font-size="11" fill="var(--ink-2)" text-anchor="middle">IOPS は容量に比例</text><text x="482" y="108" font-size="11" fill="var(--ink-2)" text-anchor="middle">速くするには</text><text x="482" y="126" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">容量を増やすしかない</text><line x1="566" y1="103" x2="574.0" y2="103.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="584.0,103.0 574.0,108.5 574.0,97.5" fill="var(--allow)"/><rect x="586" y="40" width="164" height="126" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.6"/><text x="668" y="62" font-size="14" fill="var(--allow)" text-anchor="middle" font-weight="700">gp3</text><text x="668" y="88" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">同じ容量で gp2 より安い</text><text x="668" y="108" font-size="11" fill="var(--ink-2)" text-anchor="middle">IOPS・スループットを</text><text x="668" y="126" font-size="11" fill="var(--ink-2)" text-anchor="middle">容量と別に決められる</text><text x="398" y="190" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700">「性能を維持したまま EBS のコストを下げる」→ まず gp3</text><text x="398" y="208" font-size="11" fill="var(--ink-2)" text-anchor="start">io1 / io2 は高い IOPS が本当に要るときだけ</text></svg>
   </div>
-
-  <h3>EBS ―― ボリュームとスナップショット</h3>
+  <figcaption><strong>EBS の2つの基本。</strong>左：EBS は使った量ではなく<strong>確保した（プロビジョニングした）容量</strong>に課金される。大きく作りすぎたボリュームはそのまま無駄になる。右：汎用 SSD の gp3 は gp2 より安く、IOPS とスループットを容量から切り離して設定できる。ボリュームタイプは EC2 のコンソールの「ボリューム」から、動かしたまま変更できる。</figcaption>
+</figure>
   <ul>
-    <li><strong>gp2 から gp3 へ。</strong>gp3 は同容量で gp2 より安く、IOPS とスループットを容量と切り離して設定できます。「性能を維持したままコストを下げる」という EBS の設問では、まずこれを疑ってください。</li>
-    <li><strong>ボリュームタイプの選択。</strong>高い IOPS が要る場合のみ io1/io2、大容量のシーケンシャルアクセスなら st1、めったに読まないなら sc1。過剰な io2 は削減余地の典型です。</li>
-    <li><strong>スナップショットは増分。</strong>2回目以降は変更ブロックのみ課金されますが、世代が溜まれば増えます。<strong>Data Lifecycle Manager</strong> で作成と世代削除を自動化するのが、運用負荷を上げずに削る答えです。長期保管分は<strong>アーカイブ階層</strong>へ移せます（最低保管期間あり）。</li>
-    <li><strong>プロビジョニングしたぶんだけ課金される。</strong>EBS は使用量ではなく確保した容量に課金されます。100 GiB のボリュームに 10 GiB しか入っていなくても 100 GiB 分です。</li>
+    <li><strong>ボリュームタイプの選び方：</strong>高い IOPS が要るときだけ io1 / io2、大容量を順番に読み書きするなら st1、めったに読まないなら sc1。必要以上の io2 は、削れる余地の典型</li>
+    <li><strong>スナップショットは増分：</strong>2回目以降は変わったブロックだけが課金されるが、世代がたまれば増える。<strong>Data Lifecycle Manager</strong> で作成と古い世代の削除を自動にするのが、運用負荷を上げずに削る答え。長く置く分は<strong>アーカイブ階層</strong>（スナップショット用の安い保管先。最低保管期間あり）へ移せる</li>
   </ul>
 
-  <h3>使っていないのに課金されているもの</h3>
-  <p>コスト設問の地味な定番です。Trusted Advisor で洗い出される代表格を挙げます。</p>
+  <h3>止めたのに課金されている</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 228" width="760" height="228" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="EC2を実行中、停止、終了にしたとき、稼働料金、EBSボリューム、Elastic IPのそれぞれに課金が続くかどうかの表"><text x="250" y="26" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">実行中</text><text x="428" y="26" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">停止（stop）</text><text x="606" y="26" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">終了（terminate）</text><text x="150" y="67" font-size="12" fill="var(--ink-2)" text-anchor="end" font-weight="700">EC2 の稼働料金</text><rect x="164" y="40" width="170" height="42" rx="6" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="249" y="66" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">かかる</text><rect x="342" y="40" width="170" height="42" rx="6" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="427" y="66" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">止まる</text><rect x="520" y="40" width="170" height="42" rx="6" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="605" y="66" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">止まる</text><text x="150" y="119" font-size="12" fill="var(--ink-2)" text-anchor="end" font-weight="700">EBS ボリューム</text><rect x="164" y="92" width="170" height="42" rx="6" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="249" y="118" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">かかる</text><rect x="342" y="92" width="170" height="42" rx="6" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="427" y="118" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">かかり続ける</text><rect x="520" y="92" width="170" height="42" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4"/><text x="605" y="118" font-size="10" fill="var(--warn)" text-anchor="middle" font-weight="700">「終了時に削除」が無効なら残る</text><text x="150" y="171" font-size="12" fill="var(--ink-2)" text-anchor="end" font-weight="700">Elastic IP</text><rect x="164" y="144" width="170" height="42" rx="6" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="249" y="170" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">かかる</text><rect x="342" y="144" width="170" height="42" rx="6" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="427" y="170" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">かかり続ける</text><rect x="520" y="144" width="170" height="42" rx="6" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="605" y="170" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">解放するまでかかる</text><text x="380" y="216" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">「停止しているのに課金される」→ EBS と Elastic IP。ゼロにするには終了して、残ったものも消す</text></svg>
+  </div>
+  <figcaption><strong>停止で止まるのは、稼働料金だけ。</strong>赤は課金が続く、緑は止まる、黄色は設定しだい。EBS は停止中も確保した容量の分だけかかり続ける。Elastic IP は現在、インスタンスに付いているかどうかに関係なくパブリック IPv4 アドレスとして時間料金がかかるので、要らなくなったら解放する。</figcaption>
+</figure>
+  <p>Trusted Advisor（AWS の使い方を点検して指摘するサービス → 場面8）が洗い出す「使っていないのに課金されているもの」の代表を挙げます。</p>
   <ul>
-    <li><strong>どこにも関連付けられていない Elastic IP。</strong>実行中のインスタンスに紐づかない Elastic IP は課金されます。加えて現在はパブリック IPv4 アドレス自体に時間料金がかかります。</li>
-    <li><strong>アタッチされていない EBS ボリューム。</strong>インスタンスを終了しても、終了時削除の設定によってはボリュームが残ります。残れば課金され続けます。</li>
-    <li><strong>停止したままのインスタンスのボリューム。</strong>停止すればコンピューティング料金は止まりますが、<strong>EBS の料金は止まりません</strong>。「停止しているのに課金される」の答えはこれです。</li>
-    <li><strong>使われていないロードバランサー、古いスナップショット、放置されたテスト用 RDS。</strong>いずれも時間課金です。</li>
-  </ul></section>
+    <li><strong>どこにも関連付けられていない Elastic IP：</strong>課金される。現在はパブリック IPv4 アドレスそのものに時間料金がかかる</li>
+    <li><strong>EC2 に付いていない EBS ボリューム：</strong>インスタンスを終了しても、「終了時に削除」の設定によってはボリュームが残る。残れば課金され続ける</li>
+    <li><strong>停止したままのインスタンスのボリューム：</strong>停止で稼働料金は止まるが、<strong>EBS の料金は止まらない</strong></li>
+    <li><strong>使われていないロードバランサー、古いスナップショット、放置されたテスト用の RDS：</strong>どれも置いてあるだけで時間や量に課金される</li>
+  </ul>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「オブジェクト数は増えていないのに S3 のコストが増え続ける」→ <strong>非現行バージョン</strong>か<strong>不完全なマルチパートアップロード</strong>。ライフサイクルルールで消す。「7年保持、取り出しに半日待てる」→ <strong>Glacier Deep Archive</strong>。「性能を維持したまま EBS のコストを下げる」→ <strong>gp2 から gp3</strong>。「停止しているのに課金される」→ <strong>EBS と Elastic IP</strong>。</p></div>
+</section>
 
-<section id="s7" data-toc="コンピュート">
+<section id="s8" data-toc="場面7 量と時間を減らす">
+  
+  <span class="h2num">08</span>
+  <h2>場面7 ―― 「開発環境のコストが、本番と同じくらいかかっている」</h2>
 
-  <span class="h2num">07</span>
-  <h2>コンピューティングのコストを削る</h2>
-  <p class="lead">単価を下げるのが購入オプションでした。この節は<strong>使う量そのものを減らす</strong>話です。設問が「購入オプション」と「サイジング・スケジューリング」のどちらを問うているかを見分けてください。</p>
-
-  <h3>適切なサイジング</h3>
-  <p>過剰なインスタンスサイズは、最も見つけやすく最も大きい削減余地です。根拠は実測値で、CPU 使用率が数%のまま推移しているインスタンスは1〜2段階小さくできます。ここで出てくるのが <strong>AWS Compute Optimizer</strong> です。CloudWatch のメトリクスを分析し、EC2・Auto Scaling グループ・EBS・Lambda・Fargate 上の ECS について最適なサイズを推奨します。Trusted Advisor も低使用率のインスタンスを指摘しますが、<strong>具体的な推奨サイズまで出すのは Compute Optimizer</strong> という切り分けです。</p>
-
-  <div class="note warn">
-    <span class="label">メモリ使用率は既定では見えない</span>
-    <p>EC2 の CloudWatch 標準メトリクスに<strong>メモリ使用率は含まれません</strong>。メモリを根拠にサイジングするには CloudWatch エージェントが必要です。設問にエージェントの選択肢があれば、それが正解の一部です。</p>
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>サイジング<small>ライトサイジング（適切なサイズ選び）</small></dt><dd>実際の使われ方に合わせて、インスタンスタイプの大きさを選び直すこと</dd>
+      <dt>オーバープロビジョニング</dt><dd>必要以上に大きい・多いリソースを用意している状態</dd>
+      <dt>CloudWatch<small>Amazon CloudWatch</small></dt><dd>CPU 使用率などの数字（<strong>メトリクス</strong>）を集めて見張る監視サービス（EC2 講義で既出）</dd>
+      <dt>CloudWatch エージェント</dt><dd>EC2 の中に入れる小さなプログラム。外からは見えないメモリ使用率などを CloudWatch に送る</dd>
+      <dt>Compute Optimizer<small>AWS Compute Optimizer</small></dt><dd>CloudWatch の数字を分析して、「このタイプが適切」と具体的に推奨するサービス</dd>
+      <dt>Graviton<small>AWS Graviton</small></dt><dd>AWS が自社で設計した Arm 方式の CPU。同等の x86 方式（Intel・AMD）のインスタンスより、価格あたりの性能が高い</dd>
+      <dt>スケールアウト / スケールイン</dt><dd>台数を増やすこと / 減らすこと（EC2 講義 場面6で既出）</dd>
+      <dt>EventBridge Scheduler<small>Amazon EventBridge Scheduler</small></dt><dd>決めた日時に AWS の操作（EC2 の停止・起動など）を呼び出すサービス</dd>
+      <dt>GB秒</dt><dd>Lambda の料金の単位。割り当てたメモリ（GB）× 実行時間（秒）</dd>
+      <dt>プロビジョニング済み同時実行</dt><dd>Lambda の実行環境をあらかじめ温めておく設定。最初の1件が遅い「コールドスタート」をなくす（EC2 講義 場面7で既出）</dd>
+      <dt>AWS Batch</dt><dd>バッチ処理を、必要なときだけ台を立ち上げて実行してくれるサービス</dd>
+    </dl>
   </div>
 
-  <h3>Graviton への移行</h3>
-  <p>AWS 自社設計の Arm ベースプロセッサである Graviton は、同等の x86 インスタンスより<strong>価格性能比が高い</strong>という位置づけで、EC2 のほか RDS、ElastiCache、OpenSearch、Lambda、Fargate でも選べます。</p>
-  <p>判断軸は<strong>アーキテクチャを変えられるかどうか</strong>です。Java、Python、Node.js、Go やコンテナ化されたアプリなら移行は容易で、コスト削減の正解になります。逆に x86 バイナリに依存する商用ソフトでは選べません。設問に「再コンパイルできる」「コンテナ化されている」とあれば、Graviton が狙われているサインです。</p>
+  <p>場面2・3は単価を下げる話でした。ここは<strong>使う量と時間そのものを減らす</strong>話です。設問が「払い方」と「大きさ・動かす時間」のどちらを問うているかを、先に見分けてください。</p>
 
-  <h3>Auto Scaling と停止スケジュール</h3>
-  <p>そもそも動いていなければ課金されません。これが最も確実な削減です。</p>
+  <h3>大きすぎる型を小さくする</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 200" width="760" height="200" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="EC2の数字をCloudWatchが記録し、Compute Optimizerが分析して小さいインスタンスタイプを推奨する流れ。メモリ使用率は既定では記録されず、CloudWatchエージェントが要る"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">数字を集める → 分析する → 推奨を受け取る</text><rect x="10" y="44" width="150" height="56" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="85.0" y="70.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="85.0" y="85.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">m5.2xlarge（8 vCPU）</text><line x1="160" y1="72" x2="186.0" y2="72.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="196.0,72.0 186.0,77.5 186.0,66.5" fill="var(--ink-3)"/><rect x="198" y="44" width="160" height="56" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="278.0" y="70.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">CloudWatch</text><text x="278.0" y="85.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">CPU 使用率などを記録</text><line x1="358" y1="72" x2="384.0" y2="72.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="394.0,72.0 384.0,77.5 384.0,66.5" fill="var(--ink-3)"/><rect x="396" y="44" width="170" height="56" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="481.0" y="70.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Compute Optimizer</text><text x="481.0" y="85.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">過去の数字を分析</text><line x1="566" y1="72" x2="592.0" y2="72.0" stroke="var(--allow)" stroke-width="2"/><polygon points="602.0,72.0 592.0,77.5 592.0,66.5" fill="var(--allow)"/><rect x="604" y="44" width="146" height="56" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.6"/><text x="677" y="66" font-size="12" fill="var(--allow)" text-anchor="middle" font-weight="700">推奨：m5.large</text><text x="677" y="86" font-size="10.5" fill="var(--allow)" text-anchor="middle">（2 vCPU）で足りる</text><text x="30" y="136" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="700">CPU 使用率</text><rect x="110" y="122" width="300" height="20" rx="4" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.1"/><rect x="110" y="122" width="18" height="20" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.1"/><text x="140" y="137" font-size="11" fill="var(--accent)" text-anchor="start" font-weight="700">平均 6%　→ 過剰</text><text x="30" y="174" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="700">メモリ使用率</text><rect x="110" y="160" width="300" height="20" rx="4" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.1" stroke-dasharray="4 3"/><text x="260" y="175" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">既定では記録されない</text><line x1="416" y1="170" x2="442.0" y2="170.0" stroke="var(--warn)" stroke-width="1.8"/><polygon points="452.0,170.0 442.0,175.5 442.0,164.5" fill="var(--warn)"/><rect x="454" y="150" width="296" height="40" rx="6" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.3"/><text x="602" y="167" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">CloudWatch エージェントを EC2 に入れると</text><text x="602" y="183" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">メモリ使用率も記録され、推奨に使われる</text></svg>
+  </div>
+  <figcaption><strong>大きすぎる型を、実測の数字で小さくする。</strong>CloudWatch が記録した過去の数字を Compute Optimizer が分析し、「このタイプで足りる」と具体的な型まで推奨する。ただし EC2 の標準の数字に<strong>メモリ使用率は入っていない</strong>。メモリを根拠にしたいときは、CloudWatch エージェントを EC2 に入れる。</figcaption>
+</figure>
+  <p>Compute Optimizer は、コンソールで有効にする（オプトインする）だけで使えます。推奨を出す対象は EC2・Auto Scaling グループ・EBS・Lambda・Fargate 上の ECS です。Trusted Advisor も使用率の低いインスタンスを指摘しますが、<strong>具体的な推奨サイズまで出すのは Compute Optimizer</strong> です。</p>
+
+  <h3>Graviton に替える</h3>
+  <p>Graviton は EC2 のほか、RDS、ElastiCache、OpenSearch Service、Lambda、Fargate でも選べます。EC2 ならインスタンスタイプの名前に g が付くもの（m7g、c6g など）を選びます。判断の軸は<strong>CPU の方式を変えられるかどうか</strong>です。Java、Python、Node.js、Go で書いたアプリや、コンテナにしたアプリなら移行は容易で、コスト削減の正解になります。x86 用に作られた商用ソフトに依存しているなら選べません。設問に「再コンパイルできる」「コンテナ化されている」とあれば、Graviton を選ばせる手がかりです。</p>
+
+  <h3>使わない時間は止める</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 252" width="760" height="252" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="1週間を7行24時間の表にし、開発環境が使われているのは平日の9時から19時だけであることを示す。常時動かすと週168時間、使う時間だけなら週50時間"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">開発環境が実際に使われている時間（青）</text><text x="70" y="46" font-size="10" fill="var(--ink-3)" text-anchor="middle">0時</text><text x="178" y="46" font-size="10" fill="var(--ink-3)" text-anchor="middle">6時</text><text x="286" y="46" font-size="10" fill="var(--ink-3)" text-anchor="middle">12時</text><text x="394" y="46" font-size="10" fill="var(--ink-3)" text-anchor="middle">18時</text><text x="502" y="46" font-size="10" fill="var(--ink-3)" text-anchor="middle">24時</text><text x="52" y="68" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">月</text><rect x="70" y="54" width="432" height="18" rx="3" fill="var(--inset)" stroke="var(--line)" stroke-width="1"/><rect x="232" y="54" width="180" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><text x="52" y="92" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">火</text><rect x="70" y="78" width="432" height="18" rx="3" fill="var(--inset)" stroke="var(--line)" stroke-width="1"/><rect x="232" y="78" width="180" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><text x="52" y="116" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">水</text><rect x="70" y="102" width="432" height="18" rx="3" fill="var(--inset)" stroke="var(--line)" stroke-width="1"/><rect x="232" y="102" width="180" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><text x="52" y="140" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">木</text><rect x="70" y="126" width="432" height="18" rx="3" fill="var(--inset)" stroke="var(--line)" stroke-width="1"/><rect x="232" y="126" width="180" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><text x="52" y="164" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">金</text><rect x="70" y="150" width="432" height="18" rx="3" fill="var(--inset)" stroke="var(--line)" stroke-width="1"/><rect x="232" y="150" width="180" height="18" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><text x="52" y="188" font-size="11.5" fill="var(--ink-3)" text-anchor="end" font-weight="700">土</text><rect x="70" y="174" width="432" height="18" rx="3" fill="var(--inset)" stroke="var(--line)" stroke-width="1"/><text x="52" y="212" font-size="11.5" fill="var(--ink-3)" text-anchor="end" font-weight="700">日</text><rect x="70" y="198" width="432" height="18" rx="3" fill="var(--inset)" stroke="var(--line)" stroke-width="1"/><text x="292" y="242" font-size="11" fill="var(--ink-3)" text-anchor="middle">灰色の時間は、誰も使っていないのに動いている</text><rect x="530" y="54" width="220" height="62" rx="8" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="640" y="78" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">24時間 × 7日</text><text x="640" y="100" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">＝ 週 168 時間 分の請求</text><line x1="640" y1="116" x2="640.0" y2="130.0" stroke="var(--allow)" stroke-width="2"/><polygon points="640.0,140.0 634.5,130.0 645.5,130.0" fill="var(--allow)"/><rect x="530" y="142" width="220" height="62" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="640" y="166" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">10時間 × 平日5日</text><text x="640" y="188" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">＝ 週 50 時間（約 30%）</text><text x="640" y="226" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">止めても EBS の料金は残る</text></svg>
+  </div>
+  <figcaption><strong>動いていなければ、稼働料金はかからない。</strong>平日の日中しか使わない開発環境を24時間動かすと、使っていない灰色の時間にも請求が続く。夜間と週末に止めれば、稼働料金は約30%で済む。ASG なら希望台数をゼロにするスケジュール、単体の EC2 なら EventBridge Scheduler から停止・起動を呼ぶ。</figcaption>
+</figure>
   <ol class="body">
-    <li><strong>需要に追随させる。</strong>ターゲット追跡ポリシーで必要な台数だけ動かします。ピークに合わせて台数を固定した構成は、削減余地そのものです。</li>
-    <li><strong>スケジュールで増減させる。</strong>負荷の波が時間帯で決まっているならスケジュールされたアクションで台数を変えます。予測が可能なら予測スケーリングも選択肢です。</li>
-    <li><strong>開発・検証環境を夜間と週末に止める。</strong>平日の日中しか使わない環境を24時間動かす理由はありません。Auto Scaling グループなら希望容量をゼロにするスケジュール、単体なら <strong>EventBridge Scheduler</strong> から停止・起動を呼ぶのが定石です。設問では「開発環境のコストが本番と同程度」という形で出ます。</li>
-    <li><strong>スケールインを恐れない。</strong>スケールアウトだけ設定した構成は、事実上ピーク固定です。</li>
+    <li><strong>需要に合わせて増減する：</strong>ASG のターゲット追跡ポリシー（EC2 講義 場面6）で、必要な台数だけ動かす。ピークに合わせて台数を固定した構成は、削れる余地そのもの</li>
+    <li><strong>時刻で増減する：</strong>負荷の波が時間帯で決まっているなら、ASG のスケジュールされたアクションで台数を変える。予測できるなら予測スケーリングも選べる</li>
+    <li><strong>開発・検証環境を夜間と週末に止める：</strong>ASG なら希望台数をゼロにするスケジュール、単体の EC2 なら <strong>EventBridge Scheduler</strong> から停止・起動を呼ぶ。<strong>この場面の答えはこれ</strong></li>
+    <li><strong>スケールインを設定する：</strong>増やす設定だけで減らす設定がない構成は、事実上ピークに固定されている</li>
   </ol>
+  <div class="note"><span class="label">停止と終了の違いを踏まえる</span>
+    <p>場面6の図のとおり、停止で稼働料金は止まりますが、EBS と Elastic IP の料金は続きます。ゼロにするには終了が必要で、その場合は作り直しが要ります。<strong>「夜間停止」の削減効果は、EBS の分だけ目減りする</strong>。ここまで読めていると選択肢を比べられます。</p></div>
 
-  <div class="note">
-    <span class="label">停止と終了の違いを踏まえる</span>
-    <p>停止（stop）でコンピューティング料金は止まりますが、EBS とアタッチされた Elastic IP の料金は続きます。ゼロにするには終了（terminate）が必要で、その場合は再構築が要ります。<strong>「夜間停止」の削減効果は EBS の分だけ目減りする</strong>――ここまで読めていると選択肢を比較できます。</p>
+  <h3>Lambda は、メモリを増やすと安くなることがある</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 262" width="760" height="262" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="Lambdaの料金を面積で表した図。512MBで8秒かかる処理は4GB秒、1024MBにするとCPUも増えて3秒で終わり3GB秒になる"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Lambda の料金 ＝ リクエスト数 ＋（割り当てメモリ × 実行時間）</text><text x="40" y="60" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">メモリ 512 MB</text><rect x="40" y="70" width="480" height="36" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/><text x="280" y="93" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">8 秒</text><text x="536" y="93" font-size="12" fill="var(--ink)" text-anchor="start" font-weight="700">0.5 GB × 8 秒 ＝ 4 GB秒</text><text x="40" y="140" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">メモリ 1,024 MB（CPU も倍）</text><rect x="40" y="150" width="180" height="72" rx="4" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.5"/><text x="130" y="191" font-size="12" fill="var(--allow)" text-anchor="middle" font-weight="700">3 秒</text><text x="536" y="181" font-size="12" fill="var(--allow)" text-anchor="start" font-weight="700">1 GB × 3 秒 ＝ 3 GB秒</text><text x="536" y="201" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">単価は上がるが、総額は下がる</text><line x1="40" y1="236" x2="520" y2="236" stroke="var(--ink-3)" stroke-width="1.2"/><text x="40" y="252" font-size="10" fill="var(--ink-3)" text-anchor="middle">0秒</text><text x="160" y="252" font-size="10" fill="var(--ink-3)" text-anchor="middle">2秒</text><text x="280" y="252" font-size="10" fill="var(--ink-3)" text-anchor="middle">4秒</text><text x="400" y="252" font-size="10" fill="var(--ink-3)" text-anchor="middle">6秒</text><text x="520" y="252" font-size="10" fill="var(--ink-3)" text-anchor="middle">8秒</text><text x="536" y="252" font-size="10.5" fill="var(--ink-3)" text-anchor="start">数字は例。最適点は関数ごとに実測する</text></svg>
   </div>
-
-  <h3>Lambda のメモリ設定とコストの関係</h3>
-  <p>Lambda の料金は<strong>リクエスト数</strong>と<strong>実行時間 × 割り当てメモリ量</strong>（GB 秒）で決まります。ここで直感に反するのは、<strong>メモリ割り当てを増やすと比例して CPU 性能も上がる</strong>点です。CPU を使う処理ではメモリを増やすと実行時間が縮み、単価は上がっても<em>総コストが下がる場合があります</em>。メモリを最小にするのが常に最安、という思い込みは誤りです。</p>
-  <p>設問で「Lambda の実行時間が長くコストが高い」と来たら、メモリ設定の見直しが候補です。最適点は関数ごとに違うため実測して決めます。加えて Arm（Graviton）を選べば同じ処理をより安く実行できます。</p>
-
-  <div class="trap">
-    <span class="label">引っかけ</span>
-    <p><strong>プロビジョニングされた同時実行</strong>はコールドスタート対策であって、コスト削減策ではありません。待機分にも課金されるためむしろコストは上がります。「コストを下げたい」で選ぶと誤答、「コールドスタートのレイテンシを解消したい」なら正解――目的によって正解にも誤答にもなる典型です。</p>
-  </div>
+  <figcaption><strong>面積が料金。</strong>高さが割り当てメモリ、幅が実行時間。Lambda はメモリを増やすと CPU も比例して増える（EC2 講義 場面7）ので、CPU を使う処理は実行時間が縮む。高さが2倍になっても幅が半分より短くなれば、面積（料金）は小さくなる。「メモリを最小にするのが最安」とは限らない。</figcaption>
+</figure>
+  <p>メモリの割り当ては、Lambda のコンソールで関数ごとに「設定」→「一般設定」から変えます。「Lambda の実行時間が長く、コストが高い」と来たら、メモリ設定の見直しが候補です。加えて、関数のアーキテクチャに Arm（Graviton）を選べば、同じ処理をより安く実行できます。</p>
+  <div class="note warn"><span class="label">引っかけ</span>
+    <p><strong>プロビジョニング済み同時実行</strong>はコールドスタート対策であって、コスト削減策ではありません。待機している分にも課金されるので、むしろコストは上がります。「コストを下げたい」で選ぶと誤答、「最初の1件の遅さを解消したい」なら正解。目的によって正解にも誤答にもなる典型です。</p></div>
 
   <h3>そもそも EC2 でなくてよいか</h3>
-  <p>断続的にしか動かないバッチを常時起動の EC2 で回しているなら、Lambda や Fargate、AWS Batch に移せばアイドル時間の課金が消えます。目安は<strong>稼働率</strong>――ほぼ常時なら EC2 とコミットメント、たまにしか使わないならサーバーレスです。</p></section>
+  <p>ときどきしか動かないバッチを、常時起動の EC2 で回しているなら、Lambda や Fargate、AWS Batch に移せば、待っている時間の課金が消えます。目安は<strong>稼働率</strong>です。ほぼ常時動くなら EC2 とコミットメント（場面2）、たまにしか使わないならサーバーレス（サーバーを自分で持たない方式）です。</p>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「オーバープロビジョニングを見つけて、推奨サイズが欲しい」→ <strong>Compute Optimizer</strong>。「メモリ使用率を根拠にしたい」→ <strong>CloudWatch エージェント</strong>。「開発環境のコストが本番と同程度」→ <strong>夜間・週末に止めるスケジュール</strong>。「コンテナ化されている、コストを下げたい」→ <strong>Graviton</strong>。</p></div>
+</section>
 
-<section id="s8" data-toc="管理ツール">
+<section id="s9" data-toc="場面8 見張る道具">
+  
+  <span class="h2num">09</span>
+  <h2>場面8 ―― 「先月の請求が突然増えた。今後は早く気づきたい。部署別の内訳も出したい」</h2>
 
-  <span class="h2num">08</span>
-  <h2>コスト管理ツールの役割分担</h2>
-  <p class="lead">名前が似ていて混同しやすい領域です。<strong>過去を見るのか、未来を止めるのか、詳細を掘るのか、異常を検知するのか、改善案を出すのか</strong>――この5つの動詞で切り分ければ、設問はほぼ一発で解けます。</p>
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>AWS Pricing Calculator</dt><dd>まだ何も動かしていない段階で、構成を入力して費用を見積もる Web の道具</dd>
+      <dt>Cost Explorer<small>AWS Cost Explorer</small></dt><dd>過去の請求をグラフで見て、サービス別・期間別に分析する画面。将来の予測と、RI・Savings Plans の購入の推奨も出す</dd>
+      <dt>Cost and Usage Report<small>AWS Cost and Usage Report（CUR）</small></dt><dd>最も細かい請求の明細を、ファイルとして S3 に出力する機能</dd>
+      <dt>Athena・QuickSight<small>Amazon Athena・Amazon QuickSight</small></dt><dd>Athena は S3 のファイルに SQL で問い合わせるサービス、QuickSight はグラフにするサービス。CUR の分析に使う</dd>
+      <dt>AWS Budgets</dt><dd>予算（金額や使用量の上限）を決め、超えた・超えそうなときに通知する機能。<strong>しきい値</strong>は、その境目の数字</dd>
+      <dt>Cost Anomaly Detection<small>AWS Cost Anomaly Detection</small></dt><dd>機械学習で「いつもと違う支出」を見つけて通知する機能。しきい値を決めなくてよい</dd>
+      <dt>Trusted Advisor<small>AWS Trusted Advisor</small></dt><dd>コスト・セキュリティ・信頼性などの観点で、AWS の使い方を点検して指摘するサービス</dd>
+      <dt>タグ・コスト配分タグ</dt><dd>タグはリソースに付ける「キー＝値」の札（例：部署＝製造）。請求の内訳に使えるように有効化したものが<strong>コスト配分タグ</strong></dd>
+      <dt>Organizations<small>AWS Organizations</small></dt><dd>複数の AWS アカウントをまとめて管理するサービス。まとめ役が<strong>管理アカウント</strong>。<strong>SCP</strong>（サービスコントロールポリシー）はアカウントでできることの上限を決める仕組み（IAM 講義で既出）</dd>
+      <dt>一括請求<small>Consolidated Billing</small></dt><dd>Organizations にまとめた全アカウントの請求を、管理アカウントに集約すること</dd>
+    </dl>
+  </div>
 
+  <p>コスト管理の道具は名前が似ていて混同しやすい領域です。<strong>見積もるのか、過去を見るのか、明細を掘るのか、上限を守るのか、異常に気づくのか、改善案をもらうのか</strong>。この動詞で切り分ければ、設問はほぼ一度で解けます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 270" width="760" height="270" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="コスト管理の道具を、見積もる、過去を見る、明細を掘る、上限を守る、異常に気づく、改善案をもらう、の6つの動詞で分けた図"><text x="380" y="20" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">道具は「何をしたいか」の動詞で選ぶ</text><rect x="10" y="34" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="26" y="60" font-size="14" fill="var(--ink-3)" text-anchor="start" font-weight="700">見積もる</text><text x="26" y="84" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">AWS Pricing Calculator</text><text x="26" y="104" font-size="10.5" fill="var(--ink-3)" text-anchor="start">まだ何も動かしていない</text><rect x="260" y="34" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="276" y="60" font-size="14" fill="var(--accent)" text-anchor="start" font-weight="700">過去を見る</text><text x="276" y="84" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Cost Explorer</text><text x="276" y="104" font-size="10.5" fill="var(--ink-3)" text-anchor="start">グラフで傾向・内訳・予測</text><rect x="510" y="34" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="526" y="60" font-size="14" fill="var(--accent)" text-anchor="start" font-weight="700">明細を掘る</text><text x="526" y="84" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Cost and Usage Report</text><text x="526" y="104" font-size="10.5" fill="var(--ink-3)" text-anchor="start">リソース単位・時間単位を S3 へ</text><rect x="10" y="130" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="26" y="156" font-size="14" fill="var(--warn)" text-anchor="start" font-weight="700">上限を守る</text><text x="26" y="180" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">AWS Budgets</text><text x="26" y="200" font-size="10.5" fill="var(--ink-3)" text-anchor="start">自分で決めた金額を超えたら通知</text><rect x="260" y="130" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><text x="276" y="156" font-size="14" fill="var(--deny)" text-anchor="start" font-weight="700">異常に気づく</text><text x="276" y="180" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Cost Anomaly Detection</text><text x="276" y="200" font-size="10.5" fill="var(--ink-3)" text-anchor="start">金額を決めずに「いつもと違う」</text><rect x="510" y="130" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="526" y="156" font-size="14" fill="var(--allow)" text-anchor="start" font-weight="700">改善案をもらう</text><text x="526" y="180" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Compute Optimizer</text><text x="526" y="200" font-size="10.5" fill="var(--ink-3)" text-anchor="start">具体的な推奨サイズ</text><rect x="10" y="226" width="740" height="34" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.2"/><text x="380" y="248" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">幅広く点検する（未使用のリソース・セキュリティ・信頼性も）→ Trusted Advisor</text></svg>
+  </div>
+  <figcaption><strong>名前ではなく、動詞で覚える。</strong>設問の「〜したい」をこの6つのどれかに当てはめる。Pricing Calculator 以外は、AWS マネジメントコンソールの Billing and Cost Management（請求とコスト管理）から開く。Compute Optimizer と Trusted Advisor は独立したサービス。</figcaption>
+</figure>
   <div class="tw"><table>
-    <thead><tr><th>ツール</th><th>何をするか</th><th>設問に出る言葉</th><th>選ばない場面</th></tr></thead>
+    <thead><tr><th>道具</th><th>何をするか</th><th>設問に出る言葉</th><th>選ばない場面</th></tr></thead>
     <tbody>
-      <tr><td><strong>Cost Explorer</strong></td><td>過去の利用実績を可視化・分析し、将来を予測する。RI / Savings Plans の購入推奨も出す</td><td>「傾向を分析したい」「どのサービスにいくらかかっているか見たい」「購入すべき量を知りたい」</td><td>リソース単位の明細が必要なとき</td></tr>
-      <tr><td><strong>AWS Budgets</strong></td><td>予算のしきい値を決め、超過や超過予測を通知する。アクションで自動制御もできる</td><td>「上限を決めて通知したい」「予算超過を防ぎたい」</td><td>分析そのものが目的のとき</td></tr>
-      <tr><td><strong>Cost and Usage Report</strong></td><td>最も詳細な明細を S3 に出力する。Athena や QuickSight で自由に分析</td><td>「時間単位」「リソース単位」「独自の集計」「社内の請求システムに取り込む」</td><td>「手早く見たい」だけのとき（負荷が高い）</td></tr>
-      <tr><td><strong>Cost Anomaly Detection</strong></td><td>機械学習で通常と異なる支出パターンを検知して通知する</td><td>「想定外の請求に気づきたい」「異常な増加を検知」「しきい値を決めずに」</td><td>決まった上限を守らせたいとき（それは Budgets）</td></tr>
-      <tr><td><strong>Compute Optimizer</strong></td><td>メトリクスを分析し、EC2・ASG・EBS・Lambda の適切なサイズを推奨する</td><td>「オーバープロビジョニングを見つけたい」「推奨サイズが欲しい」</td><td>コストの内訳を見たいとき</td></tr>
-      <tr><td><strong>Trusted Advisor</strong></td><td>コスト・セキュリティ・信頼性など複数の観点でベストプラクティス違反をチェックする</td><td>「使われていないリソースを洗い出す」「幅広く点検したい」</td><td>詳細な推奨サイズが必要なとき</td></tr>
+      <tr><td><strong>Pricing Calculator</strong></td><td>動かす前に費用を試算する</td><td>「移行前に」「設計段階で見積もりたい」</td><td>すでに動いているものの実績を見たいとき</td></tr>
+      <tr><td><strong>Cost Explorer</strong></td><td>過去の利用実績をグラフにして分析し、将来を予測する。RI / Savings Plans の購入の推奨も出す</td><td>「傾向を分析したい」「どのサービスにいくらかかっているか」「どれだけ買えばよいか」</td><td>リソース単位の明細が要るとき。実績がまだないとき</td></tr>
+      <tr><td><strong>Cost and Usage Report</strong></td><td>最も詳細な明細を S3 に出力する。Athena や QuickSight で自由に分析する</td><td>「時間単位」「リソース単位」「独自の集計」「社内の請求システムに取り込む」</td><td>「手早く見たい」だけのとき（手間が大きい）</td></tr>
+      <tr><td><strong>AWS Budgets</strong></td><td>予算のしきい値を決め、超過や超過の見込みを通知する。アクションで自動の制御もできる</td><td>「上限を決めて通知したい」「予算超過を防ぎたい」</td><td>分析そのものが目的のとき</td></tr>
+      <tr><td><strong>Cost Anomaly Detection</strong></td><td>機械学習で、通常と異なる支出のパターンを検知して通知する</td><td>「想定外の請求に気づきたい」「異常な増加」「しきい値を決めずに」</td><td>決まった上限を守らせたいとき（それは Budgets）</td></tr>
+      <tr><td><strong>Compute Optimizer</strong></td><td>メトリクスを分析し、EC2・ASG・EBS・Lambda などの適切なサイズを推奨する（場面7）</td><td>「オーバープロビジョニングを見つけたい」「推奨サイズが欲しい」</td><td>コストの内訳を見たいとき</td></tr>
+      <tr><td><strong>Trusted Advisor</strong></td><td>コスト・セキュリティ・信頼性など複数の観点で、ベストプラクティスから外れた点を指摘する</td><td>「使われていないリソースを洗い出す」「幅広く点検したい」</td><td>詳細な推奨サイズが要るとき</td></tr>
     </tbody>
   </table></div>
 
-  <h3>いちばん迷う組み合わせ</h3>
+  <h3>いちばん迷う2組</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 240" width="760" height="240" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はAWS Budgetsが自分で決めた予算の線を支出が超えたときに通知するグラフ。右はCost Anomaly Detectionがいつもの範囲から外れた支出を検知して通知するグラフ"><text x="10" y="22" font-size="12.5" fill="var(--warn)" text-anchor="start" font-weight="700">AWS Budgets ―― 自分で線を引く</text><line x1="20" y1="40" x2="20" y2="190" stroke="var(--ink-3)" stroke-width="1.2"/><line x1="20" y1="190" x2="350" y2="190" stroke="var(--ink-3)" stroke-width="1.2"/><text x="350" y="206" font-size="10" fill="var(--ink-3)" text-anchor="end">日 →</text><line x1="20" y1="86" x2="350" y2="86" stroke="var(--warn)" stroke-width="1.8" stroke-dasharray="6 4"/><text x="26" y="76" font-size="10.5" fill="var(--warn)" text-anchor="start" font-weight="700">予算 $1,000（自分で決める）</text><polyline points="20,184 80,162 140,140 200,118 260,96 290,82 340,62" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/><circle cx="282" cy="86" r="6" fill="var(--warn)"/><text x="282" y="118" font-size="11" fill="var(--warn)" text-anchor="middle" font-weight="700">超えたら通知</text><text x="20" y="228" font-size="11" fill="var(--ink-2)" text-anchor="start">「月◯ドルを超えたら知らせる」</text><line x1="380" y1="12" x2="380" y2="240" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">Cost Anomaly Detection ―― 線を引かない</text><line x1="408" y1="40" x2="408" y2="190" stroke="var(--ink-3)" stroke-width="1.2"/><line x1="408" y1="190" x2="738" y2="190" stroke="var(--ink-3)" stroke-width="1.2"/><text x="738" y="206" font-size="10" fill="var(--ink-3)" text-anchor="end">日 →</text><polygon points="408.0,150.0 470.0,142.0 530.0,146.0 590.0,138.0 650.0,142.0 738.0,136.0 738.0,168.0 650.0,172.0 590.0,170.0 530.0,176.0 470.0,172.0 408.0,178.0" fill="var(--accent-soft)" stroke="none" stroke-width="1.4" stroke-linejoin="round"/><text x="470" y="132" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">いつもの範囲（機械学習で学ぶ）</text><polyline points="408,164 470,158 530,162 590,154 630,158 660,70 690,66 738,64" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/><circle cx="660" cy="70" r="6" fill="var(--deny)"/><text x="600" y="62" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">いつもと違う → 通知</text><text x="398" y="228" font-size="11" fill="var(--ink-2)" text-anchor="start">「想定外の増加に気づきたい。金額は決められない」</text></svg>
+  </div>
+  <figcaption><strong>線を自分で引くか、引かないか。</strong>Budgets は自分で決めた金額（しきい値）を超えた、または超えそうなときに通知する。Cost Anomaly Detection は過去の支出から「いつもの範囲」を学び、そこから外れたら通知する。設問に金額が書いてあれば Budgets、「想定外の」「異常な」とあれば Anomaly Detection。</figcaption>
+</figure>
   <ul>
-    <li><strong>Budgets と Cost Anomaly Detection。</strong>Budgets は<em>自分で決めたしきい値</em>の超過を通知し、Anomaly Detection は<em>しきい値なしで</em>普段と違う動きを検知します。金額が書いてあれば Budgets、「想定外の」「異常な」とあれば Anomaly Detection です。</li>
-    <li><strong>Cost Explorer と Cost and Usage Report。</strong>前者はコンソールでグラフを見る道具、後者は生データを吐き出す道具です。「リソース単位」「Athena で分析」とあれば CUR です。</li>
+    <li><strong>Budgets と Cost Anomaly Detection：</strong>この場面の「早く気づきたい」は、金額を自分で決められるなら Budgets、決められないなら Cost Anomaly Detection。どちらも Billing and Cost Management の中で作る（Budgets は「予算」、Anomaly Detection は「コスト異常検出」でモニターを作る）</li>
+    <li><strong>Cost Explorer と Cost and Usage Report：</strong>前者はコンソールでグラフを見る道具、後者は生のデータを出力する道具。「リソース単位」「Athena で分析」とあれば Cost and Usage Report</li>
   </ul>
 
-  <div class="note">
-    <span class="label">設計前に見積もる</span>
-    <p>まだ何も動かしていない段階――「移行前に費用を試算したい」――では <strong>AWS Pricing Calculator</strong> が答えです。Cost Explorer は実績がないと使えません。</p>
+  <h3>部署別の内訳を出す ―― コスト配分タグ</h3>
+  <p>「どの部署が、どのプロジェクトがいくら使っているか」を知りたい、という要件の答えは<strong>コスト配分タグ</strong>です。タグには、AWS が自動で付けるもの（<code>aws:</code> で始まる）と、利用者が付けるユーザー定義タグがあります。どちらも、有効化しないと内訳に使えません。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 216" width="760" height="216" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="9月から12月の時間軸。11月1日にコスト配分タグを有効化すると、11月以降は部署別の内訳が出るが、9月と10月は分けられない"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">コスト配分タグは、有効化した後の分からしか内訳に出ない</text><rect x="30" y="70" width="168" height="60" rx="6" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="114" y="94" font-size="12.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">9月</text><text x="114" y="114" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">部署別に分けられない</text><rect x="206" y="70" width="168" height="60" rx="6" fill="var(--inset)" stroke="var(--ink-3)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="290" y="94" font-size="12.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">10月</text><text x="290" y="114" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">部署別に分けられない</text><rect x="382" y="70" width="168" height="60" rx="6" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="466" y="94" font-size="12.5" fill="var(--allow)" text-anchor="middle" font-weight="700">11月</text><text x="466" y="114" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">部署別の内訳が出る</text><rect x="558" y="70" width="168" height="60" rx="6" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="642" y="94" font-size="12.5" fill="var(--allow)" text-anchor="middle" font-weight="700">12月</text><text x="642" y="114" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">部署別の内訳が出る</text><line x1="380" y1="44" x2="380" y2="150" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 4"/><rect x="292" y="36" width="176" height="26" rx="13" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="380" y="54" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">11/1 タグを有効化</text><circle cx="40" cy="172" r="9" fill="var(--deny)"/><line x1="35.95" y1="167.95" x2="44.05" y2="176.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="35.95" y1="176.05" x2="44.05" y2="167.95" stroke="var(--bg)" stroke-width="2.4"/><text x="56" y="176" font-size="11.5" fill="var(--ink)" text-anchor="start">「先月分の部署別内訳を今すぐ」に、今からの有効化は間に合わない</text><circle cx="40" cy="198" r="9" fill="var(--allow)"/><polyline points="36.0,198.0 39.1,201.4 44.5,194.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="56" y="202" font-size="11.5" fill="var(--ink)" text-anchor="start">タグは事前に付け、Organizations のタグポリシーなどで付け忘れを防ぐ</text></svg>
+  </div>
+  <figcaption><strong>タグは遡らない。</strong>リソースにタグを付けただけでは内訳に使えず、Billing and Cost Management の「コスト配分タグ」で<strong>有効化</strong>して初めて Cost Explorer に現れる。しかも有効化より前の期間には効かない。</figcaption>
+</figure>
+  <p>タグの付け忘れを防ぐには、Organizations の<strong>タグポリシー</strong>（タグの付け方の決まりを組織全体に配る機能）や、必須のタグがなければリソースを作らせない SCP を併用します。</p>
+
+  <h3>複数アカウントをまとめると安くなる ―― 一括請求</h3>
+  <p>Organizations で複数のアカウントをまとめると、請求は管理アカウントに集約されます。支払いの手間が減るだけでなく、コスト上の実利が2つあります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 222" width="760" height="222" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左は開発、検証、本番の3アカウントの使用量を合算して安い単価の段に届く図。右はアカウントAで余ったRIの割引がアカウントBのEC2に自動で適用される図"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">① 使用量を合算して、ボリューム割引を判定する</text><rect x="24" y="126" width="46" height="24" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><text x="47" y="168" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">開発</text><rect x="86" y="118" width="46" height="32" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><text x="109" y="168" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">検証</text><rect x="148" y="102" width="46" height="48" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><text x="171" y="168" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">本番</text><line x1="20" y1="150" x2="208" y2="150" stroke="var(--ink-3)" stroke-width="1.1"/><text x="232" y="112" font-size="16" fill="var(--ink-3)" text-anchor="middle">＝</text><rect x="262" y="46" width="54" height="104" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.3"/><line x1="250" y1="150" x2="360" y2="150" stroke="var(--ink-3)" stroke-width="1.1"/><text x="289" y="168" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">組織の合計</text><line x1="250" y1="70" x2="318" y2="70" stroke="var(--allow)" stroke-width="1.6" stroke-dasharray="5 4"/><text x="324" y="68" font-size="10" fill="var(--allow)" text-anchor="start" font-weight="700">安い単価</text><text x="324" y="82" font-size="10" fill="var(--allow)" text-anchor="start" font-weight="700">の段</text><text x="20" y="200" font-size="11" fill="var(--ink-2)" text-anchor="start">1アカウントずつでは届かない段に、合計で届く</text><line x1="380" y1="12" x2="380" y2="216" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">② RI / Savings Plans の余りを分け合う</text><rect x="398" y="40" width="160" height="120" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.4"/><text x="478" y="60" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">アカウント A</text><rect x="412" y="72" width="132" height="30" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="478" y="92" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">RI を 4台分 購入</text><text x="478" y="126" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">実際に動かすのは 2台</text><text x="478" y="144" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">→ 2台分 余る</text><line x1="558" y1="100" x2="580.0" y2="100.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="590.0,100.0 580.0,105.5 580.0,94.5" fill="var(--allow)"/><rect x="592" y="40" width="158" height="120" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.4"/><text x="671" y="60" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">アカウント B</text><rect x="606" y="76" width="60" height="34" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="636.0" y="97.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="676" y="76" width="60" height="34" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="706.0" y="97.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="671" y="134" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">余った割引が自動で当たる</text><text x="398" y="200" font-size="11" fill="var(--ink-2)" text-anchor="start">共有はアカウント単位でオフにもできる</text></svg>
+  </div>
+  <figcaption><strong>Organizations の一括請求には、コスト上の実利が2つある。</strong>①使うほど単価が下がる料金（S3 の保管やデータ転送など）は、組織全体の使用量を合算して判定される。②あるアカウントで買った RI や Savings Plans の使い残しが、組織内の他のアカウントに自動で適用される。</figcaption>
+</figure>
+  <p>設問での見分け方は<strong>「複数アカウント」＋「コスト」</strong>の組み合わせです。「部門ごとに請求を切り分けたい」なら、アカウントを分けたうえで、一括請求とコスト配分タグで内訳を出すのが標準的な答えです。</p>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>金額が書いてある（「月◯ドルを超えたら」）→ <strong>AWS Budgets</strong>。「想定外の」「異常な」「しきい値は決められない」→ <strong>Cost Anomaly Detection</strong>。「リソース単位・時間単位で独自に分析」→ <strong>Cost and Usage Report ＋ Athena</strong>。「移行前に試算」→ <strong>Pricing Calculator</strong>。「先月分の部署別内訳を今すぐ」で「今からタグを有効化する」→ <strong>遡らないので解決にならない</strong>。</p></div>
+</section>
+
+<section id="s10" data-toc="場面9 6つの柱">
+  
+  <span class="h2num">10</span>
+  <h2>場面9 ―― 「可用性もコストも運用負荷も、全部よくしたい」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>柱<small>pillar</small></dt><dd>Well-Architected Framework が設計を評価するときの6つの観点</dd>
+      <dt>最小権限</dt><dd>必要な権限だけを与えるという原則（IAM 講義で既出）</dd>
+      <dt>多層防御</dt><dd>守りを1か所に頼らず、何重にも重ねること（セキュリティの講義で既出）</dd>
+      <dt>単一障害点</dt><dd>そこが壊れると全体が止まる箇所</dd>
+      <dt>RTO・RPO<small>Recovery Time Objective・Recovery Point Objective</small></dt><dd>障害のあと、何時間以内に復旧させるかが RTO、どの時点のデータまで戻せればよいかが RPO</dd>
+      <dt>レイテンシ</dt><dd>応答が返ってくるまでの待ち時間</dd>
+    </dl>
   </div>
 
-  <h3>タグによるコスト配分</h3>
-  <p>「どの部署が、どのプロジェクトがいくら使っているか」を知りたいという要件は頻出です。答えは<strong>コスト配分タグ</strong>です。</p>
-  <p>タグには AWS が自動で付ける生成タグ（<code>aws:</code> で始まる）と、利用者が付けるユーザー定義タグがあります。どちらも<strong>請求コンソールでコスト配分タグとして有効化しないと、Cost Explorer や請求レポートで内訳に使えません</strong>。ここが設問になります。</p>
-
-  <div class="note warn">
-    <span class="label">タグは遡及しない</span>
-    <p>コスト配分タグを有効化しても、<strong>有効化より前の期間には適用されません</strong>。「先月分の部署別内訳を今すぐ出したい」という設問で、今からタグを有効化する選択肢は解決になりません。<strong>タグ付けは事前に、組織的に強制する</strong>――そのために Organizations のタグポリシーや、必須タグがなければ作成させない SCP を併用します。</p>
+  <p>最後に、SAA 全体を貫く観点を置いておきます。Well-Architected Framework は、「良い設計とは何か」を6つの柱に分けたものです。試験は、この6つのうちどれを優先するかを選ばせる形で作られています。コスト最適化は、そのうちの1つにすぎません。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 226" width="760" height="226" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="Well-Architected Frameworkの6つの柱と、それぞれを指す設問文の言い回し"><text x="380" y="20" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">設問文は、どの柱を優先するかを名指ししている</text><rect x="10" y="34" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="26" y="62" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700">運用上の優秀性</text><text x="26" y="80" font-size="10" fill="var(--ink-3)" text-anchor="start">Operational Excellence</text><text x="26" y="104" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">「運用負荷を最小限に」</text><rect x="260" y="34" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="276" y="62" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700">セキュリティ</text><text x="276" y="80" font-size="10" fill="var(--ink-3)" text-anchor="start">Security</text><text x="276" y="104" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">「最小権限で」「暗号化して」</text><rect x="510" y="34" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="526" y="62" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700">信頼性</text><text x="526" y="80" font-size="10" fill="var(--ink-3)" text-anchor="start">Reliability</text><text x="526" y="104" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">「可用性を維持しながら」</text><rect x="10" y="130" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="26" y="158" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700">パフォーマンス効率</text><text x="26" y="176" font-size="10" fill="var(--ink-3)" text-anchor="start">Performance Efficiency</text><text x="26" y="200" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">「レイテンシを最小化」</text><rect x="260" y="130" width="240" height="86" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="276" y="158" font-size="14" fill="var(--accent)" text-anchor="start" font-weight="700">コスト最適化</text><text x="276" y="176" font-size="10" fill="var(--ink-3)" text-anchor="start">Cost Optimization</text><text x="276" y="200" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">「最もコスト効率が高い」</text><rect x="510" y="130" width="240" height="86" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.3"/><text x="526" y="158" font-size="14" fill="var(--ink)" text-anchor="start" font-weight="700">持続可能性</text><text x="526" y="176" font-size="10" fill="var(--ink-3)" text-anchor="start">Sustainability</text><text x="526" y="200" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">「環境負荷を減らす」</text></svg>
   </div>
-
-  <h3>Organizations の一括請求</h3>
-  <p>Organizations で複数アカウントをまとめると、請求は管理アカウントに集約されます。支払いの手間の話にとどまらず、<strong>コスト上の実利が2つ</strong>あります。</p>
-  <ol class="body">
-    <li><strong>ボリューム割引の合算。</strong>使用量に応じて単価が下がる従量段階（S3 のストレージやデータ転送など）は、組織全体の使用量を合算して判定されます。アカウントを分けていても、割引の観点では1つの利用者として扱われます。</li>
-    <li><strong>Reserved Instance と Savings Plans の共有。</strong>あるアカウントで購入した RI / Savings Plans の未使用分が、組織内の他のアカウントに自動で適用されます。環境別・チーム別に分割していてもコミットメントを使い切れます。共有はアカウント単位でオフにもできます。</li>
-  </ol>
-
-  <p>設問での見分け方は<strong>「複数アカウント」＋「コスト」</strong>の組み合わせです。この2語が並んだら、一括請求によるボリューム割引と RI/SP 共有を思い出してください。「部門ごとに請求を切りたい」なら、アカウントを分割したうえで一括請求とコスト配分タグで内訳を出すのが標準的な答えです。</p></section>
-
-<section id="s9" data-toc="6つの柱">
-
-  <span class="h2num">09</span>
-  <h2>Well-Architected Framework の6つの柱</h2>
-  <p class="lead">最後に、SAA 全体を貫く観点を置いておきます。Well-Architected Framework は、AWS が「良い設計とは何か」を6つの視点に分解したものです。試験は、この6つのうちどれを優先するかを選ばせる形で作られています。コスト最適化は、そのひとつにすぎません。</p>
-
+  <figcaption><strong>Well-Architected Framework の6つの柱。</strong>かぎかっこの中は、設問文でその柱を指す言い回し。今日の講義はまるごと「コスト最適化」の柱で、場面1の「運用負荷を上げずに」は「運用上の優秀性」の柱の言い換え。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th>柱</th><th>問うていること</th></tr></thead>
     <tbody>
-      <tr><td><strong>運用上の優秀性</strong><br><span style="color:var(--ink-3);font-size:13px">Operational Excellence</span></td><td>手作業を自動化し、小さく変更し、監視して改善できるか。「運用負荷を上げずに」という設問文は、この柱の言い換えです。</td></tr>
-      <tr><td><strong>セキュリティ</strong><br><span style="color:var(--ink-3);font-size:13px">Security</span></td><td>データと資産を守れているか。最小権限、多層防御、保管時と転送時の暗号化、追跡可能性。W1 の IAM がここに入ります。</td></tr>
-      <tr><td><strong>信頼性</strong><br><span style="color:var(--ink-3);font-size:13px">Reliability</span></td><td>障害から回復し、需要の変化に応えられるか。単一障害点の排除、マルチ AZ、自動復旧、RTO / RPO。</td></tr>
-      <tr><td><strong>パフォーマンス効率</strong><br><span style="color:var(--ink-3);font-size:13px">Performance Efficiency</span></td><td>要求される性能を無駄のない資源で満たせているか。適切なサービスの選択、キャッシュ、需要に合わせた調整。</td></tr>
-      <tr><td><strong>コスト最適化</strong><br><span style="color:var(--ink-3);font-size:13px">Cost Optimization</span></td><td>不要な支出をなくし、支出の所在を把握できているか。今日の講義がまるごとこの柱です。</td></tr>
-      <tr><td><strong>持続可能性</strong><br><span style="color:var(--ink-3);font-size:13px">Sustainability</span></td><td>環境負荷を減らせているか。使用リソースの最小化、効率の高いハードウェア（Graviton など）の活用、不要データの削除。後から追加された6番目の柱です。</td></tr>
+      <tr><td><strong>運用上の優秀性</strong></td><td>手作業を自動化し、小さく変更し、監視して改善できるか。「運用負荷を上げずに」という設問文は、この柱の言い換え</td></tr>
+      <tr><td><strong>セキュリティ</strong></td><td>データと資産を守れているか。最小権限、多層防御、保管時と転送時の暗号化、操作を追跡できること。IAM 講義とセキュリティの講義がここに入る</td></tr>
+      <tr><td><strong>信頼性</strong></td><td>障害から回復し、需要の変化に応えられるか。単一障害点をなくす、マルチ AZ、自動復旧、RTO / RPO</td></tr>
+      <tr><td><strong>パフォーマンス効率</strong></td><td>求められる性能を、無駄のない資源で満たせているか。適切なサービスの選択、キャッシュ、需要に合わせた調整</td></tr>
+      <tr><td><strong>コスト最適化</strong></td><td>不要な支出をなくし、支出の所在を把握できているか。今日の講義がまるごとこの柱</td></tr>
+      <tr><td><strong>持続可能性</strong></td><td>環境への負荷を減らせているか。使うリソースを最小にする、効率の高いハードウェア（Graviton など）を使う、不要なデータを消す。後から追加された6番目の柱</td></tr>
     </tbody>
   </table></div>
 
-  <p>重要なのは<strong>これらがしばしば互いに衝突する</strong>ことです。マルチ AZ は信頼性を上げますが AZ 間転送料金でコストは上がり、スポットはコストを下げますが信頼性を落とします。Well-Architected Framework は「全部を最大化せよ」ではなく、<em>要件に応じてどれを優先するかを意識的に選べ</em>と言っています。</p>
+  <h3>全部を最大にする答えはない</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 254" width="760" height="254" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="マルチAZ、スポット、1つのAZに寄せる、の3つの選択が信頼性とコストに逆向きに効くことを示し、設問文の制約と目的を読み分ける図"><text x="160" y="24" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">選択</text><text x="400" y="24" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">信頼性</text><text x="610" y="24" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">コスト</text><rect x="10" y="36" width="740" height="36" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="24" y="59" font-size="12" fill="var(--ink)" text-anchor="start" font-weight="700">マルチ AZ にする</text><text x="400" y="59" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">上がる</text><text x="610" y="59" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">上がる（台数・AZ 間転送）</text><rect x="10" y="80" width="740" height="36" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="24" y="103" font-size="12" fill="var(--ink)" text-anchor="start" font-weight="700">スポットを使う</text><text x="400" y="103" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">下がる（中断される）</text><text x="610" y="103" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">下がる</text><rect x="10" y="124" width="740" height="36" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.2"/><text x="24" y="147" font-size="12" fill="var(--ink)" text-anchor="start" font-weight="700">1つの AZ に寄せる</text><text x="400" y="147" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">下がる（AZ 障害で全滅）</text><text x="610" y="147" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">下がる（AZ 間転送なし）</text><rect x="10" y="180" width="364" height="64" rx="8" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="24" y="202" font-size="12" fill="var(--deny)" text-anchor="start" font-weight="700">制約：「可用性を維持しながら」</text><text x="24" y="226" font-size="11" fill="var(--ink-2)" text-anchor="start">必ず満たす。破った選択肢は消える</text><rect x="386" y="180" width="364" height="64" rx="8" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="400" y="202" font-size="12" fill="var(--allow)" text-anchor="start" font-weight="700">目的：「最もコスト効率が高い」</text><text x="400" y="226" font-size="11" fill="var(--ink-2)" text-anchor="start">制約を満たした中で、いちばん良いものを選ぶ</text></svg>
+  </div>
+  <figcaption><strong>柱どうしは衝突する。</strong>信頼性を上げればコストが上がり、コストを下げれば信頼性が下がる。全部を最大にする答えはない。設問は「〜しながら」（制約）と「最も〜」（目的）で優先順位を書いてくる。<strong>制約を先に満たし、その中で目的を追う。</strong>場面1のふるいと同じ読み方。</figcaption>
+</figure>
+  <p>Well-Architected Framework は「全部を最大にせよ」ではなく、<em>要件に応じてどれを優先するかを意識して選べ</em>と言っています。この場面の依頼への答えは「全部は無理。何が制約で、何が目的かを先に決める」です。</p>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>SAA の設問は、<strong>優先する柱を設問文で必ず名指ししています。</strong>「可用性を維持しながら」なら信頼性、「レイテンシを最小化」ならパフォーマンス効率、「運用負荷を最小限に」なら運用上の優秀性、「最もコスト効率が高い」ならコスト最適化。複数並ぶときは<strong>制約として書かれているほうが上位</strong>です。「可用性を維持しながらコストを削減する」なら、可用性は満たすべき制約、コストは小さくすべき目的。この読み分けは全分野で効きます。</p></div>
+</section>
 
-  <div class="note">
-    <span class="label">試験での使い方</span>
-    <p>SAA の設問は、<strong>設問文が優先する柱を必ず名指ししています。</strong>「可用性を維持しながら」なら信頼性、「レイテンシを最小化」ならパフォーマンス効率、「運用負荷を最小限に」なら運用上の優秀性、「最もコスト効率が高い」ならコスト最適化。複数並ぶ場合は<strong>制約として書かれているほうが上位</strong>です。「可用性を維持しながらコストを削減する」なら、可用性は満たすべき制約、コストは最小化すべき目的。この読み分けが全分野で効きます。</p>
-  </div></section>
-
-<section id="s10" data-toc="試験での判断軸">
-
-  <span class="h2num">10</span>
-  <h2>試験での判断軸</h2>
-  <p class="lead">設問文にこの手がかりが出たら、この答えに寄せる――という対応表です。コスト分野は選択肢の言い換えが多く、この対応が入っているかどうかで解答速度が変わります。</p>
-
+<section id="s11" data-toc="場面→答えの早見表">
+  
+  <span class="h2num">11</span>
+  <h2>場面 → 答えの早見表</h2>
+  <p class="lead">左を読んで右を思い出す訓練に使ってください。この表は暗記するものではなく、<strong>模試で間違えたときに戻ってくる場所</strong>です。誤答の原因が「対応を知らなかった」なら覚え直す、「知っていたが設問文の制約を読み落とした」なら読み方の問題、と切り分けてください。コスト分野は後者が多いはずです。</p>
   <div class="judge">
+    <div class="row"><span class="cue">「可用性を維持しながら」でマルチ AZ をやめる選択肢</span><span class="arrow">→</span><span class="ans">要件破り。安くても不正解</span></div>
+    <div class="row"><span class="cue">「運用負荷を上げずに」で自前のスクリプト</span><span class="arrow">→</span><span class="ans">不正解。マネージドな機能を選ぶ</span></div>
     <div class="row"><span class="cue">中断に耐えられる / フォールトトレラント / バッチ</span><span class="arrow">→</span><span class="ans">スポットインスタンス</span></div>
-    <div class="row"><span class="cue">常時稼働 + 今後1〜3年 + 構成を変えない</span><span class="arrow">→</span><span class="ans">Standard RI / EC2 Instance Savings Plans</span></div>
+    <div class="row"><span class="cue">常時稼働 ＋ 今後1〜3年 ＋ 構成を変えない</span><span class="arrow">→</span><span class="ans">Standard RI / EC2 Instance Savings Plans</span></div>
     <div class="row"><span class="cue">柔軟性を保ちたい / Fargate や Lambda も使う</span><span class="arrow">→</span><span class="ans">Compute Savings Plans</span></div>
-    <div class="row"><span class="cue">NAT Gateway のコストが高い + 相手は S3 / DynamoDB</span><span class="arrow">→</span><span class="ans">Gateway エンドポイント（追加料金なし）</span></div>
-    <div class="row"><span class="cue">NAT を避けたい + 相手は S3・DynamoDB 以外</span><span class="arrow">→</span><span class="ans">Interface エンドポイント（PrivateLink）</span></div>
+    <div class="row"><span class="cue">常時動く RDS の料金を下げたい</span><span class="arrow">→</span><span class="ans">リザーブド DB インスタンス</span></div>
+    <div class="row"><span class="cue">特定の AZ で必ず起動できるようにしたい</span><span class="arrow">→</span><span class="ans">オンデマンドキャパシティ予約 / ゾーン指定 RI</span></div>
+    <div class="row"><span class="cue">長時間のバッチをスポットで動かしたい</span><span class="arrow">→</span><span class="ans">チェックポイント / SQS</span></div>
+    <div class="row"><span class="cue">スポットの中断を最小化したい</span><span class="arrow">→</span><span class="ans">キャパシティ最適化 ＋ 複数のタイプと AZ</span></div>
+    <div class="row"><span class="cue">運用負荷を上げずにコンテナのコストを下げたい</span><span class="arrow">→</span><span class="ans">Fargate Spot</span></div>
     <div class="row"><span class="cue">インターネットへの配信量が多くコストが高い</span><span class="arrow">→</span><span class="ans">CloudFront（オリジンからの転送は無料）</span></div>
+    <div class="row"><span class="cue">同じ VPC 内をパブリック DNS 名で呼んでいる</span><span class="arrow">→</span><span class="ans">プライベート IP・内部の DNS 名に変える</span></div>
+    <div class="row"><span class="cue">NAT Gateway のコストが高い ＋ 相手は S3 / DynamoDB</span><span class="arrow">→</span><span class="ans">ゲートウェイ型エンドポイント（追加料金なし）</span></div>
+    <div class="row"><span class="cue">NAT を避けたい ＋ 相手は S3・DynamoDB 以外</span><span class="arrow">→</span><span class="ans">インターフェース型エンドポイント（PrivateLink）</span></div>
+    <div class="row"><span class="cue">オンプレミスとの継続的な大量転送</span><span class="arrow">→</span><span class="ans">Direct Connect</span></div>
     <div class="row"><span class="cue">アクセスパターンが予測できない / 変化する</span><span class="arrow">→</span><span class="ans">S3 Intelligent-Tiering</span></div>
-    <div class="row"><span class="cue">7年保持 + 取り出しに数時間〜半日待てる</span><span class="arrow">→</span><span class="ans">Glacier Deep Archive</span></div>
+    <div class="row"><span class="cue">◯日後には読まれなくなると分かっている</span><span class="arrow">→</span><span class="ans">ライフサイクルルールで移行</span></div>
+    <div class="row"><span class="cue">7年保持 ＋ 取り出しに数時間〜半日待てる</span><span class="arrow">→</span><span class="ans">Glacier Deep Archive</span></div>
+    <div class="row"><span class="cue">オブジェクトは増えていないのに S3 が高くなる</span><span class="arrow">→</span><span class="ans">非現行バージョン / 不完全なマルチパートを消す</span></div>
+    <div class="row"><span class="cue">性能を維持したまま EBS のコストを下げる</span><span class="arrow">→</span><span class="ans">gp2 から gp3 へ</span></div>
+    <div class="row"><span class="cue">スナップショットの世代管理を自動にしたい</span><span class="arrow">→</span><span class="ans">Data Lifecycle Manager</span></div>
+    <div class="row"><span class="cue">停止しているのに課金される</span><span class="arrow">→</span><span class="ans">EBS ボリュームと Elastic IP</span></div>
     <div class="row"><span class="cue">オーバープロビジョニングを見つけて推奨が欲しい</span><span class="arrow">→</span><span class="ans">Compute Optimizer</span></div>
+    <div class="row"><span class="cue">メモリ使用率を根拠にサイズを決めたい</span><span class="arrow">→</span><span class="ans">CloudWatch エージェント</span></div>
+    <div class="row"><span class="cue">開発環境のコストが本番と同程度</span><span class="arrow">→</span><span class="ans">夜間・週末に止めるスケジュール</span></div>
+    <div class="row"><span class="cue">コンテナ化されている / 再コンパイルできる</span><span class="arrow">→</span><span class="ans">Graviton</span></div>
+    <div class="row"><span class="cue">Lambda の実行時間が長くコストが高い</span><span class="arrow">→</span><span class="ans">メモリ設定の見直し（増やすと安くなることがある）</span></div>
     <div class="row"><span class="cue">金額のしきい値を決めて通知・自動制御したい</span><span class="arrow">→</span><span class="ans">AWS Budgets</span></div>
     <div class="row"><span class="cue">想定外・異常な増加に気づきたい（しきい値なし）</span><span class="arrow">→</span><span class="ans">Cost Anomaly Detection</span></div>
-    <div class="row"><span class="cue">リソース単位・時間単位で独自に分析したい</span><span class="arrow">→</span><span class="ans">Cost and Usage Report + Athena</span></div>
-    <div class="row"><span class="cue">部門別・プロジェクト別に費用を割り当てたい</span><span class="arrow">→</span><span class="ans">コスト配分タグ（事前有効化が必要）</span></div>
-    <div class="row"><span class="cue">複数アカウント + ボリューム割引 / RI の有効活用</span><span class="arrow">→</span><span class="ans">Organizations の一括請求</span></div>
+    <div class="row"><span class="cue">リソース単位・時間単位で独自に分析したい</span><span class="arrow">→</span><span class="ans">Cost and Usage Report ＋ Athena</span></div>
+    <div class="row"><span class="cue">移行前・設計前に費用を試算したい</span><span class="arrow">→</span><span class="ans">AWS Pricing Calculator</span></div>
+    <div class="row"><span class="cue">部門別・プロジェクト別に費用を割り当てたい</span><span class="arrow">→</span><span class="ans">コスト配分タグ（事前の有効化が必要）</span></div>
+    <div class="row"><span class="cue">複数アカウント ＋ ボリューム割引 / RI の有効活用</span><span class="arrow">→</span><span class="ans">Organizations の一括請求</span></div>
   </div>
+</section>
 
-  <div class="note warn">
-    <span class="label">対応表の使い方</span>
-    <p>この表は暗記するものではなく、<strong>模試で間違えたときに戻ってくる場所</strong>です。誤答の原因が「対応を知らなかった」なら覚え直す、「知っていたが設問文の制約を読み落とした」なら読み方の問題――と切り分けてください。コスト分野は後者が多いはずです。</p>
-  </div></section>
-
-<section id="s11" data-toc="確認問題">
-
-  <span class="h2num">11</span>
+<section id="s12" data-toc="確認問題">
+  
+  <span class="h2num">12</span>
   <h2>確認問題</h2>
   <p class="lead">先に自分で答えを決めてから開いてください。この分野は「なんとなく安そう」で選ぶ癖がつきやすいので、選んだ理由を一文で言えるか確かめてから開くこと。</p>
 
@@ -711,8 +938,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>Gateway エンドポイントには追加料金がありません。S3 宛ての通信が NAT Gateway を通らなくなるため、処理データ量料金が消えます。設定はルートテーブルの変更だけです。</p>
-      <p><strong>判断軸:</strong> A は自前で管理するインスタンスが増えて運用負荷が上がり、可用性も落ちます。C はセキュリティ要件を壊します。D は S3 がピアリングの対象ではありません。<strong>相手が S3 か DynamoDB なら Gateway エンドポイント</strong>――反射で出るようにしてください。</p>
+      <p>場面5の2枚の図そのもの。NAT Gateway には通したデータ量にかかる処理料金があり、S3 宛ての数テラバイトがそこを通っていた。ゲートウェイ型（Gateway）エンドポイントを作るとルートテーブルに1行増え、S3 宛ての通信は NAT Gateway を通らなくなる。エンドポイントに追加料金はない。</p>
+      <p><strong>判断軸:</strong> A は自分で面倒を見る EC2 が増えて運用負荷が上がり、可用性も落ちる（場面1の「運用負荷の付け替え」）。C はプライベートに置くというセキュリティの要件を壊す。D は S3 がピアリングの相手にならない。<strong>相手が S3 か DynamoDB なら、ゲートウェイ型エンドポイント</strong>。</p>
     </div>
   </details>
 
@@ -727,8 +954,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: C</span></p>
-      <p>Compute Savings Plans は EC2 に加えて Fargate と Lambda もカバーします。EC2 から Fargate へワークロードが移っても、コミットした金額分の割引が自動的に適用先を移します。</p>
-      <p><strong>判断軸:</strong> A と B は割引率では有利ですが EC2 のみが対象です。<strong>Fargate や Lambda という単語が出た時点で、選べるのは Compute Savings Plans だけ</strong>。D は基幹システムに中断のリスクを持ち込みます。「割引率が最大のもの」ではなく「要件を満たすもののうち割引が大きいもの」という順序を守ってください。</p>
+      <p>場面2の Savings Plans の表。Compute Savings Plans は EC2 に加えて Fargate と Lambda にも効く。約束するのは金額なので、EC2 から Fargate へ仕事が移っても、割引は自動で移った先に当たる。</p>
+      <p><strong>判断軸:</strong> A と B は割引率では有利だが、対象が EC2 だけ。<strong>Fargate や Lambda という単語が出た時点で、選べるのは Compute Savings Plans だけ</strong>。D は基幹システムに中断のリスクを持ち込む（場面3）。「割引率が最大のもの」ではなく「要件を満たすもののうち割引が大きいもの」という順序（場面1の図）を守る。</p>
     </div>
   </details>
 
@@ -743,8 +970,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>アクセスパターンが予測できず、データセットごとにも異なるという条件は Intelligent-Tiering のためにある設問文です。自動で階層が切り替わり、<strong>取り出し料金がかからない</strong>点も要件に合致します。</p>
-      <p><strong>判断軸:</strong> A は当初の頻繁なアクセスで取り出し料金が膨らみます。C は日数が根拠のない決め打ちで、One Zone-IA は単一 AZ のため元データには適しません。D は毎月の手作業が発生し「運用負荷を最小限に」に反します。<strong>「予測できない」は Intelligent-Tiering、「◯日後と分かっている」はライフサイクル</strong>です。</p>
+      <p>場面6のストレージクラスの図の、黄色い帯。「読めない」「データセットごとに差がある」は Intelligent-Tiering を選ばせるための言葉。自動で階層が切り替わり、<strong>取り出し料金がかからない</strong>点も要件に合う。</p>
+      <p><strong>判断軸:</strong> A は当初の頻繁なアクセスで取り出し料金が膨らむ。C は30日という日数に根拠がなく、One Zone-IA は単一 AZ なので元データには向かない。D は毎月の手作業が発生し、「運用負荷を最小限に」に反する。<strong>「予測できない」は Intelligent-Tiering、「◯日後と分かっている」はライフサイクル</strong>。</p>
     </div>
   </details>
 
@@ -759,8 +986,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>Cost Anomaly Detection は過去の支出パターンを学習し、通常と異なる支出を検知して通知します。しきい値を人が決めなくてよい点が設問の条件に対応しています。</p>
-      <p><strong>判断軸:</strong> A は<strong>しきい値を決められるという前提</strong>が要件と合いません。C は自前の集計を作る必要があり運用負荷が高い。D は自動化されておらず検知が遅れます。<strong>「しきい値を自分で決める → Budgets」「決められない → Cost Anomaly Detection」</strong>で覚えてください。</p>
+      <p>場面8の左右のグラフ。Cost Anomaly Detection は過去の支出のパターンを学び、いつもの範囲から外れた支出を検知して通知する。線（しきい値）を人が引かなくてよい点が、設問の条件に対応している。</p>
+      <p><strong>判断軸:</strong> A は<strong>しきい値を決められるという前提</strong>が要件と合わない。C は自前の集計を作る必要があり運用負荷が高い。D は自動になっておらず、気づくのが遅れる。<strong>「しきい値を自分で決める → Budgets」「決められない → Cost Anomaly Detection」</strong>。</p>
     </div>
   </details>
 
@@ -775,33 +1002,36 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>同一 VPC 内でもパブリック DNS 名を使うとトラフィックがパブリック IP 経由で扱われ、転送料金が発生します。プライベート IP（内部 DNS 名）に切り替えれば同一 AZ 内の通信は無料になり、可用性構成には一切手を触れません。</p>
-      <p><strong>判断軸:</strong> A は AZ 間転送料金をなくせますが<strong>可用性要件を壊す</strong>ため不正解――最初に疑うべき「要件破り」です。C は外部配信向けで内部通信には効きません。D は同一 VPC 内なのでピアリングの出番がありません。<strong>同一 VPC 内でパブリック名、という記述はコスト設問の仕込み</strong>です。</p>
+      <p>場面4の「同じ VPC の中なのに、有料になる呼び方」の図。同じ VPC の中でもパブリック DNS 名で呼ぶと、通信はパブリック IP 経由として扱われ、転送料金がかかる。プライベート IP（内部の DNS 名）に切り替えれば、同じ AZ 内の通信は無料になる。構成には手を触れない。</p>
+      <p><strong>判断軸:</strong> A は AZ 間の転送料金をなくせるが、<strong>可用性の要件を壊す</strong>。最初に疑うべき「要件破り」（場面1）。C は外への配信向けで、内部の通信には効かない。D は同じ VPC の中なのでピアリングの出番がない。<strong>「同じ VPC 内でパブリック名」という記述は、コスト設問の仕込み</strong>。</p>
     </div>
-  </details></section>
+  </details>
+</section>
 
-<section id="s12" data-toc="今日の宿題">
-
-  <span class="h2num">12</span>
+<section id="s13" data-toc="今日の宿題">
+  
+  <span class="h2num">13</span>
   <h2>今日の宿題</h2>
-  <p>この時点で模試は数回終えているはずです。今日の宿題は新しい知識を足すことより、<strong>すでに間違えたものをコストという軸で見直すこと</strong>に重心を置いています。25分を確保してください。</p>
+  <p>25分で、ここまでやってください。これで講義は全部読み終わりです。</p>
 
   <div class="hw">
-    <div class="item"><span class="box"></span><span class="t"><code>notes/cost/</code> の README チェックリストを埋める<small>購入オプション、データ転送、ストレージ、管理ツールの4項目。埋まらない行はその節に戻る</small></span></div>
-    <div class="item"><span class="box"></span><span class="t">データ転送の4つの境界を、資料を見ずに図として描く<small>同一AZ / AZ間 / リージョン間 / インターネット。NAT Gateway と2種類のエンドポイントを書き足せれば完成</small></span></div>
-    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d4-cost.md</code> に判断軸を追記<small>10の対応表から、自分が知らなかった行だけを写す</small></span></div>
-    <div class="item"><span class="box"></span><span class="t"><code>drills/mistakes.md</code> のコスト関連の誤答を読み返す<small>02の「罠になる選択肢の5パターン」のどれに当たるかを各誤答の横に1語で書く。同じパターンが3つ以上あれば、それが弱点</small></span></div>
-    <div class="item"><span class="box"></span><span class="t">W9 の Issue のチェック項目を埋め、<code>plan/log.md</code> に1行残す<small>「購入オプションと Savings Plans」「データ転送料金とエンドポイント」「コスト管理ツールの使い分け」の3つ。ログには時間と、いちばん意外だったことを</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">9つの場面を、資料を閉じて書き出す<small>「どんな依頼で、答えは何だったか」を9行。書けたら、チャットに貼ってもらえれば私が清書します</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">各場面の「初めて出る言葉」を、正式名称なしで一言ずつ言えるか試す<small>言えなかった言葉だけ、その場面に戻る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">場面4の経路図を、何も見ずに紙に描く<small>同じ AZ / AZ 間 / リージョン間 / インターネットの出入り。そこに NAT Gateway・ゲートウェイ型エンドポイント・CloudFront を描き足し、矢印を無料と有料で塗り分ける</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">場面8の6つの動詞と道具の名前を、対にして言う<small>見積もる / 過去を見る / 明細を掘る / 上限を守る / 異常に気づく / 改善案をもらう</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">終わったことを伝える<small>Issue のチェックと plan/log.md は私が更新します</small></span></div>
   </div>
 
   <div class="note">
-    <span class="label">次回に向けて</span>
-    <p>ドメイン4はこれで一巡しました。残りの期間でやることは、新しい知識の追加ではなく<strong>ドメインをまたいだ設問への対応</strong>です。試験では「可用性を維持しながら、運用負荷を上げずに、コストを最小化する」と複数の柱が同時に条件として与えられます。<strong>制約として書かれているものを満たしたうえで、目的として書かれているものを最小化する</strong>――この読み方を次の模試で試してください。解けなかった設問より、<em>正解したが理由を説明できなかった設問</em>のほうが危険です。</p>
-  </div></section>
+    <span class="label">このあとの誤答潰しで使う</span>
+    <p>明日からは模試の誤答潰しです。<code>drills/mistakes.md</code> のコスト関連の誤答を読み返すときは、場面1の<strong>「誤答の作られ方は5通り」</strong>のどれに当たるかを、各誤答の横に1語で書いてください。同じパターンが3つ以上あれば、それが弱点です。</p>
+    <p>試験では「可用性を維持しながら、運用負荷を上げずに、コストを最小化する」と、複数の柱が同時に条件として与えられます。<strong>制約として書かれているものを満たしたうえで、目的として書かれているものを良くする</strong>（場面9）。この読み方を次の模試で試してください。解けなかった設問より、<em>正解したが理由を説明できなかった設問</em>のほうが危険です。</p>
+  </div>
+</section>
 
 <footer>
   AWS SAA-C03 / W9 座学<br>
-  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
+  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。料金の金額は変わるため載せていない。
 </footer>
 
 </main>

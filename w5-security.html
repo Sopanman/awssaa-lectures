@@ -174,9 +174,9 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 
 <header class="masthead">
   <p class="eyebrow">AWS SAA-C03 / W5 座学</p>
-  <h1>セキュリティサービス ―― 守るのか、見張るのか</h1>
-  <p class="standfirst">ドメイン1の残り半分です。IAMが「誰が何をできるか」なら、こちらは「データをどう守り、異常をどう見つけるか」。AWSのセキュリティサービスは名前が似ていて役割が重なって見えますが、実際には守る層がそれぞれ違います。どの層を担当するサービスなのかで整理すれば、設問で迷わなくなります。</p>
-  <div class="meta"><span>所要 60-90分</span><span>前提 IAM 講義を読了</span><span>ドメイン1 (30%)</span></div>
+  <h1>セキュリティサービス ―― 図で見る9つの依頼</h1>
+  <p class="standfirst">IAM が「誰が何をできるか」なら、こちらは「データをどう守り、異常をどう見つけるか」です。名前の似たサービスが多い領域ですが、守る側か見張る側か、どの層を担当するかで並べれば迷いません。この講義は図が主役です。各場面の最初に「この場面で初めて出る言葉」を置いてあるので、知らない言葉はそこで確かめてから図を見てください。緑は通る・うまくいく、赤と ✕ は止まる・失敗する、青は自分が決めるものです。</p>
+  <div class="meta"><span>所要 80-100分</span><span>前提 IAM・VPC・EC2 講義を読了</span><span>ドメイン1 (30%)</span></div>
 </header>
 
 <div class="cols">
@@ -184,486 +184,662 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 <nav class="toc">
   <h2>目次</h2>
   <ol>
-    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
-    <li><a href="#s2"><span class="n">02</span>2つの軸</a></li>
-    <li><a href="#s3"><span class="n">03</span>KMSのキー</a></li>
-    <li><a href="#s4"><span class="n">04</span>エンベロープ</a></li>
-    <li><a href="#s5"><span class="n">05</span>シークレット</a></li>
-    <li><a href="#s6"><span class="n">06</span>ACM</a></li>
-    <li><a href="#s7"><span class="n">07</span>守る層</a></li>
-    <li><a href="#s8"><span class="n">08</span>脅威検知</a></li>
-    <li><a href="#s9"><span class="n">09</span>Cognito</a></li>
-    <li><a href="#s10"><span class="n">10</span>試験での判断軸</a></li>
-    <li><a href="#s11"><span class="n">11</span>確認問題</a></li>
-    <li><a href="#s12"><span class="n">12</span>今日の宿題</a></li>
+    <li><a href="#s1"><span class="n">01</span>全体の地図</a></li>
+    <li><a href="#s2"><span class="n">02</span>場面1 何を暗号化するか</a></li>
+    <li><a href="#s3"><span class="n">03</span>場面2 KMS のキー</a></li>
+    <li><a href="#s4"><span class="n">04</span>場面3 暗号化の仕組み</a></li>
+    <li><a href="#s5"><span class="n">05</span>場面4 鍵の運用</a></li>
+    <li><a href="#s6"><span class="n">06</span>場面5 パスワードの置き場</a></li>
+    <li><a href="#s7"><span class="n">07</span>場面6 証明書</a></li>
+    <li><a href="#s8"><span class="n">08</span>場面7 攻撃を止める</a></li>
+    <li><a href="#s9"><span class="n">09</span>場面8 見張る</a></li>
+    <li><a href="#s10"><span class="n">10</span>場面9 利用者を確かめる</a></li>
+    <li><a href="#s11"><span class="n">11</span>場面→答えの早見表</a></li>
+    <li><a href="#s12"><span class="n">12</span>確認問題</a></li>
+    <li><a href="#s13"><span class="n">13</span>今日の宿題</a></li>
   </ol>
 </nav>
 
 <main>
 
-<section id="s1" data-toc="ゴール">
-
+<section id="s1" data-toc="全体の地図">
+  
   <span class="h2num">01</span>
-  <h2>この講義のゴール</h2>
-  <p class="lead">セキュリティサービスは数が多く、暗記しようとすると必ず崩れます。狙うのは名前の暗記ではなく、設問の一文から「これは守る側の話か、見張る側の話か」を切り分けられる状態です。今日終わったときに、次の3つができていれば合格です。</p>
-  <ul class="goals">
-    <li><span class="tick">01</span><div><strong>設問が保管時の暗号化を問うているのか、転送時の暗号化を問うているのかを即座に判別できる。</strong><br>そのうえで、KMS・ACM・CloudHSM のどれが答えの中心になるかを言える。</div></li>
-    <li><span class="tick">02</span><div><strong>エンベロープ暗号化を、図を見ずに順を追って説明できる。</strong><br>なぜ2段階にするのか、KMSが何を持っていて何を持っていないのかを、自分の言葉で言える。</div></li>
-    <li><span class="tick">03</span><div><strong>WAF・GuardDuty・Inspector・Macie・Config を、担当する層で並べられる。</strong><br>「攻撃を止める」「侵害の兆候を見つける」「弱点を洗い出す」「置いてはいけないデータを探す」「設定が規則どおりか確かめる」の対応を間違えない。</div></li>
-  </ul>
+  <h2>全体の地図</h2>
+  <p class="lead">セキュリティサービスは、<strong>守る</strong>ものと<strong>見張る</strong>ものに分かれます。守る側は「置いてあるデータを暗号化する」「通り道を暗号化する」「入口で攻撃を止める」の3つ。見張る側は何も止めませんが、起きたことや弱点を教えます。まず登場人物を紹介してから、9つの場面がどこの話かを見ます。</p>
+
+  <div class="note terms"><span class="label">この講義の登場人物</span>
+    <dl>
+      <dt>KMS<small>AWS Key Management Service</small></dt><dd>暗号化に使う鍵を作り、保管し、使わせるサービス。S3・EBS・RDS などの暗号化は、裏でこれを呼んでいる → 場面2〜4</dd>
+      <dt>Secrets Manager<small>AWS Secrets Manager</small></dt><dd>データベースのパスワードなどを預かり、定期的に取り替えるサービス → 場面5</dd>
+      <dt>ACM<small>AWS Certificate Manager</small></dt><dd>HTTPS に必要な証明書を発行し、更新するサービス → 場面6</dd>
+      <dt>CloudFront・ALB</dt><dd>利用者からの通信を最初に受ける入口。CloudFront は世界中の拠点から配信するサービス（VPC 講義で既出）、ALB は HTTP の中身を見て配るロードバランサー（EC2 講義で既出）</dd>
+      <dt>WAF<small>AWS WAF（Web Application Firewall）</small></dt><dd>HTTP リクエストの中身を読んで、攻撃を止めるサービス → 場面7</dd>
+      <dt>Shield<small>AWS Shield</small></dt><dd>大量の通信を送りつける攻撃（DDoS）を和らげるサービス → 場面7</dd>
+      <dt>GuardDuty ほか</dt><dd>GuardDuty・Inspector・Macie・Config・Security Hub・Detective。どれも「見張る」サービスで、止めはしない → 場面8</dd>
+      <dt>Cognito<small>Amazon Cognito</small></dt><dd>アプリの利用者（社外の一般の人）のログインを受け持つサービス → 場面9</dd>
+    </dl>
+  </div>
+
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 770 348" width="770" height="348" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="利用者からShieldとWAF、CloudFrontとALB、EC2を通ってS3やRDSに届く。保管時はKMSで、転送時はHTTPSで暗号化する。下にGuardDutyなどの見張るサービスが並ぶ"><rect x="16" y="58" width="104" height="34" rx="17.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="68.0" y="79.2" font-size="12" fill="var(--ink-2)" text-anchor="middle">利用者</text><line x1="120" y1="75" x2="146.0" y2="75.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="156.0,75.0 146.0,80.5 146.0,69.5" fill="var(--allow)"/><rect x="156" y="48" width="128" height="54" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="220.0" y="73.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">Shield・WAF</text><text x="220.0" y="88.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">攻撃を止める</text><circle cx="156" cy="48" r="10" fill="var(--accent)"/><text x="156" y="52" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">7</text><line x1="284" y1="75" x2="306.0" y2="75.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="316.0,75.0 306.0,80.5 306.0,69.5" fill="var(--allow)"/><rect x="316" y="48" width="148" height="54" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="390.0" y="73.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">CloudFront・ALB</text><text x="390.0" y="88.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">証明書（ACM）で HTTPS</text><circle cx="316" cy="48" r="10" fill="var(--accent)"/><text x="316" y="52" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">6</text><line x1="464" y1="75" x2="486.0" y2="75.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="496.0,75.0 486.0,80.5 486.0,69.5" fill="var(--allow)"/><rect x="496" y="48" width="100" height="54" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="546.0" y="73.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="546.0" y="88.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">アプリ</text><line x1="596" y1="75" x2="616.0" y2="75.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="626.0,75.0 616.0,80.5 616.0,69.5" fill="var(--allow)"/><rect x="626" y="10" width="128" height="170" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/><rect x="638" y="34" width="104" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="690.0" y="55.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">S3</text><rect x="638" y="76" width="104" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="690.0" y="97.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">RDS・EBS</text><text x="690" y="136" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">KMS の鍵で暗号化</text><text x="690" y="154" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">保管時</text><text x="690" y="170" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">場面 1〜4</text><circle cx="650" cy="10" r="10" fill="var(--accent)"/><text x="650" y="14" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><circle cx="674" cy="10" r="10" fill="var(--accent)"/><text x="674" y="14" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><circle cx="698" cy="10" r="10" fill="var(--accent)"/><text x="698" y="14" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">4</text><line x1="120" y1="118" x2="464" y2="118" stroke="var(--allow)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="292" y="140" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">転送時：通り道を HTTPS（TLS）で暗号化</text><circle cx="150" cy="136" r="10" fill="var(--accent)"/><text x="150" y="140" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><rect x="16" y="150" width="104" height="46" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="68.0" y="171.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">Cognito</text><text x="68.0" y="186.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">誰かを確かめる</text><circle cx="16" cy="150" r="10" fill="var(--accent)"/><text x="16" y="154" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">9</text><line x1="68" y1="92" x2="68" y2="150" stroke="var(--ink-3)" stroke-width="1.4" stroke-dasharray="4 3"/><rect x="470" y="132" width="148" height="46" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="544.0" y="153.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Secrets Manager</text><text x="544.0" y="168.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">パスワードを預かる</text><circle cx="470" cy="132" r="10" fill="var(--accent)"/><text x="470" y="136" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">5</text><line x1="546" y1="132" x2="546.0" y2="112.0" stroke="var(--ink-3)" stroke-width="1.6" stroke-dasharray="5 4"/><polygon points="546.0,102.0 551.5,112.0 540.5,112.0" fill="var(--ink-3)"/><rect x="16" y="214" width="738" height="124" rx="10" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><circle cx="34" cy="234" r="10" fill="var(--accent)"/><text x="34" y="238" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">8</text><text x="52" y="238" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">見張る：止めはしないが、起きたことと弱点を教える</text><rect x="28" y="256" width="112" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="84.0" y="279.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">GuardDuty</text><text x="84.0" y="294.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">不審な振る舞い</text><rect x="148" y="256" width="112" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="204.0" y="279.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Inspector</text><text x="204.0" y="294.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">脆弱性</text><rect x="268" y="256" width="112" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="324.0" y="279.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Macie</text><text x="324.0" y="294.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">S3 の機密データ</text><rect x="388" y="256" width="112" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="444.0" y="279.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Config</text><text x="444.0" y="294.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">設定が規則どおりか</text><rect x="508" y="256" width="112" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="564.0" y="279.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Security Hub</text><text x="564.0" y="294.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">結果を1画面に</text><rect x="628" y="256" width="112" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="684.0" y="279.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Detective</text><text x="684.0" y="294.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">原因を掘る</text><text x="385" y="328" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">左の4つが見つけ、Security Hub が集め、Detective が調べる</text></svg>
+  </div>
+  <figcaption><strong>この講義の地図。</strong>丸数字は場面の番号。上の段は<strong>守る</strong>側で、左から「入口で攻撃を止める（⑦）」「通り道を暗号化する（⑥）」「置いてあるデータを暗号化する（②〜④）」。⑤はアプリが使うパスワードの置き場、⑨は利用者が誰かを確かめる仕組み。下の段は<strong>見張る</strong>側（⑧）で、何も止めない代わりに、起きたことや弱点を教える。</figcaption>
+</figure>
+
   <div class="note">
-    <span class="label">IAM 講義との関係</span>
-    <p>IAMは<strong>アクセスの可否</strong>を決める仕組みでした。今日扱うのは、そのアクセス制御をすり抜けられた場合や、そもそもアクセス制御では守れない領域――物理的な媒体の盗難、通信経路の盗聴、アプリケーション層への攻撃、設定ミスの放置――に対する備えです。この2つは代替関係ではなく、積み重ねる関係にあります。設問で「多層防御（defense in depth）」という語が出たら、それは「一つの対策だけを選ぶ選択肢は不正解」という合図です。</p>
-  </div></section>
+    <span class="label">この講義の見取り図</span>
+    <p>場面1〜4は<strong>置いてあるデータの暗号化</strong>（何を暗号化と呼ぶか、鍵の種類、仕組み、鍵の運用）。場面5・6は<strong>秘密の置き場と通り道</strong>（パスワードと証明書）。場面7は<strong>止める</strong>、場面8は<strong>見張る</strong>、場面9は<strong>利用者を確かめる</strong>です。</p>
+    <p>IAM は<strong>アクセスの可否</strong>を決める仕組みでした。この講義が扱うのは、IAM では守れない領域――ディスクの盗難、通信の盗聴、アプリへの攻撃、設定ミスの放置――への備えです。IAM の代わりではなく、上に積み重ねます。設問に<strong>「多層防御（defense in depth）」</strong>とあれば、「対策を1つだけ選ぶ選択肢は不正解」という合図です。</p>
+  </div>
+</section>
 
-<section id="s2" data-toc="2つの軸">
-
+<section id="s2" data-toc="場面1 何を暗号化するか">
+  
   <span class="h2num">02</span>
-  <h2>暗号化の2つの軸と、責任の境目</h2>
-  <p class="lead">暗号化の設問は、ほぼすべてが2つの軸のどちらかに属します。<em>保管時（at rest）</em>か、<em>転送時（in transit）</em>か。この判別を最初にやると、選択肢が半分に落ちます。</p>
+  <h2>場面1 ―― 「データを暗号化しろと言われた。RDS を使っているから、AWS がやってくれるのでは？」</h2>
 
-  <h3>設問文のどこを見るか</h3>
-  <p>設問は「データを暗号化したい」とだけ書いてくれることは少なく、状況の描写のなかに軸のヒントを埋め込んできます。ディスク・バケット・スナップショット・バックアップ・アーカイブといった<strong>置き場所を指す語</strong>が出てきたら保管時。ネットワーク・通信・クライアントとサーバーの間・盗聴・中間者といった<strong>経路を指す語</strong>が出てきたら転送時です。両方を要求する設問もあり、その場合は「KMSで保管時を、ACMとHTTPSで転送時を」という二段構えの選択肢が正解になります。</p>
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>暗号化</dt><dd>鍵を使って、データを読めない形に変えること。元に戻すことを<strong>復号</strong>と呼ぶ</dd>
+      <dt>平文／暗号文</dt><dd>暗号化する前の読めるデータが平文、暗号化した後の読めないデータが暗号文</dd>
+      <dt>保管時の暗号化<small>encryption at rest</small></dt><dd>ディスクやバケットに置いてあるデータを暗号化すること</dd>
+      <dt>転送時の暗号化<small>encryption in transit</small></dt><dd>ネットワークを流れている途中のデータを暗号化すること</dd>
+      <dt>TLS<small>Transport Layer Security</small></dt><dd>通信を暗号化する決まりごと。これを使った Web の通信が <strong>HTTPS</strong> → 場面6</dd>
+      <dt>責任共有モデル</dt><dd>セキュリティの作業のうち、どこまでが AWS の担当で、どこからが利用者（顧客）の担当かを決めた取り決め</dd>
+      <dt>マネージド</dt><dd>運用（故障対応やパッチ当て）を AWS が代わりにやってくれること。その度合いはサービスごとに違う</dd>
+      <dt>パッチ</dt><dd>ソフトウェアの弱点を直す更新プログラム</dd>
+      <dt>ハイパーバイザー</dt><dd>1台の物理サーバーの上で、複数の仮想サーバー（EC2）を動かす土台のソフトウェア</dd>
+    </dl>
+  </div>
 
+  <p>種類の話に入る前に、暗号化が何を守っているのかを1枚で確かめます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 762 232" width="762" height="232" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="平文を鍵で暗号化すると暗号文になる。鍵を使える人は復号して読めるが、鍵を使えない人は暗号文を盗んでも読めない"><rect x="16" y="72" width="118" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="75.0" y="95.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">平文</text><text x="75.0" y="110.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">読めるデータ</text><line x1="134" y1="97" x2="170.0" y2="97.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="180.0,97.0 170.0,102.5 170.0,91.5" fill="var(--ink-3)"/><rect x="180" y="72" width="136" height="50" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="248.0" y="95.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">暗号化</text><text x="248.0" y="110.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">鍵を使って変換</text><rect x="198" y="16" width="100" height="28" rx="14.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="248.0" y="34.2" font-size="12" fill="var(--ink-2)" text-anchor="middle">鍵</text><line x1="248" y1="44" x2="248.0" y2="62.0" stroke="var(--accent)" stroke-width="2"/><polygon points="248.0,72.0 242.5,62.0 253.5,62.0" fill="var(--accent)"/><line x1="316" y1="97" x2="352.0" y2="97.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="362.0,97.0 352.0,102.5 352.0,91.5" fill="var(--ink-3)"/><rect x="362" y="72" width="136" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="430.0" y="95.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">暗号文</text><text x="430.0" y="110.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">鍵がないと読めない</text><line x1="498" y1="88" x2="557.2" y2="56.7" stroke="var(--allow)" stroke-width="2"/><polygon points="566.0,52.0 559.7,61.5 554.6,51.8" fill="var(--allow)"/><line x1="498" y1="106" x2="557.2" y2="137.3" stroke="var(--deny)" stroke-width="2"/><polygon points="566.0,142.0 554.6,142.2 559.7,132.5" fill="var(--deny)"/><rect x="566" y="26" width="180" height="50" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="656.0" y="49.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">鍵を使える人</text><text x="656.0" y="64.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">元に戻して読める（復号）</text><circle cx="566" cy="26" r="9" fill="var(--allow)"/><polyline points="562.0,26.0 565.1,29.4 570.5,22.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="566" y="118" width="180" height="50" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><text x="656.0" y="141.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">鍵を使えない人</text><text x="656.0" y="156.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">盗んでも読めない</text><circle cx="566" cy="118" r="9" fill="var(--deny)"/><line x1="561.95" y1="113.95" x2="570.05" y2="122.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="561.95" y1="122.05" x2="570.05" y2="113.95" stroke="var(--bg)" stroke-width="2.4"/><rect x="16" y="190" width="730" height="30" rx="6" fill="var(--accent-soft)" stroke="none" stroke-width="0"/><text x="381.0" y="209.14" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">守りの中心は「鍵を誰が使えるか」。だから暗号化の設問は、鍵の管理（KMS）を聞いてくる</text></svg>
+  </div>
+  <figcaption><strong>暗号化とは、鍵を使ってデータを読めない形に変えること。</strong>元の読めるデータを<strong>平文</strong>、変えた後を<strong>暗号文</strong>、元に戻すことを<strong>復号</strong>と呼ぶ。ディスクやファイルを丸ごと盗まれても、鍵を使えなければ中身は読めない。つまり、守るべきものが「データ」から「鍵を使う権限」に移る。</figcaption>
+</figure>
+
+  <h3>保管時か、転送時か</h3>
+  <p>暗号化の設問は、ほぼすべてが2つのどちらかです。設問は「暗号化したい」とだけ書くことは少なく、状況の描写にヒントを埋めてきます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 766 268" width="766" height="268" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左は保管時の暗号化でS3やEBSなど置いてあるデータをKMSで守る。右は転送時の暗号化で利用者とCloudFrontやALBの間をHTTPSで守る。下にインターネットを経由させたくない場合は経路の話でVPCエンドポイントが答えになると書いてある"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">保管時（at rest）：置いてあるデータ</text><rect x="26" y="38" width="144" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="98.0" y="59.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 バケット</text><rect x="182" y="38" width="144" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="254.0" y="59.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EBS ボリューム</text><rect x="26" y="82" width="144" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="98.0" y="103.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">RDS</text><rect x="182" y="82" width="144" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="254.0" y="103.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">スナップショット</text><text x="176" y="148" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">中心：KMS（＋各サービスの暗号化の設定）</text><text x="176" y="170" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">設問の語：バケット・ディスク・バックアップ・</text><text x="176" y="186" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">アーカイブ・媒体の廃棄・鍵の管理</text><line x1="382" y1="14" x2="382" y2="198" stroke="var(--line)" stroke-width="1.2"/><text x="400" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">転送時（in transit）：通り道のデータ</text><rect x="404" y="52" width="104" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="456.0" y="79.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">利用者</text><rect x="630" y="52" width="120" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="690.0" y="79.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">CloudFront・ALB</text><line x1="508" y1="75" x2="620.0" y2="75.0" stroke="var(--allow)" stroke-width="2.4"/><polygon points="630.0,75.0 620.0,80.5 620.0,69.5" fill="var(--allow)"/><text x="569" y="66" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">HTTPS（TLS）</text><text x="577" y="148" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">中心：ACM（証明書）</text><text x="577" y="170" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">設問の語：HTTPS・TLS・盗聴・傍受・</text><text x="577" y="186" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">中間者・クライアントとサーバーの間</text><rect x="16" y="212" width="734" height="46" rx="6" fill="var(--warn-soft)" stroke="none" stroke-width="0"/><text x="383" y="232" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">「インターネットを経由させたくない」は、暗号化ではなく経路の話</text><text x="383" y="250" font-size="11" fill="var(--warn)" text-anchor="middle">→ VPC エンドポイント / PrivateLink（VPC 講義）</text></svg>
+  </div>
+  <figcaption><strong>暗号化の設問は、まず左右のどちらかを決める。</strong>置き場所を指す語が出たら保管時（中心は KMS）、通り道を指す語が出たら転送時（中心は ACM の証明書と HTTPS）。両方を求める設問では「KMS で保管時を、ACM と HTTPS で転送時を」という二段構えの選択肢が正解になる。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th>軸</th><th>守る対象</th><th>中心になるサービス</th><th>設問に出る語</th></tr></thead>
     <tbody>
-      <tr><td><strong>保管時</strong><br><span style="color:var(--ink-3);font-size:13px">at rest</span></td><td>ディスク、オブジェクト、バックアップ、ログ</td><td>KMS（と各サービスの暗号化オプション）、CloudHSM</td><td>スナップショット、バケット、アーカイブ、媒体の廃棄、鍵の管理</td></tr>
-      <tr><td><strong>転送時</strong><br><span style="color:var(--ink-3);font-size:13px">in transit</span></td><td>クライアントとサービスの間、サービス同士の間</td><td>ACM（証明書）、TLS終端、VPN、PrivateLink</td><td>HTTPS、TLS、盗聴、傍受、公衆インターネットを経由させたくない</td></tr>
+      <tr><td><strong>保管時</strong></td><td>ディスク、オブジェクト、バックアップ、ログ</td><td>KMS（と各サービスの暗号化の設定）、CloudHSM（場面4）</td><td>スナップショット、バケット、アーカイブ、媒体の廃棄、鍵の管理</td></tr>
+      <tr><td><strong>転送時</strong></td><td>利用者とサービスの間、サービス同士の間</td><td>ACM（証明書）、TLS の終端（場面6）、VPN、PrivateLink</td><td>HTTPS、TLS、盗聴、傍受、公衆インターネットを経由させたくない</td></tr>
     </tbody>
   </table></div>
 
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>「インターネットを経由させたくない」は、厳密には暗号化ではなく<strong>経路の話</strong>です。ここで正解になるのは VPC エンドポイントや PrivateLink であって、暗号化サービスではありません。「暗号化したい」のか「経路を閉じたい」のかを読み分けてください。</p>
+  <h3>「AWS がやってくれる」のはどこまでか</h3>
+  <p>CLF では「AWS はクラウド<em>の</em>セキュリティ、顧客はクラウド<em>内の</em>セキュリティ」という標語で覚えたはずです。SAA では標語ではなく、<strong>具体的な作業がどちらの担当か</strong>を問われます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 292" width="760" height="292" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="EC2、RDS、S3などの3列で、パッチ適用はマネージドになるほどAWSの担当になるが、アクセス制御と暗号化の有効化とアプリのコードは常に顧客の担当であることを示す"><text x="340" y="24" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="506" y="24" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">RDS</text><text x="672" y="24" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">S3・DynamoDB・Lambda</text><text x="14" y="60" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="700">アクセス制御（IAM・SG）と暗号化の有効化</text><rect x="262" y="38" width="156" height="34" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="340" y="60" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（顧客）</text><rect x="428" y="38" width="156" height="34" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="506" y="60" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（顧客）</text><rect x="594" y="38" width="156" height="34" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="672" y="60" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（顧客）</text><text x="14" y="102" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="700">アプリケーションのコードの弱点</text><rect x="262" y="80" width="156" height="34" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="340" y="102" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（顧客）</text><rect x="428" y="80" width="156" height="34" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="506" y="102" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（顧客）</text><rect x="594" y="80" width="156" height="34" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="672" y="102" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（顧客）</text><text x="14" y="144" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="700">データベースエンジンのパッチ</text><rect x="262" y="122" width="156" height="34" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="340" y="144" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（顧客）</text><rect x="428" y="122" width="156" height="34" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="506" y="144" font-size="11.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">AWS</text><rect x="594" y="122" width="156" height="34" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="672" y="144" font-size="11.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">AWS</text><text x="14" y="186" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="700">ゲスト OS のパッチ</text><rect x="262" y="164" width="156" height="34" rx="5" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="340" y="186" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（顧客）</text><rect x="428" y="164" width="156" height="34" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="506" y="186" font-size="11.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">AWS</text><rect x="594" y="164" width="156" height="34" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="672" y="186" font-size="11.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">AWS</text><text x="14" y="228" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="700">物理施設・ハイパーバイザー・媒体の廃棄</text><rect x="262" y="206" width="156" height="34" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="340" y="228" font-size="11.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">AWS</text><rect x="428" y="206" width="156" height="34" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="506" y="228" font-size="11.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">AWS</text><rect x="594" y="206" width="156" height="34" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="672" y="228" font-size="11.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">AWS</text><line x1="262" y1="262" x2="740.0" y2="262.0" stroke="var(--ink-3)" stroke-width="1.4"/><polygon points="750.0,262.0 740.0,267.5 740.0,256.5" fill="var(--ink-3)"/><text x="506" y="280" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">右へ行くほどマネージド ＝ AWS の担当が増える。それでも上の2行は必ず自分</text></svg>
   </div>
+  <figcaption><strong>責任共有モデルは「どこまで AWS が面倒を見るか」の表。</strong>EC2 では OS のパッチも自分の仕事、RDS では OS とデータベースエンジンのパッチが AWS に移る（メンテナンスウィンドウで当たる）。しかし<strong>アクセス制御・暗号化を有効にする判断・アプリのコード</strong>は、どのサービスでも自分の側に残る。</figcaption>
+</figure>
+  <ul>
+    <li><strong>この場面の答え：</strong>RDS でも、暗号化を有効にするかどうかを決めて設定するのは自分。AWS が肩代わりするのは、設備とソフトウェアの保守まで</li>
+    <li><strong>設定する場所：</strong>保管時の暗号化は、各サービスでリソースを作るときの設定項目にある（RDS ならデータベースの作成画面、EBS ならボリュームの作成画面、S3 ならバケットの「デフォルトの暗号化」）。そこでどの KMS キーを使うかを選ぶ</li>
+    <li><strong>ディスク媒体の廃棄・消去</strong>は、どのサービスでも AWS の担当</li>
+  </ul>
+  <div class="note warn"><span class="label">最頻出の引っかけ</span>
+    <p>「RDS を使っているので、認証情報の管理も AWS の責任である」――誤りです。<strong>マネージドサービスでも、アクセス制御と設定は常に顧客側。</strong>責任共有モデルの設問で、アクセス制御・暗号化の有効化・データの分類のどれかが AWS 側に振られている選択肢は、読んだ時点で消せます。</p>
+  </div>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「スナップショット」「バケット」「媒体の廃棄」→ <strong>保管時（KMS）</strong>。「HTTPS」「盗聴」「中間者」→ <strong>転送時（ACM と TLS）</strong>。両方を求められたら二段構えの選択肢。「インターネットを経由させたくない」は暗号化ではなく経路の話なので、<strong>VPC エンドポイント / PrivateLink</strong>（VPC 講義で既出）。「EC2 の OS のパッチは誰の担当か」→ 顧客。「RDS の OS のパッチは」→ AWS。</p></div>
+</section>
 
-  <h3>責任共有モデルの読み方</h3>
-  <p>責任共有モデルは、CLFでは「AWSはクラウド<em>の</em>セキュリティ、顧客はクラウド<em>内の</em>セキュリティ」という標語で覚えたはずです。SAAでは標語そのものは問われず、<strong>具体的な作業がどちら側に落ちるか</strong>という形で問われます。判定のコツは一つで、<strong>そのサービスがマネージドである度合いが上がるほど、AWS側の責任範囲が広がる</strong>という一本の軸で考えることです。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th>作業</th><th>EC2</th><th>RDS</th><th>S3 / DynamoDB / Lambda</th></tr></thead>
-    <tbody>
-      <tr><td>物理施設、ハイパーバイザー、ネットワーク基盤</td><td class="yes">AWS</td><td class="yes">AWS</td><td class="yes">AWS</td></tr>
-      <tr><td>ゲストOSのパッチ適用</td><td class="no">顧客</td><td class="yes">AWS（メンテナンスウィンドウで適用）</td><td class="yes">AWS</td></tr>
-      <tr><td>データベースエンジンのパッチ適用</td><td class="no">顧客</td><td class="yes">AWS</td><td class="yes">AWS</td></tr>
-      <tr><td>アプリケーションコードの脆弱性</td><td class="no">顧客</td><td class="no">顧客</td><td class="no">顧客</td></tr>
-      <tr><td>暗号化を有効にするかどうかの判断</td><td class="no">顧客</td><td class="no">顧客</td><td class="no">顧客</td></tr>
-      <tr><td>IAMポリシー、バケットポリシー、SGの設定</td><td class="no">顧客</td><td class="no">顧客</td><td class="no">顧客</td></tr>
-      <tr><td>ディスク媒体の廃棄・消去</td><td class="yes">AWS</td><td class="yes">AWS</td><td class="yes">AWS</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「RDSを使っているので、認証情報の管理もAWSの責任である」――違います。<strong>マネージドサービスでも、アクセス制御と設定は常に顧客側です。</strong>AWSが肩代わりするのはインフラとソフトウェアの保守までです。責任共有モデルの設問で、アクセス制御・暗号化の有効化・データ分類のいずれかがAWS側に振られている選択肢は、読んだ瞬間に消せます。</p>
-  </div></section>
-
-<section id="s3" data-toc="KMSのキー">
-
+<section id="s3" data-toc="場面2 KMS のキー">
+  
   <span class="h2num">03</span>
-  <h2>KMS ―― キーの種類とポリシーの二重構造</h2>
-  <p class="lead">KMSは保管時暗号化の中心にあり、S3・EBS・RDS・DynamoDB・Secrets Manager・SNS・SQS など、ほぼすべてのサービスがKMSを呼んでいます。まず<strong>キーの種類</strong>を3つに分けることから始めます。この分け方が、料金・ローテーション・クロスアカウントの設問すべてに効きます。</p>
+  <h2>場面2 ―― 「鍵がいつ誰に使われたかを記録したい。特定のロールにだけ復号を許したい」</h2>
 
-  <div class="tw"><table>
-    <thead><tr><th></th><th>AWS所有キー<br><span style="font-weight:400;text-transform:none;letter-spacing:0">AWS owned</span></th><th>AWSマネージドキー<br><span style="font-weight:400;text-transform:none;letter-spacing:0">AWS managed</span></th><th>カスタマー管理キー<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Customer managed</span></th></tr></thead>
-    <tbody>
-      <tr><td><strong>誰が作るか</strong></td><td>AWSがサービス横断で用意</td><td>サービスを使うと自動生成（<code>aws/s3</code> のような別名）</td><td>自分で作る</td></tr>
-      <tr><td><strong>アカウントから見えるか</strong></td><td class="no">見えない</td><td class="yes">見える（一覧に出る）</td><td class="yes">見える</td></tr>
-      <tr><td><strong>キーポリシーの編集</strong></td><td class="no">不可</td><td class="no">不可</td><td class="yes">自由に編集できる</td></tr>
-      <tr><td><strong>ローテーション</strong></td><td>AWSが管理（設定不可）</td><td>年1回、強制（止められない）</td><td class="yes">任意。既定365日、90〜2560日で指定可</td></tr>
-      <tr><td><strong>クロスアカウント共有</strong></td><td class="no">不可</td><td class="no">不可</td><td class="yes">キーポリシーで可能</td></tr>
-      <tr><td><strong>削除</strong></td><td class="no">不可</td><td class="no">不可</td><td class="yes">待機期間つきで可能</td></tr>
-      <tr><td><strong>料金</strong></td><td>無料</td><td>キー自体は無料、API呼び出しは課金</td><td>1キーあたり月額1USD＋API呼び出し</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>設問に<strong>「鍵の使用を監査したい」「特定のロールだけに復号を許したい」「別アカウントと共有したい」「独自のローテーション周期にしたい」「鍵を無効化して即座にアクセスを遮断したい」</strong>のどれか一つでも出てきたら、答えは<strong>カスタマー管理キー</strong>です。AWSマネージドキーはキーポリシーを触れないので、これらの要件を一つも満たせません。逆に「特別な要件はなく、とにかく暗号化されていればよい」「運用負荷を最小にしたい」ならAWSマネージドキーで十分、という書き分けになります。</p>
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>KMS キー</dt><dd>KMS の中に作る鍵。暗号化と復号の「元締め」になる。リージョンごとに作る</dd>
+      <dt>AWS 所有キー<small>AWS owned key</small></dt><dd>AWS がサービスの裏側で使っている鍵。利用者のアカウントからは見えない</dd>
+      <dt>AWS マネージドキー<small>AWS managed key</small></dt><dd>S3 や EBS を使うと自動で作られる鍵。<code>aws/s3</code> のような名前で一覧に出るが、設定は変えられない</dd>
+      <dt>カスタマー管理キー<small>Customer managed key。問題集では CMK と略すことがある</small></dt><dd>自分で作る鍵。使える人・周期・共有・削除を自分で決められる</dd>
+      <dt>キーポリシー</dt><dd>KMS キーに必ず付いている、「誰がこの鍵を使えるか」を書いたポリシー。S3 のバケットポリシーと同じリソースベースポリシー（IAM 講義で既出）の一種</dd>
+      <dt>kms:Decrypt</dt><dd>KMS キーで復号する、という操作の名前。IAM ポリシーやキーポリシーの Action に書く</dd>
+      <dt>プリンシパル</dt><dd>操作をする主体。ユーザーやロールのこと（IAM 講義で既出）</dd>
+      <dt>ローテーション</dt><dd>鍵やパスワードを定期的に新しいものに取り替えること → 場面4・5</dd>
+    </dl>
   </div>
 
-  <h3>キーポリシーとIAMポリシーの関係</h3>
-  <p>ここがKMSで最も間違えやすい部分です。<strong>KMSキーは、必ずリソースベースポリシー（キーポリシー）を持ちます。</strong>しかも、S3バケットのように「リソースポリシーを付けない」という選択肢がありません。キーを作った時点で既定のキーポリシーが付き、これを空にすることはできません。</p>
-  <p>そして評価の仕方が独特です。IAMポリシーで <code>kms:Decrypt</code> を許可しても、<strong>キーポリシー側がそのプリンシパルに権限を委ねていなければアクセスできません。</strong>既定のキーポリシーには「このアカウントのIAMポリシーによる権限委任を有効にする」という一文が入っていて、これがあるおかげで普段はIAMポリシーだけで話が済んでいます。この一文を外したり、狭い条件に書き換えたりすると、管理者権限を持っていてもキーを使えなくなります。</p>
+  <p>KMS キーは、KMS のコンソールの「カスタマー管理型のキー」で作ります。S3・EBS・RDS・DynamoDB・Secrets Manager・SNS・SQS など、ほぼすべてのサービスの暗号化が KMS を呼んでいます。最初に押さえるのは、キーに3種類あることです。この分け方が、料金・ローテーション・共有の設問すべてに効きます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 764 292" width="764" height="292" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="KMSキーの3種類の比較。AWS所有キーは見えず無料、AWSマネージドキーはサービスが自動で作り一覧に見えるがキーポリシーは編集できない、カスタマー管理キーは編集・共有・無効化・削除・ローテーション周期の指定ができる"><rect x="240" y="12" width="162" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="321.0" y="35.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">AWS 所有キー</text><text x="321.0" y="50.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">見えない・無料</text><rect x="414" y="12" width="162" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="495.0" y="35.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">AWS マネージドキー</text><text x="495.0" y="50.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">サービスが自動で作る</text><rect x="588" y="12" width="162" height="50" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="669.0" y="35.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">カスタマー管理キー</text><text x="669.0" y="50.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">自分で作る・月額 1 USD</text><text x="14" y="96" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">キーの一覧に見える</text><line x1="14" y1="109" x2="750" y2="109" stroke="var(--line)" stroke-width="1"/><circle cx="321" cy="92" r="9" fill="var(--deny)"/><line x1="316.95" y1="87.95" x2="325.05" y2="96.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="316.95" y1="96.05" x2="325.05" y2="87.95" stroke="var(--bg)" stroke-width="2.4"/><circle cx="495" cy="92" r="9" fill="var(--allow)"/><polyline points="490.9,92.0 494.1,95.4 499.5,88.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="669" cy="92" r="9" fill="var(--allow)"/><polyline points="665.0,92.0 668.1,95.4 673.5,88.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="14" y="130" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">キーポリシーを編集できる</text><line x1="14" y1="143" x2="750" y2="143" stroke="var(--line)" stroke-width="1"/><circle cx="321" cy="126" r="9" fill="var(--deny)"/><line x1="316.95" y1="121.95" x2="325.05" y2="130.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="316.95" y1="130.05" x2="325.05" y2="121.95" stroke="var(--bg)" stroke-width="2.4"/><circle cx="495" cy="126" r="9" fill="var(--deny)"/><line x1="490.95" y1="121.95" x2="499.05" y2="130.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="490.95" y1="130.05" x2="499.05" y2="121.95" stroke="var(--bg)" stroke-width="2.4"/><circle cx="669" cy="126" r="9" fill="var(--allow)"/><polyline points="665.0,126.0 668.1,129.4 673.5,122.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="14" y="164" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">別アカウントと共有できる</text><line x1="14" y1="177" x2="750" y2="177" stroke="var(--line)" stroke-width="1"/><circle cx="321" cy="160" r="9" fill="var(--deny)"/><line x1="316.95" y1="155.95" x2="325.05" y2="164.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="316.95" y1="164.05" x2="325.05" y2="155.95" stroke="var(--bg)" stroke-width="2.4"/><circle cx="495" cy="160" r="9" fill="var(--deny)"/><line x1="490.95" y1="155.95" x2="499.05" y2="164.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="490.95" y1="164.05" x2="499.05" y2="155.95" stroke="var(--bg)" stroke-width="2.4"/><circle cx="669" cy="160" r="9" fill="var(--allow)"/><polyline points="665.0,160.0 668.1,163.4 673.5,156.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="14" y="198" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">無効化・削除ができる</text><line x1="14" y1="211" x2="750" y2="211" stroke="var(--line)" stroke-width="1"/><circle cx="321" cy="194" r="9" fill="var(--deny)"/><line x1="316.95" y1="189.95" x2="325.05" y2="198.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="316.95" y1="198.05" x2="325.05" y2="189.95" stroke="var(--bg)" stroke-width="2.4"/><circle cx="495" cy="194" r="9" fill="var(--deny)"/><line x1="490.95" y1="189.95" x2="499.05" y2="198.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="490.95" y1="198.05" x2="499.05" y2="189.95" stroke="var(--bg)" stroke-width="2.4"/><circle cx="669" cy="194" r="9" fill="var(--allow)"/><polyline points="665.0,194.0 668.1,197.4 673.5,190.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="14" y="232" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">ローテーション</text><text x="321" y="232" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">AWS 任せ（設定不可）</text><text x="495" y="232" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">年1回で固定（止められない）</text><text x="669" y="232" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">任意。既定365日・90〜2560日</text><rect x="14" y="252" width="736" height="30" rx="6" fill="var(--accent-soft)" stroke="none" stroke-width="0"/><text x="382.0" y="271.14" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">監査したい・使える人を絞りたい・共有したい・すぐ止めたい → カスタマー管理キー</text></svg>
+  </div>
+  <figcaption><strong>3種類の違いは「自分でどこまで触れるか」。</strong>AWS マネージドキー（<code>aws/s3</code> のような別名で一覧に出る）は、見えるがキーポリシーを触れない。カスタマー管理キーだけが、使える人を絞る・別アカウントに貸す・止める・消す、のすべてを自分で決められる。</figcaption>
+</figure>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>AWS 所有キー</th><th>AWS マネージドキー</th><th>カスタマー管理キー</th></tr></thead>
+    <tbody>
+      <tr><td><strong>誰が作るか</strong></td><td>AWS がサービス横断で用意</td><td>サービスを使うと自動で作られる</td><td>自分で作る</td></tr>
+      <tr><td><strong>ローテーション</strong></td><td>AWS が管理（設定不可）</td><td>年1回で固定（止められない）</td><td class="yes">任意。既定 365日、90〜2560日で指定可</td></tr>
+      <tr><td><strong>削除</strong></td><td class="no">不可</td><td class="no">不可</td><td class="yes">待機期間つきで可能（場面4）</td></tr>
+      <tr><td><strong>料金</strong></td><td>無料</td><td>キー自体は無料、API 呼び出しは課金</td><td>1キーあたり月額 1 USD ＋ API 呼び出し</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><strong>この場面の答え：</strong>カスタマー管理キーを作り、キーポリシーで復号できるロールを絞る。鍵が使われた記録は CloudTrail（API 呼び出しを記録するサービス、IAM 講義で既出）に残る</li>
+    <li><strong>逆の場面：</strong>「特別な要件はなく、暗号化されていればよい」「運用の手間を最小に」なら AWS マネージドキーで足りる</li>
+  </ul>
 
+  <h3>関所は2つある ―― キーポリシーと IAM ポリシー</h3>
+  <p>KMS で最も間違えやすい部分です。<strong>KMS キーには必ずキーポリシーが付きます。</strong>S3 バケットのように「リソース側のポリシーを付けない」という選択はできず、空にもできません。そして、IAM ポリシーで許可するだけでは足りません。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 322" width="760" height="322" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左は既定のキーポリシーがIAMポリシーに判断を委ねているので、IAMポリシーの許可で復号できる。右はキーポリシーが委ねていないので、IAMポリシーで許可していても復号できない"><text x="10" y="22" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">キーポリシーが IAM に委ねている（既定）</text><rect x="115" y="36" width="140" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="185.0" y="57.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ロール</text><line x1="185" y1="70" x2="185.0" y2="88.0" stroke="var(--allow)" stroke-width="2"/><polygon points="185.0,98.0 179.5,88.0 190.5,88.0" fill="var(--allow)"/><rect x="40" y="98" width="290" height="46" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="185.0" y="118.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">IAM ポリシー</text><text x="185.0" y="134.5" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">kms:Decrypt を許可</text><circle cx="40" cy="98" r="9" fill="var(--allow)"/><polyline points="36.0,98.0 39.1,101.4 44.5,94.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><line x1="185" y1="144" x2="185.0" y2="162.0" stroke="var(--allow)" stroke-width="2"/><polygon points="185.0,172.0 179.5,162.0 190.5,162.0" fill="var(--allow)"/><rect x="40" y="172" width="290" height="50" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="185.0" y="193.8" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">キーポリシー（KMS キーに必ず付く）</text><text x="185.0" y="210.2" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">「このアカウントの IAM ポリシーに委ねる」あり</text><circle cx="40" cy="172" r="9" fill="var(--allow)"/><polyline points="36.0,172.0 39.1,175.4 44.5,168.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><line x1="185" y1="222" x2="185.0" y2="240.0" stroke="var(--allow)" stroke-width="2"/><polygon points="185.0,250.0 179.5,240.0 190.5,240.0" fill="var(--allow)"/><rect x="115" y="250" width="140" height="34" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="185.0" y="271.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">KMS キー</text><text x="185" y="308" font-size="12" fill="var(--allow)" text-anchor="middle" font-weight="700">復号できる</text><line x1="380" y1="14" x2="380" y2="314" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">キーポリシーが委ねていない</text><rect x="503" y="36" width="140" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="573.0" y="57.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ロール</text><line x1="573" y1="70" x2="573.0" y2="88.0" stroke="var(--allow)" stroke-width="2"/><polygon points="573.0,98.0 567.5,88.0 578.5,88.0" fill="var(--allow)"/><rect x="428" y="98" width="290" height="46" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="573.0" y="118.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">IAM ポリシー</text><text x="573.0" y="134.5" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">kms:Decrypt を許可</text><circle cx="428" cy="98" r="9" fill="var(--allow)"/><polyline points="423.9,98.0 427.1,101.4 432.5,94.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><line x1="573" y1="144" x2="573.0" y2="162.0" stroke="var(--deny)" stroke-width="2"/><polygon points="573.0,172.0 567.5,162.0 578.5,162.0" fill="var(--deny)"/><rect x="428" y="172" width="290" height="50" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><text x="573.0" y="193.8" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">キーポリシー（KMS キーに必ず付く）</text><text x="573.0" y="210.2" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">委ねる一文も、このロールの許可もない</text><circle cx="428" cy="172" r="9" fill="var(--deny)"/><line x1="423.95" y1="167.95" x2="432.05" y2="176.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="423.95" y1="176.05" x2="432.05" y2="167.95" stroke="var(--bg)" stroke-width="2.4"/><line x1="573" y1="222" x2="573.0" y2="240.0" stroke="var(--deny)" stroke-width="2"/><polygon points="573.0,250.0 567.5,240.0 578.5,240.0" fill="var(--deny)"/><circle cx="573" cy="236" r="9" fill="var(--deny)"/><line x1="568.95" y1="231.95" x2="577.05" y2="240.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="568.95" y1="240.05" x2="577.05" y2="231.95" stroke="var(--bg)" stroke-width="2.4"/><rect x="503" y="250" width="140" height="34" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="573.0" y="271.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">KMS キー</text><text x="573" y="308" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">IAM で許可していても復号できない</text></svg>
+  </div>
+  <figcaption><strong>KMS キーには関所が2つある。</strong>IAM ポリシーで <code>kms:Decrypt</code> を許可しても、キーポリシーが「IAM ポリシーに委ねる」と書いていなければ届かない（右）。既定のキーポリシーにはこの一文が入っているので、普段は IAM ポリシーだけで済んでいるように見える（左）。</figcaption>
+</figure>
+  <p>キーポリシーは、KMS のコンソールでキーを開いた「キーポリシー」タブで編集します。既定のキーポリシーには、次の一文が入っています。</p>
   <div class="code">
-    <div class="cap">既定のキーポリシーに入っている「委任を有効にする」ステートメント</div>
+    <div class="cap">既定のキーポリシーに入っている「委ねる」一文</div>
 <pre>{
   <span class="k">"Sid"</span>: <span class="s">"Enable IAM User Permissions"</span>,
   <span class="k">"Effect"</span>: <span class="s">"Allow"</span>,
   <span class="k">"Principal"</span>: { <span class="k">"AWS"</span>: <span class="s">"arn:aws:iam::111122223333:root"</span> },
-  <span class="c">// ↑ rootユーザーに許すという意味ではなく、</span>
-  <span class="c">//   「このアカウントのIAMポリシーに判断を委ねる」という定型句</span>
+  <span class="c">// ↑ root ユーザーに許すという意味ではなく、</span>
+  <span class="c">//   「このアカウントの IAM ポリシーに判断を委ねる」という定型句</span>
   <span class="k">"Action"</span>: <span class="s">"kms:*"</span>,
   <span class="k">"Resource"</span>: <span class="s">"*"</span>
 }</pre>
   </div>
-
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「IAMポリシーで <code>kms:Decrypt</code> を許可したのに、暗号化されたS3オブジェクトが読めない。原因は？」――答えは<strong>キーポリシーでそのプリンシパルが許可されていない</strong>です。S3のバケットポリシーを疑う選択肢、IAMポリシーの記述ミスを疑う選択肢が並びますが、KMSが絡む「読めない」系の設問では、まずキーポリシーを見ます。<strong>暗号化されたオブジェクトを読むには、S3側の権限とKMS側の権限の両方が要る</strong>という構造を押さえてください。</p>
+  <p>この一文を外したり、狭い条件に書き換えたりすると、管理者権限を持っていてもキーを使えなくなります。</p>
+  <div class="note warn"><span class="label">最頻出の引っかけ</span>
+    <p>「IAM ポリシーで <code>kms:Decrypt</code> を許可したのに、暗号化された S3 オブジェクトが読めない。原因は？」――<strong>キーポリシーでそのプリンシパルが許可されていない</strong>、が答えです。バケットポリシーや IAM ポリシーの書き間違いを疑う選択肢が並びますが、KMS が絡む「読めない」は、まずキーポリシーを見ます。<strong>暗号化されたオブジェクトを読むには、S3 側の権限と KMS 側の権限の両方が要ります。</strong></p>
   </div>
 
-  <div class="note warn">
-    <span class="label">クロスアカウントでは3か所</span>
-    <p>別アカウントから暗号化されたリソースを使う場合、必要なのは3か所です。①キーポリシーに相手アカウントを書く、②相手アカウント側のIAMポリシーで <code>kms:Decrypt</code> 等を許可する、③リソース側のアクセスも許可する。<strong>キーポリシーだけでは相手アカウントのプリンシパルに権限が届きません。</strong>IAM講義でやった「クロスアカウントは両側の合意」が、KMSでも同じ形で出てきます。</p>
-  </div></section>
-
-<section id="s4" data-toc="エンベロープ">
-
-  <span class="h2num">04</span>
-  <h2>エンベロープ暗号化と、鍵の運用</h2>
-  <p class="lead">KMSが実際に何をしているかを理解すると、S3の暗号化オプションもEBSの暗号化も、同じ一つの仕組みの応用だと分かります。その仕組みが<strong>エンベロープ暗号化</strong>です。</p>
-
-  <h3>なぜ2段階にするのか</h3>
-  <p>KMSのキー素材は、KMSの外に出ません。強い性質ですが不便でもあり、暗号化するにはデータをKMSに送る必要があります。実際、<strong>KMSのAPIで直接暗号化できるのは4KBまで</strong>です。数GBのEBSボリュームやS3の動画ファイルをKMSに送ることは、性能面でもコスト面でも成立しません。</p>
-  <p>そこで、鍵を二階建てにします。<strong>データを暗号化するのは、その場で生成した使い捨ての「データキー」。</strong>そして、そのデータキー自体をKMSのキー（CMK）で暗号化して、暗号文と一緒に保存します。手紙を封筒に入れて、封筒に鍵をかけるイメージから「エンベロープ（封筒）暗号化」と呼ばれます。</p>
-
+  <h3>別アカウントから使うときは3か所</h3>
   <figure>
-    <div class="fig">
-      <svg viewBox="0 0 860 330" width="860" height="330" role="img" aria-label="エンベロープ暗号化の流れ。上段は暗号化、GenerateDataKeyで平文データキーと暗号化データキーを受け取り、平文キーでデータを暗号化して破棄し、暗号文と暗号化データキーを並べて保存する。下段は復号、暗号化データキーをKMSに送って平文データキーを得て暗号文を復号する。">
-        <text x="24" y="30" font-size="12.5" fill="var(--ink-3)" font-weight="600">暗号化するとき</text>
+  <div class="fig">
+    <svg viewBox="0 0 760 236" width="760" height="236" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="アカウントAにKMSキーとS3バケット、アカウントBにロールがある。Aのキーポリシー、BのIAMポリシー、Aのバケットポリシーの3か所で許可して初めて読める"><rect x="16" y="30" width="356" height="164" rx="10" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="30" y="50" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">アカウント A（鍵とデータの持ち主）</text><rect x="34" y="66" width="150" height="50" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="109.0" y="89.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">KMS キー</text><text x="109.0" y="104.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">キーポリシー</text><circle cx="34" cy="66" r="10" fill="var(--accent)"/><text x="34" y="70" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><rect x="204" y="66" width="150" height="50" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="279.0" y="89.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 バケット</text><text x="279.0" y="104.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">バケットポリシー</text><circle cx="204" cy="66" r="10" fill="var(--accent)"/><text x="204" y="70" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><text x="30" y="144" font-size="11" fill="var(--ink)" text-anchor="start">① キーポリシーにアカウント B を書く</text><text x="30" y="166" font-size="11" fill="var(--ink)" text-anchor="start">③ バケットポリシーでも B を許可する</text><rect x="436" y="30" width="308" height="164" rx="10" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="450" y="50" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">アカウント B（使う側）</text><rect x="512" y="66" width="156" height="50" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="590.0" y="89.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ロール</text><text x="590.0" y="104.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">IAM ポリシー</text><circle cx="512" cy="66" r="10" fill="var(--accent)"/><text x="512" y="70" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><text x="450" y="144" font-size="11" fill="var(--ink)" text-anchor="start">② B の IAM ポリシーで kms:Decrypt と</text><text x="450" y="166" font-size="11" fill="var(--ink)" text-anchor="start">　 S3 の読み取りを許可する</text><line x1="512" y1="91" x2="364.0" y2="91.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="354.0,91.0 364.0,85.5 364.0,96.5" fill="var(--allow)"/><text x="380" y="222" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">3か所そろって初めて読める。キーポリシーだけでは B のロールに権限が届かない</text></svg>
+  </div>
+  <figcaption><strong>別アカウントから暗号化されたデータを読むには3か所。</strong>IAM 講義の「クロスアカウントは両側の合意」が、鍵（①②）とデータ（③）の両方に必要になる。</figcaption>
+</figure>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「鍵の使用を監査したい」「特定のロールだけに復号を許したい」「別アカウントと共有したい」「独自のローテーション周期にしたい」「鍵を無効化して即座にアクセスを遮断したい」――どれか1つでも出たら<strong>カスタマー管理キー</strong>。AWS マネージドキーはキーポリシーを触れないので、どれも満たせない。</p></div>
+</section>
 
-        <rect x="24" y="42" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="112" y="72" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">① 鍵を要求</text>
-        <text x="112" y="92" font-size="11" fill="var(--ink-3)" text-anchor="middle">GenerateDataKey</text>
-        <text x="112" y="110" font-size="11" fill="var(--ink-3)" text-anchor="middle">CMK を指定して呼ぶ</text>
+<section id="s4" data-toc="場面3 暗号化の仕組み">
+  
+  <span class="h2num">04</span>
+  <h2>場面3 ―― 「数 GB のログを KMS で暗号化している。中で何が起きているのか説明してほしい」</h2>
 
-        <line x1="204" y1="85" x2="230" y2="85" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M232 85 l-9 -5 v10 z" fill="var(--ink-3)"/>
-
-        <rect x="236" y="42" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
-        <text x="324" y="70" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">② KMS が2つ返す</text>
-        <text x="324" y="92" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">平文データキー</text>
-        <text x="324" y="110" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">暗号化データキー</text>
-
-        <line x1="416" y1="85" x2="442" y2="85" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M444 85 l-9 -5 v10 z" fill="var(--ink-3)"/>
-
-        <rect x="448" y="42" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="536" y="70" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">③ 手元で暗号化</text>
-        <text x="536" y="92" font-size="11" fill="var(--ink-3)" text-anchor="middle">平文キーでデータを暗号化</text>
-        <text x="536" y="110" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">直後に平文キーを破棄</text>
-
-        <line x1="628" y1="85" x2="654" y2="85" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M656 85 l-9 -5 v10 z" fill="var(--ink-3)"/>
-
-        <rect x="660" y="42" width="176" height="86" rx="8" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="748" y="70" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">④ 並べて保存</text>
-        <text x="748" y="92" font-size="11" fill="var(--ink-3)" text-anchor="middle">暗号文</text>
-        <text x="748" y="110" font-size="11" fill="var(--ink-3)" text-anchor="middle">＋ 暗号化データキー</text>
-
-        <text x="24" y="176" font-size="12.5" fill="var(--ink-3)" font-weight="600">復号するとき</text>
-
-        <rect x="660" y="188" width="176" height="86" rx="8" fill="var(--inset)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="748" y="218" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">⑤ 取り出す</text>
-        <text x="748" y="240" font-size="11" fill="var(--ink-3)" text-anchor="middle">添えてある</text>
-        <text x="748" y="256" font-size="11" fill="var(--ink-3)" text-anchor="middle">暗号化データキー</text>
-
-        <line x1="656" y1="231" x2="630" y2="231" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M628 231 l9 -5 v10 z" fill="var(--ink-3)"/>
-
-        <rect x="448" y="188" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
-        <text x="536" y="218" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">⑥ KMS に渡す</text>
-        <text x="536" y="240" font-size="11" fill="var(--ink-3)" text-anchor="middle">Decrypt</text>
-        <text x="536" y="256" font-size="11" fill="var(--ink-3)" text-anchor="middle">CMK の使用権限が要る</text>
-
-        <line x1="444" y1="231" x2="418" y2="231" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M416 231 l9 -5 v10 z" fill="var(--ink-3)"/>
-
-        <rect x="236" y="188" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="324" y="218" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">⑦ 平文キーが戻る</text>
-        <text x="324" y="240" font-size="11" fill="var(--ink-3)" text-anchor="middle">メモリ上だけに置く</text>
-
-        <line x1="232" y1="231" x2="206" y2="231" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M204 231 l9 -5 v10 z" fill="var(--ink-3)"/>
-
-        <rect x="24" y="188" width="176" height="86" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="112" y="218" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">⑧ 復号完了</text>
-        <text x="112" y="240" font-size="11" fill="var(--ink-3)" text-anchor="middle">使い終えたら</text>
-        <text x="112" y="256" font-size="11" fill="var(--ink-3)" text-anchor="middle">平文キーを再び破棄</text>
-
-        <rect x="24" y="292" width="812" height="26" rx="6" fill="var(--accent-soft)"/>
-        <text x="430" y="309" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">KMS が直接暗号化できるのは 4 KB まで。大きなデータはこの往復で扱う。</text>
-      </svg>
-    </div>
-    <figcaption>エンベロープ暗号化。KMSを往復するのは<strong>データキーだけ</strong>で、データ本体はKMSに送られません。だから数GBのボリュームでも成立します。復号時にKMSへのアクセス権を失えば――キーを無効化する、キーポリシーから外す――暗号文が手元にあっても読めなくなります。<strong>これが「鍵を無効化してアクセスを遮断する」という設問の正体です。</strong></figcaption>
-  </figure>
-
-  <div class="note">
-    <span class="label">S3 バケットキー</span>
-    <p>S3でSSE-KMSを使うと、既定ではオブジェクトごとにKMSへのリクエストが発生し、オブジェクト数が多いと呼び出し料金が無視できなくなります。<strong>S3バケットキー</strong>はバケット単位の短期キーを再利用してこのリクエスト数を大幅に削減します。「SSE-KMSを使いたいが、KMSのリクエスト料金を抑えたい」の答えはこれです。暗号化をやめる選択肢やSSE-S3への切り替えは、要件を満たしていません。</p>
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>鍵素材<small>key material</small></dt><dd>鍵の実体であるビット列。KMS キーの鍵素材は KMS の外に出ない</dd>
+      <dt>データキー</dt><dd>データ本体を暗号化するために、その場で作る使い捨ての鍵</dd>
+      <dt>エンベロープ暗号化<small>envelope encryption</small></dt><dd>データをデータキーで暗号化し、そのデータキーを KMS キーで暗号化する二階建ての方式。エンベロープは「封筒」</dd>
+      <dt>GenerateDataKey</dt><dd>KMS にデータキーを作らせる API（KMS に頼む操作）の名前</dd>
+      <dt>SSE-KMS<small>Server-Side Encryption with AWS KMS keys</small></dt><dd>S3 が KMS キーを使ってオブジェクトを暗号化する方式（S3 講義で既出）。KMS を使わず S3 自身の鍵で暗号化するのが SSE-S3</dd>
+      <dt>S3 バケットキー</dt><dd>SSE-KMS で KMS を呼ぶ回数を減らすための、バケット単位の短期の鍵</dd>
+    </dl>
   </div>
 
-  <h3>自動ローテーション</h3>
-  <p>カスタマー管理キーの自動ローテーションは、有効にすると<strong>既定で365日ごと</strong>に新しい鍵素材が生成されます。周期は<strong>90日から2560日</strong>の範囲で指定できます。AWSマネージドキーは年1回のローテーションが強制で、こちらは設定を変えられません。</p>
-  <p>押さえるべきは、<strong>ローテーションしてもキーIDもARNもエイリアスも変わらない</strong>点です。古い鍵素材はKMSに保持され続けるため、ローテーション前に暗号化したデータもそのまま復号でき、アプリ側の書き換えも不要です。「過去のデータが読めなくなるのでは」と心配させる選択肢は不正解です。</p>
-
-  <div class="note warn">
-    <span class="label">自動ローテーションできないキー</span>
-    <p>自動ローテーションが使えるのは、<strong>KMSが鍵素材を生成した対称暗号化キー</strong>だけです。自分で鍵素材をインポートしたキー（オリジンがEXTERNAL）、非対称キー、HMACキー、カスタムキーストア上のキーは対象外です。これらを回したい場合は、新しいキーを作ってエイリアスを付け替える<strong>手動ローテーション</strong>になります。設問に「オンプレミスで生成した鍵素材を使う」と書いてあれば、自動ローテーションを答えにする選択肢は消えます。</p>
+  <p>S3 の暗号化も EBS の暗号化も、同じ1つの仕組みの応用です。まず、なぜ鍵が二階建てになるのかを見ます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 212" width="760" height="212" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="KMSキーはKMSの外に出ない。KMSキーでデータキーを暗号化し、データキーでデータ本体を暗号化する二階建て。データ本体をKMSに送ることは4KBの上限があるためできない"><rect x="16" y="30" width="190" height="110" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="111" y="50" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">KMS の中</text><rect x="36" y="62" width="150" height="56" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="111.0" y="88.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">KMS キー</text><text x="111.0" y="103.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">外には出ない</text><line x1="206" y1="90" x2="278.0" y2="90.0" stroke="var(--accent)" stroke-width="2"/><polygon points="288.0,90.0 278.0,95.5 278.0,84.5" fill="var(--accent)"/><text x="247" y="80" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">で暗号化</text><rect x="288" y="62" width="170" height="56" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="373.0" y="88.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">データキー</text><text x="373.0" y="103.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">その場で作る使い捨ての鍵</text><line x1="458" y1="90" x2="530.0" y2="90.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="540.0,90.0 530.0,95.5 530.0,84.5" fill="var(--ink-3)"/><text x="499" y="80" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">で暗号化</text><rect x="540" y="62" width="204" height="56" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="642.0" y="88.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">データ本体</text><text x="642.0" y="103.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">数 GB のファイルやディスク</text><polyline points="642,118 642,172 136,172 136.0,150.0" fill="none" stroke="var(--deny)" stroke-width="1.8" stroke-linejoin="round" stroke-dasharray="5 4"/><polygon points="136.0,140.0 141.5,150.0 130.5,150.0" fill="var(--deny)"/><circle cx="389" cy="172" r="10" fill="var(--deny)"/><line x1="384.5" y1="167.5" x2="393.5" y2="176.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="384.5" y1="176.5" x2="393.5" y2="167.5" stroke="var(--bg)" stroke-width="2.4"/><text x="389" y="198" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">データ本体を KMS に送って暗号化する ― できない（KMS が直接暗号化できるのは 4 KB まで）</text></svg>
   </div>
-
-  <h3>マルチリージョンキー</h3>
-  <p>KMSキーは通常リージョンに閉じていて、東京で暗号化したデータを大阪で復号することはできません。これを越えるのが<strong>マルチリージョンキー</strong>です。プライマリキーを作り、それを別リージョンにレプリカとして複製すると、<strong>同じ鍵素材とキーIDを持つキー</strong>が両方のリージョンに存在します。片方で暗号化した暗号文を、もう片方でKMSを跨がずに復号できます。</p>
+  <figcaption><strong>鍵を二階建てにする。</strong>KMS キーは KMS の外に出ないので、暗号化するにはデータを KMS へ送るしかないが、送れるのは 4 KB まで。そこで、データ本体は<strong>データキー</strong>という別の鍵を使って手元で暗号化し、KMS キーには小さなデータキーだけを暗号化させる。</figcaption>
+</figure>
+  <p>この二階建てを、暗号化するときと復号するときの手順に並べたのが次の図です。S3 や EBS を使っているときは、この手順を各サービスが代わりにやっています。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 314" width="760" height="314" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="エンベロープ暗号化の8つの手順。暗号化では、データキーを要求し、KMSが平文と暗号化済みの2つのデータキーを返し、平文のキーでデータを暗号化して捨て、暗号文と暗号化されたデータキーを並べて保存する。復号では、暗号化されたデータキーをKMSに渡して平文のキーを受け取り、復号して捨てる"><text x="16" y="26" font-size="12.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">暗号化するとき</text><rect x="16" y="38" width="170" height="84" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="101.0" y="68.8" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">データキーを要求</text><text x="101.0" y="85.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">GenerateDataKey</text><text x="101.0" y="101.8" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">KMS キーを指定して呼ぶ</text><circle cx="16" cy="38" r="10" fill="var(--accent)"/><text x="16" y="42" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><line x1="186" y1="80" x2="192.0" y2="80.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="202.0,80.0 192.0,85.5 192.0,74.5" fill="var(--ink-3)"/><rect x="202" y="38" width="170" height="84" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="287.0" y="68.8" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">KMS が2つ返す</text><text x="287.0" y="85.2" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">平文のデータキー</text><text x="287.0" y="101.8" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">暗号化されたデータキー</text><circle cx="202" cy="38" r="10" fill="var(--accent)"/><text x="202" y="42" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><line x1="372" y1="80" x2="378.0" y2="80.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="388.0,80.0 378.0,85.5 378.0,74.5" fill="var(--ink-3)"/><rect x="388" y="38" width="170" height="84" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="473.0" y="68.8" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">手元で暗号化</text><text x="473.0" y="85.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">平文のキーでデータを暗号化</text><text x="473.0" y="101.8" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">直後に平文のキーを捨てる</text><circle cx="388" cy="38" r="10" fill="var(--accent)"/><text x="388" y="42" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><line x1="558" y1="80" x2="564.0" y2="80.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="574.0,80.0 564.0,85.5 564.0,74.5" fill="var(--ink-3)"/><rect x="574" y="38" width="170" height="84" rx="6" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="659.0" y="68.8" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">並べて保存</text><text x="659.0" y="85.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">暗号文</text><text x="659.0" y="101.8" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">＋ 暗号化されたデータキー</text><circle cx="574" cy="38" r="10" fill="var(--accent)"/><text x="574" y="42" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">4</text><rect x="16" y="172" width="170" height="84" rx="6" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="101.0" y="202.8" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">取り出す</text><text x="101.0" y="219.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">暗号文に添えてある</text><text x="101.0" y="235.8" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">暗号化されたデータキー</text><circle cx="16" cy="172" r="10" fill="var(--accent)"/><text x="16" y="176" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">5</text><line x1="186" y1="214" x2="192.0" y2="214.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="202.0,214.0 192.0,219.5 192.0,208.5" fill="var(--ink-3)"/><rect x="202" y="172" width="170" height="84" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="287.0" y="202.8" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">KMS に渡す</text><text x="287.0" y="219.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">Decrypt</text><text x="287.0" y="235.8" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">KMS キーを使う権限が要る</text><circle cx="202" cy="172" r="10" fill="var(--accent)"/><text x="202" y="176" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">6</text><line x1="372" y1="214" x2="378.0" y2="214.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="388.0,214.0 378.0,219.5 378.0,208.5" fill="var(--ink-3)"/><rect x="388" y="172" width="170" height="84" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="473.0" y="211.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">平文のキーが戻る</text><text x="473.0" y="227.5" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">メモリの上だけに置く</text><circle cx="388" cy="172" r="10" fill="var(--accent)"/><text x="388" y="176" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">7</text><line x1="558" y1="214" x2="564.0" y2="214.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="574.0,214.0 564.0,219.5 564.0,208.5" fill="var(--ink-3)"/><rect x="574" y="172" width="170" height="84" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="659.0" y="202.8" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">復号する</text><text x="659.0" y="219.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">使い終えたら</text><text x="659.0" y="235.8" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">平文のキーをまた捨てる</text><circle cx="574" cy="172" r="10" fill="var(--accent)"/><text x="574" y="176" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">8</text><text x="16" y="160" font-size="12.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">復号するとき</text><rect x="16" y="274" width="728" height="30" rx="6" fill="var(--accent-soft)" stroke="none" stroke-width="0"/><text x="380.0" y="293.14" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">KMS を往復するのはデータキーだけ。データ本体は KMS に送られない</text></svg>
+  </div>
+  <figcaption><strong>エンベロープ暗号化の手順。</strong>②で KMS は同じデータキーを<strong>2つの形</strong>で返す。平文のほうで暗号化し、すぐ捨てる。暗号化されたほうは暗号文の隣に置く（手紙を封筒に入れ、封筒に鍵をかける形）。読むときは⑥で必ず KMS を通る。だから、キーを無効化したりキーポリシーから外したりすれば、暗号文が手元にあっても読めなくなる。<strong>これが「鍵を無効化してアクセスを遮断する」の正体。</strong></figcaption>
+</figure>
   <ul>
-    <li>典型的な用途は、<strong>S3のクロスリージョンレプリケーション</strong>、<strong>DynamoDBグローバルテーブル</strong>、そして<strong>ディザスタリカバリ</strong>です。暗号化されたデータを別リージョンに運ぶ設計で出てきます。</li>
-    <li><strong>キーポリシーはリージョンごとに独立</strong>です。複製したからといって権限まで同じになるわけではありません。</li>
-    <li><strong>作成時に決める必要があります。</strong>すでにある単一リージョンキーを、後からマルチリージョンキーに変換することはできません。設問で「既存のキーをマルチリージョン化する」という選択肢が出たら不正解です。</li>
-    <li>レプリカもそれぞれ1キーとして課金されます。無条件にマルチリージョンにするのはコスト面で不利です。</li>
+    <li><strong>この場面の答え：</strong>ファイル全体が KMS に送られるのではない。KMS が作ったデータキーでファイルを暗号化し、そのデータキーを KMS キーで暗号化して、暗号文と一緒に保存している</li>
+    <li><strong>なぜ数 GB でも成り立つか：</strong>KMS を往復するのは小さなデータキーだけだから</li>
+    <li><strong>復号には毎回 KMS が要る：</strong>だから「キーを無効化する」「キーポリシーから外す」だけで、暗号文を持っている相手からもアクセスを断てる</li>
   </ul>
 
-  <h3>キーの削除</h3>
-  <p>KMSキーは即座に削除できません。<strong>削除をスケジュールすると、7日から30日の待機期間が始まり、既定は30日</strong>です。この間キーは「削除保留中」になり暗号化にも復号にも使えませんが、待機期間中ならキャンセルできます。鍵を消すことはその鍵で暗号化された全データを永久に読めなくすることなので、猶予が設けられています。</p>
-  <p>設問では「不要になったキーを削除したいが、まだどこかで使われているかもしれない」という文脈で出ます。<strong>正解は多くの場合「まずキーを無効化（disable）して、影響が出ないことを確認してから削除をスケジュールする」</strong>です。無効化は即時に効き、即時に戻せます。なお、マルチリージョンのプライマリキーは、すべてのレプリカを削除し終えてからでないと待機期間が始まりません。</p>
+  <h3>KMS を呼ぶ回数が料金になる ―― S3 バケットキー</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 210" width="760" height="210" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はS3バケットキーなしで、オブジェクトごとにKMSを呼び出す。右はバケットキーありで、バケット単位の短期キーを使い回し、KMSの呼び出しが減る"><text x="10" y="22" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">S3 バケットキー：なし（既定）</text><rect x="20" y="40" width="96" height="20" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="68" y="54" font-size="10" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><rect x="20" y="66" width="96" height="20" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="68" y="80" font-size="10" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><rect x="20" y="92" width="96" height="20" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="68" y="106" font-size="10" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><rect x="20" y="118" width="96" height="20" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="68" y="132" font-size="10" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><rect x="20" y="144" width="96" height="20" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="68" y="158" font-size="10" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><rect x="270" y="74" width="86" height="50" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="313.0" y="103.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">KMS</text><line x1="116" y1="50" x2="260.2" y2="80.0" stroke="var(--deny)" stroke-width="1.4"/><polygon points="270.0,82.0 259.1,85.4 261.3,74.6" fill="var(--deny)"/><line x1="116" y1="76" x2="260.0" y2="89.6" stroke="var(--deny)" stroke-width="1.4"/><polygon points="270.0,90.5 259.5,95.0 260.6,84.1" fill="var(--deny)"/><line x1="116" y1="102" x2="260.0" y2="99.2" stroke="var(--deny)" stroke-width="1.4"/><polygon points="270.0,99.0 260.1,104.7 259.9,93.7" fill="var(--deny)"/><line x1="116" y1="128" x2="260.1" y2="108.8" stroke="var(--deny)" stroke-width="1.4"/><polygon points="270.0,107.5 260.8,114.3 259.4,103.4" fill="var(--deny)"/><line x1="116" y1="154" x2="260.3" y2="118.4" stroke="var(--deny)" stroke-width="1.4"/><polygon points="270.0,116.0 261.6,123.7 259.0,113.1" fill="var(--deny)"/><text x="185" y="196" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">オブジェクトごとに KMS を呼ぶ → 料金がかさむ</text><line x1="380" y1="14" x2="380" y2="204" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--allow)" text-anchor="start" font-weight="700">S3 バケットキー：あり</text><rect x="408" y="40" width="96" height="20" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="456" y="54" font-size="10" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><rect x="408" y="66" width="96" height="20" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="456" y="80" font-size="10" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><rect x="408" y="92" width="96" height="20" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="456" y="106" font-size="10" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><rect x="408" y="118" width="96" height="20" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="456" y="132" font-size="10" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><rect x="408" y="144" width="96" height="20" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="456" y="158" font-size="10" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><rect x="658" y="74" width="86" height="50" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="701.0" y="103.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">KMS</text><rect x="534" y="74" width="96" height="50" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="582.0" y="97.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">バケットキー</text><text x="582.0" y="112.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">短期・使い回す</text><line x1="504" y1="50" x2="534" y2="99" stroke="var(--allow)" stroke-width="1.4"/><line x1="504" y1="76" x2="534" y2="99" stroke="var(--allow)" stroke-width="1.4"/><line x1="504" y1="102" x2="534" y2="99" stroke="var(--allow)" stroke-width="1.4"/><line x1="504" y1="128" x2="534" y2="99" stroke="var(--allow)" stroke-width="1.4"/><line x1="504" y1="154" x2="534" y2="99" stroke="var(--allow)" stroke-width="1.4"/><line x1="630" y1="99" x2="648.0" y2="99.0" stroke="var(--allow)" stroke-width="2"/><polygon points="658.0,99.0 648.0,104.5 648.0,93.5" fill="var(--allow)"/><text x="573" y="196" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">KMS を呼ぶ回数が大幅に減る</text></svg>
+  </div>
+  <figcaption><strong>SSE-KMS の呼び出し料金を減らす設定。</strong>S3 が KMS キーで暗号化する（SSE-KMS）と、既定ではオブジェクトごとに KMS を呼ぶ。バケットの暗号化設定で <strong>S3 バケットキー</strong>を有効にすると、バケット単位の短期キーを使い回すので、KMS へのリクエストが大幅に減る。</figcaption>
+</figure>
+  <p>S3 バケットキーは、バケットの「プロパティ」→「デフォルトの暗号化」で有効にします。</p>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「KMS での暗号化の動作として正しいものは」→ <strong>データキーで暗号化し、データキーを KMS キーで暗号化して一緒に保存</strong>。「ファイル全体を KMS に送る」「鍵素材が S3 にコピーされる」「復号に KMS は不要」はすべて誤り。「SSE-KMS を使いたいが、KMS のリクエスト料金を抑えたい」→ <strong>S3 バケットキー</strong>（暗号化をやめる、SSE-S3 に切り替える、は要件を満たさない）。</p></div>
+</section>
 
-  <h3>CloudHSM との使い分け</h3>
-  <p>CloudHSMは、KMSと同じ「鍵を守るサービス」ですが、位置づけが違います。KMSがマネージドな共有基盤なのに対し、CloudHSMは<strong>自分専用のハードウェアセキュリティモジュール</strong>をVPC内に立てるサービスです。</p>
+<section id="s5" data-toc="場面4 鍵の運用">
+  
+  <span class="h2num">05</span>
+  <h2>場面4 ―― 「鍵を定期的に替えたい」「別リージョンでも復号したい」「要らない鍵を消したい」「専用の装置を求められた」</h2>
 
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>自動ローテーション</dt><dd>KMS が決まった周期で、キーの鍵素材を新しく作り直す機能</dd>
+      <dt>エイリアス</dt><dd>KMS キーに付ける別名（例：<code>alias/app-key</code>）。アプリはこの名前でキーを指定できる</dd>
+      <dt>対称暗号化キー／非対称キー</dt><dd>暗号化と復号に同じ鍵を使うのが対称、別々の鍵（公開鍵と秘密鍵）を使うのが非対称。KMS キーの既定は対称</dd>
+      <dt>HMAC キー<small>Hash-based Message Authentication Code</small></dt><dd>データが改ざんされていないことを確かめる符号を作るための鍵</dd>
+      <dt>インポートした鍵素材</dt><dd>オンプレミスなど KMS の外で作って持ち込んだ鍵素材。キーの「オリジン」が EXTERNAL になる</dd>
+      <dt>マルチリージョンキー</dt><dd>同じ鍵素材とキー ID を持つキーを、複数のリージョンに置けるようにした KMS キー</dd>
+      <dt>HSM<small>Hardware Security Module</small></dt><dd>鍵を外に取り出せないように守る専用の機械。KMS も内部で使っている</dd>
+      <dt>CloudHSM<small>AWS CloudHSM</small></dt><dd>自分専用の HSM を、自分の VPC の中に置けるサービス</dd>
+      <dt>テナント</dt><dd>設備を使う利用者のこと。1つの設備を複数の利用者で共用するのがマルチテナント、1人で専有するのがシングルテナント</dd>
+      <dt>FIPS 140-3<small>Federal Information Processing Standards</small></dt><dd>暗号を扱う機器についての米国政府の規格。レベルの数字が大きいほど厳しい</dd>
+      <dt>カスタムキーストア</dt><dd>KMS キーの鍵素材の置き場を、KMS 標準の場所ではなく CloudHSM などにする設定</dd>
+      <dt>TDE<small>Transparent Data Encryption</small></dt><dd>データベース製品が自分でデータを暗号化する機能。SQL Server や Oracle にある</dd>
+    </dl>
+  </div>
+
+  <h3>鍵を替える ―― 自動ローテーション</h3>
+  <p>自動ローテーションは、KMS のコンソールでカスタマー管理キーを開いた「キーローテーション」タブで有効にします。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 230" width="760" height="230" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="KMSキーの自動ローテーション。365日ごとに新しい鍵素材が作られるが、キーIDやARNやエイリアスは変わらず、古い鍵素材も残るので古いデータも復号できる"><rect x="16" y="30" width="728" height="112" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="380" y="52" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">KMS キー ― キー ID・ARN・エイリアスは変わらない</text><rect x="44" y="70" width="180" height="52" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="134.0" y="94.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">鍵素材 1</text><text x="134.0" y="109.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">古いが残してある</text><line x1="224" y1="96" x2="280.0" y2="96.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="290.0,96.0 280.0,101.5 280.0,90.5" fill="var(--ink-3)"/><text x="257" y="86" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">365日</text><rect x="290" y="70" width="180" height="52" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="380.0" y="94.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">鍵素材 2</text><text x="380.0" y="109.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">古いが残してある</text><line x1="470" y1="96" x2="526.0" y2="96.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="536.0,96.0 526.0,101.5 526.0,90.5" fill="var(--ink-3)"/><text x="503" y="86" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">365日</text><rect x="536" y="70" width="180" height="52" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="626.0" y="94.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">鍵素材 3</text><text x="626.0" y="109.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">いまの暗号化に使う</text><rect x="44" y="176" width="180" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="134.0" y="200.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">1年目に暗号化したデータ</text><line x1="134" y1="176" x2="134.0" y2="132.0" stroke="var(--allow)" stroke-width="2"/><polygon points="134.0,122.0 139.5,132.0 128.5,132.0" fill="var(--allow)"/><rect x="536" y="176" width="180" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="626.0" y="200.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">今日暗号化するデータ</text><line x1="626" y1="176" x2="626.0" y2="132.0" stroke="var(--allow)" stroke-width="2"/><polygon points="626.0,122.0 631.5,132.0 620.5,132.0" fill="var(--allow)"/><circle cx="262" cy="196" r="9" fill="var(--allow)"/><polyline points="257.9,196.0 261.1,199.4 266.5,192.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="278" y="192" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">古いデータもそのまま復号できる</text><text x="278" y="210" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">アプリの書き換えは不要</text></svg>
+  </div>
+  <figcaption><strong>ローテーションで変わるのは中身（鍵素材）だけ。</strong>キー ID・ARN・エイリアス（キーに付ける別名）は同じままなので、アプリは何も変えなくてよい。古い鍵素材は KMS に残り続けるので、ローテーション前に暗号化したデータも復号できる。周期はカスタマー管理キーなら既定 365日、90〜2560日で指定できる。</figcaption>
+</figure>
+  <ul>
+    <li><strong>カスタマー管理キー：</strong>有効にすると既定で 365日ごと。周期は 90〜2560日で指定できる</li>
+    <li><strong>AWS マネージドキー：</strong>年1回のローテーションが強制で、設定は変えられない</li>
+    <li>「ローテーションすると過去のデータが読めなくなる」と心配させる選択肢は不正解</li>
+  </ul>
+  <div class="note warn"><span class="label">自動ローテーションできないキー</span>
+    <p>自動ローテーションが使えるのは、<strong>KMS が鍵素材を作った対称暗号化キー</strong>だけです。インポートした鍵素材のキー、非対称キー、HMAC キー、カスタムキーストア上のキーは対象外。これらを替えたいときは、新しいキーを作ってエイリアスを付け替える<strong>手動ローテーション</strong>になります。設問に「オンプレミスで生成した鍵素材を使う」とあれば、自動ローテーションを答えにする選択肢は消えます。</p>
+  </div>
+
+  <h3>別リージョンでも復号する ―― マルチリージョンキー</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 254" width="760" height="254" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="東京のプライマリキーを大阪に複製したレプリカキーは同じ鍵素材とキーIDを持つので、東京で暗号化した暗号文を大阪にコピーしてそのまま復号できる"><rect x="16" y="30" width="320" height="136" rx="10" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="30" y="50" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">東京リージョン</text><rect x="424" y="30" width="320" height="136" rx="10" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="438" y="50" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">大阪リージョン</text><rect x="40" y="62" width="170" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="125.0" y="82.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">プライマリキー</text><text x="125.0" y="97.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">キー ID：mrk-1234…</text><rect x="448" y="62" width="170" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="533.0" y="82.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">レプリカキー</text><text x="533.0" y="97.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">同じ鍵素材・同じキー ID</text><line x1="210" y1="84" x2="438.0" y2="84.0" stroke="var(--accent)" stroke-width="2"/><polygon points="448.0,84.0 438.0,89.5 438.0,78.5" fill="var(--accent)"/><text x="380" y="74" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">複製</text><rect x="40" y="116" width="170" height="38" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="125.0" y="139.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">暗号文</text><rect x="448" y="116" width="170" height="38" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="533.0" y="139.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">暗号文</text><line x1="210" y1="135" x2="438.0" y2="135.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="448.0,135.0 438.0,140.5 438.0,129.5" fill="var(--ink-3)"/><text x="380" y="152" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">コピー</text><circle cx="640" cy="135" r="9" fill="var(--allow)"/><polyline points="636.0,135.0 639.1,138.4 644.5,131.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="654" y="139" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">そのまま復号</text><circle cx="30" cy="192" r="8" fill="var(--deny)"/><line x1="26.4" y1="188.4" x2="33.6" y2="195.6" stroke="var(--bg)" stroke-width="2.4"/><line x1="26.4" y1="195.6" x2="33.6" y2="188.4" stroke="var(--bg)" stroke-width="2.4"/><text x="45" y="196" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">後から変換はできない（作成時にマルチリージョンと決める）</text><circle cx="30" cy="216" r="8" fill="var(--deny)"/><line x1="26.4" y1="212.4" x2="33.6" y2="219.6" stroke="var(--bg)" stroke-width="2.4"/><line x1="26.4" y1="219.6" x2="33.6" y2="212.4" stroke="var(--bg)" stroke-width="2.4"/><text x="45" y="220" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">キーポリシーはリージョンごとに別（複製しても権限は同じにならない）</text><text x="45" y="242" font-size="11" fill="var(--ink-3)" text-anchor="start">レプリカもそれぞれ1キーとして課金される</text></svg>
+  </div>
+  <figcaption><strong>KMS キーはふつうリージョンに閉じている。</strong>東京のキーで暗号化したものは、大阪の KMS では復号できない。<strong>マルチリージョンキー</strong>は、同じ鍵素材とキー ID を持つキーを別リージョンに複製するので、運んだ先でそのまま復号できる。</figcaption>
+</figure>
+  <p>使いどころは、暗号化されたデータを別リージョンへ運ぶ設計です。<strong>S3 のクロスリージョンレプリケーション</strong>（S3 講義で既出）、<strong>DynamoDB グローバルテーブル</strong>（DB 講義で既出）、<strong>ディザスタリカバリ</strong>（災害時に別リージョンで復旧する備え）で出てきます。マルチリージョンにするかどうかは、キーを作る画面で選びます。</p>
+
+  <h3>鍵を消す ―― まず無効化</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 240" width="760" height="240" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="KMSキーの時間軸。有効、無効化、削除のスケジュール、削除の順。無効化はすぐ効いてすぐ戻せる。削除のスケジュール後は7日から30日の待機期間があり、その間はキャンセルできる"><line x1="30" y1="30" x2="726.0" y2="30.0" stroke="var(--ink-3)" stroke-width="1.4"/><polygon points="736.0,30.0 726.0,35.5 726.0,24.5" fill="var(--ink-3)"/><text x="736" y="22" font-size="10.5" fill="var(--ink-3)" text-anchor="end">時間</text><line x1="40" y1="108" x2="720" y2="108" stroke="var(--ink-3)" stroke-width="2"/><circle cx="90" cy="108" r="8" fill="var(--allow)"/><text x="90" y="72" font-size="12.5" fill="var(--allow)" text-anchor="middle" font-weight="700">有効</text><text x="90" y="90" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">普通に使える</text><circle cx="270" cy="108" r="8" fill="var(--warn)"/><text x="270" y="72" font-size="12.5" fill="var(--warn)" text-anchor="middle" font-weight="700">無効化</text><text x="270" y="90" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">すぐ効く・すぐ戻せる</text><circle cx="470" cy="108" r="8" fill="var(--deny)"/><text x="470" y="72" font-size="12.5" fill="var(--deny)" text-anchor="middle" font-weight="700">削除をスケジュール</text><text x="470" y="90" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">待機期間が始まる</text><circle cx="690" cy="108" r="8" fill="var(--deny)"/><text x="690" y="72" font-size="12.5" fill="var(--deny)" text-anchor="middle" font-weight="700">削除</text><text x="690" y="90" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">元に戻せない</text><rect x="270" y="118" width="200" height="26" rx="4" fill="var(--warn-soft)" stroke="none" stroke-width="0"/><text x="370" y="136" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">影響が出ないか確かめる</text><rect x="470" y="118" width="220" height="26" rx="4" fill="var(--deny-soft)" stroke="none" stroke-width="0"/><text x="580" y="136" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">7〜30日（既定30日）</text><text x="580" y="164" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">この間は暗号化にも復号にも使えない</text><text x="580" y="182" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">待機期間中ならキャンセルできる</text><text x="690" y="210" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">そのキーで暗号化した</text><text x="690" y="226" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">データは永久に読めない</text></svg>
+  </div>
+  <figcaption><strong>KMS キーはすぐには消せない。</strong>鍵を消すと、その鍵で暗号化したデータがすべて永久に読めなくなるため、7〜30日（既定30日）の待機期間が置かれている。「まだどこかで使われているかもしれない」ときは、<strong>まず無効化して様子を見てから、削除をスケジュールする。</strong></figcaption>
+</figure>
+  <p>無効化も削除のスケジュールも、KMS のコンソールでキーを選んだ「キーのアクション」から行います。マルチリージョンのプライマリキーは、すべてのレプリカを削除し終えてからでないと待機期間が始まりません。</p>
+
+  <h3>専用の装置を求められた ―― CloudHSM</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 766 256" width="766" height="256" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はAWS KMSでAWSが運用する共用のHSMを使い、AWSサービスと統合済みで運用負荷がほぼない。右はAWS CloudHSMで自分のVPCに専用のHSMを置き、FIPS 140-3レベル3だが運用と費用の負担が大きい。下にKMSカスタムキーストアが両方を橋渡しすると書いてある"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">AWS KMS：AWS が運用する共用の HSM</text><rect x="24" y="36" width="330" height="62" rx="8" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="189" y="54" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">HSM（マルチテナント）</text><rect x="40" y="62" width="92" height="26" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2"/><text x="86" y="80" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">自分の鍵</text><rect x="144" y="62" width="92" height="26" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="190" y="80" font-size="10.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">他社の鍵</text><rect x="248" y="62" width="92" height="26" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="294" y="80" font-size="10.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">他社の鍵</text><circle cx="34" cy="122" r="8" fill="var(--allow)"/><polyline points="30.4,122.0 33.2,125.0 38.0,119.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="49" y="126" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">S3・EBS・RDS などと統合済み</text><circle cx="34" cy="146" r="8" fill="var(--allow)"/><polyline points="30.4,146.0 33.2,149.0 38.0,143.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="49" y="150" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">運用はほぼゼロ（可用性も AWS 任せ）</text><circle cx="34" cy="170" r="8" fill="var(--allow)"/><polyline points="30.4,170.0 33.2,173.0 38.0,167.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="49" y="174" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">1キー 月額 1 USD ほど</text><line x1="382" y1="14" x2="382" y2="190" stroke="var(--line)" stroke-width="1.2"/><text x="400" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">AWS CloudHSM：自分専用の HSM</text><rect x="410" y="36" width="334" height="62" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="424" y="54" font-size="11" fill="var(--accent)" text-anchor="start" font-weight="700">自分の VPC</text><rect x="512" y="50" width="220" height="38" rx="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/><text x="622" y="74" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">HSM（シングルテナント）</text><circle cx="420" cy="122" r="8" fill="var(--allow)"/><polyline points="416.4,122.0 419.2,125.0 424.0,119.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="435" y="126" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">FIPS 140-3 レベル3・AWS は鍵に触れない</text><circle cx="420" cy="146" r="8" fill="var(--deny)"/><line x1="416.4" y1="142.4" x2="423.6" y2="149.6" stroke="var(--bg)" stroke-width="2.4"/><line x1="416.4" y1="149.6" x2="423.6" y2="142.4" stroke="var(--bg)" stroke-width="2.4"/><text x="435" y="150" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">クラスター・ユーザー・バックアップは自分</text><circle cx="420" cy="170" r="8" fill="var(--deny)"/><line x1="416.4" y1="166.4" x2="423.6" y2="173.6" stroke="var(--bg)" stroke-width="2.4"/><line x1="416.4" y1="173.6" x2="423.6" y2="166.4" stroke="var(--bg)" stroke-width="2.4"/><text x="435" y="174" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">HSM 単位の時間課金（桁が上がる）</text><rect x="16" y="200" width="734" height="46" rx="6" fill="var(--accent-soft)" stroke="none" stroke-width="0"/><text x="383" y="220" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">KMS カスタムキーストア：KMS の裏側に CloudHSM のクラスターを置く</text><text x="383" y="238" font-size="11" fill="var(--accent)" text-anchor="middle">→ AWS サービスとの統合を保ったまま、鍵を専用の HSM に置ける</text></svg>
+  </div>
+  <figcaption><strong>どちらも鍵を HSM（鍵を守る専用の機械）に置くが、誰の HSM かが違う。</strong>KMS は AWS が運用する共用の HSM、CloudHSM は自分の VPC に置く専用の HSM。専用は運用も費用も重いので、設問に「専用」「FIPS 140-3 レベル3」「AWS が鍵に一切アクセスできない」と明示がない限り KMS を選ぶ。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th></th><th>AWS KMS</th><th>AWS CloudHSM</th></tr></thead>
     <tbody>
-      <tr><td><strong>テナンシー</strong></td><td>AWSが運用するマルチテナントのHSM</td><td class="yes">自分専用のシングルテナントHSM</td></tr>
-      <tr><td><strong>鍵の管理主体</strong></td><td>AWSが運用。AWSは鍵素材を取り出せない設計だが、サービス自体はAWSが管理</td><td class="yes">顧客が完全に管理。AWSはHSM内の鍵にアクセスできない</td></tr>
-      <tr><td><strong>認証・規格</strong></td><td>AWSのマネージド基準</td><td>FIPS 140-3 レベル3 認証のHSM</td></tr>
-      <tr><td><strong>AWSサービスとの統合</strong></td><td class="yes">S3・EBS・RDSなど広範に統合済み</td><td class="no">直接の統合は限定的（KMSカスタムキーストア経由で橋渡し）</td></tr>
-      <tr><td><strong>運用負荷</strong></td><td class="yes">ほぼゼロ。可用性もAWS任せ</td><td class="no">クラスタ構成、ユーザー管理、バックアップを自分で設計</td></tr>
-      <tr><td><strong>非対称・特殊用途</strong></td><td>対称・非対称の一般的な用途</td><td class="yes">SQL Server / Oracle の TDE、独自PKI、コード署名、SSLオフロード</td></tr>
-      <tr><td><strong>料金</strong></td><td>1キー月額1USD規模</td><td class="no">HSMインスタンス単位の時間課金。桁が上がる</td></tr>
+      <tr><td><strong>鍵の管理主体</strong></td><td>AWS が運用。AWS は鍵素材を取り出せない設計だが、サービス自体は AWS が管理</td><td class="yes">顧客が完全に管理。AWS は HSM 内の鍵にアクセスできない</td></tr>
+      <tr><td><strong>AWS サービスとの統合</strong></td><td class="yes">S3・EBS・RDS など広く統合済み</td><td class="no">直接の統合は限定的（カスタムキーストア経由で橋渡し）</td></tr>
+      <tr><td><strong>特殊な用途</strong></td><td>対称・非対称の一般的な用途</td><td class="yes">SQL Server / Oracle の TDE、独自の認証局（→ 場面6）、コード署名、SSL オフロード（暗号化通信の処理を HSM に肩代わりさせること）</td></tr>
     </tbody>
   </table></div>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「暗号化データを別リージョンでも復号したい」→ <strong>マルチリージョンキー</strong>（「既存のキーをマルチリージョン化する」は不可能なので不正解）。「鍵を消したいが、まだ使われているかもしれない」→ <strong>まず無効化、確認してから削除をスケジュール</strong>。「専用のハードウェアセキュリティモジュール」「FIPS 140-3 レベル3」「鍵素材に AWS が一切アクセスできない」「規制当局から鍵の単独管理を求められた」→ <strong>CloudHSM</strong>。書いていなければ KMS。「AWS サービスとの統合は保ちつつ、鍵は専用 HSM に」→ <strong>KMS カスタムキーストア</strong>。</p></div>
+</section>
 
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>設問に<strong>「専用のハードウェアセキュリティモジュール」「FIPS 140-3 レベル3」「鍵素材にAWSが一切アクセスできないこと」「規制当局から鍵の単独管理を求められている」</strong>のいずれかが書いてあればCloudHSM。<strong>書いていなければKMS</strong>です。CloudHSMは運用負荷とコストが跳ね上がるので、要件に明示がない限り正解にはなりません。「KMSのカスタムキーストア」は、CloudHSMのクラスタをKMSの裏側に置く構成で、AWSサービスとの統合を保ちながら鍵をHSMに置きたい、という両取りの要件に対する答えです。</p>
-  </div></section>
+<section id="s6" data-toc="場面5 パスワードの置き場">
+  
+  <span class="h2num">06</span>
+  <h2>場面5 ―― 「監査で、データベースのパスワードを 90日ごとに変えることになった」</h2>
 
-<section id="s5" data-toc="シークレット">
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>シークレット</dt><dd>パスワード、API キー、外部サービスのトークンなど、人に見せてはいけない値のこと</dd>
+      <dt>マネージドローテーション</dt><dd>パスワードを取り替える処理まで AWS が用意している状態。自分で Lambda 関数を書かなくてよい</dd>
+      <dt>Parameter Store<small>AWS Systems Manager Parameter Store</small></dt><dd>設定値を名前付きで保存しておくサービス。Systems Manager（サーバー群の運用を助けるサービスの集まり）の機能の1つ</dd>
+      <dt>SecureString</dt><dd>Parameter Store の値の型の1つ。これを選ぶと KMS で暗号化される。ほかに String と StringList（どちらも平文）がある</dd>
+      <dt>GetParametersByPath</dt><dd>Parameter Store から、ある階層の下の値をまとめて取り出す API の名前</dd>
+      <dt>マスターユーザー</dt><dd>RDS のデータベースを作るときに決める、最初の管理者ユーザー</dd>
+    </dl>
+  </div>
 
-  <span class="h2num">05</span>
-  <h2>シークレット管理 ―― Secrets Manager と Parameter Store</h2>
-  <p class="lead">データベースのパスワード、APIキー、サードパーティのトークン。これらを環境変数やコードに直書きしないための選択肢が2つあり、その使い分けは頻出です。<strong>分岐は3点――自動ローテーションが要るか、コストを重視するか、階層構造が要るか。</strong></p>
+  <p>パスワードをコードや環境変数に直接書くと、取り替えるたびにアプリを直して配り直すことになります。そこで、パスワードを外の置き場に預け、アプリには「使うときに聞きに行く」だけをさせます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 298" width="760" height="298" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="アプリは使う直前にSecrets Managerからパスワードを取得してデータベースに接続する。Secrets Managerは決めた周期でデータベースのパスワードを新しくし、保管している値も更新する"><rect x="16" y="116" width="150" height="54" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="91.0" y="141.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">アプリ</text><text x="91.0" y="156.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">EC2・Lambda・コンテナ</text><rect x="300" y="106" width="176" height="74" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="388.0" y="141.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">Secrets Manager</text><text x="388.0" y="156.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">パスワードを保管（KMS で暗号化）</text><rect x="610" y="116" width="134" height="54" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="677.0" y="141.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">RDS・Aurora</text><text x="677.0" y="156.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">データベース</text><line x1="166" y1="134" x2="290.0" y2="134.0" stroke="var(--allow)" stroke-width="2"/><polygon points="300.0,134.0 290.0,139.5 290.0,128.5" fill="var(--allow)"/><text x="233" y="124" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">① 使う直前に取得</text><polyline points="91,170 91,222 677,222 677.0,180.0" fill="none" stroke="var(--allow)" stroke-width="2" stroke-linejoin="round"/><polygon points="677.0,170.0 682.5,180.0 671.5,180.0" fill="var(--allow)"/><text x="384" y="240" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">② 受け取ったパスワードで接続</text><rect x="283" y="22" width="210" height="30" rx="15.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="388.0" y="40.85" font-size="11" fill="var(--ink-2)" text-anchor="middle">90日ごと（周期は自分で決める）</text><line x1="388" y1="52" x2="388.0" y2="96.0" stroke="var(--accent)" stroke-width="2"/><polygon points="388.0,106.0 382.5,96.0 393.5,96.0" fill="var(--accent)"/><line x1="476" y1="143" x2="600.0" y2="143.0" stroke="var(--accent)" stroke-width="2"/><polygon points="610.0,143.0 600.0,148.5 600.0,137.5" fill="var(--accent)"/><text x="543" y="133" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">③ パスワードを替える</text><text x="388" y="200" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">③と同時に、保管している値も新しくなる</text><rect x="16" y="258" width="728" height="30" rx="6" fill="var(--accent-soft)" stroke="none" stroke-width="0"/><text x="380.0" y="277.14" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">アプリはパスワードを持たない → パスワードが変わっても、コードも設定も直さなくてよい</text></svg>
+  </div>
+  <figcaption><strong>ローテーションとは、パスワードを定期的に新しいものに取り替えること。</strong>アプリが毎回 Secrets Manager に聞きに行く形にしておけば、取り替えは Secrets Manager とデータベースの間だけで完結する。RDS・Aurora・Redshift・DocumentDB は、取り替えの処理まで AWS が用意している（マネージドローテーション）。それ以外は Lambda 関数で書く。</figcaption>
+</figure>
+  <ul>
+    <li><strong>この場面の答え：</strong>Secrets Manager に保存し、自動ローテーションを有効にする。Aurora・RDS・Redshift・DocumentDB はマネージドローテーションなので、Lambda 関数も書かなくてよい</li>
+    <li><strong>設定する場所：</strong>Secrets Manager のコンソールでシークレットを開き、「ローテーション」で周期を決める</li>
+    <li><strong>もっと手間を減らす：</strong>RDS・Aurora のデータベースを作る画面で「マスター認証情報を Secrets Manager で管理する」を選ぶと、パスワードの作成からローテーションまで任せられる（マネージドマスターユーザーパスワード）</li>
+  </ul>
 
+  <h3>もう1つの置き場 ―― Parameter Store</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 240" width="760" height="240" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="Parameter Storeの階層。/myapp/prodの下に/db/host、/db/password、/ami-idがあり、SecureString型だけがKMSで暗号化される。GetParametersByPathで階層の下をまとめて取得できる"><text x="16" y="24" font-size="12" fill="var(--ink)" text-anchor="start" font-weight="700">Parameter Store：名前を「/」で区切って階層にする</text><rect x="16" y="84" width="96" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="64.0" y="106.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">/myapp</text><rect x="160" y="84" width="96" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="208.0" y="106.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">/prod</text><rect x="160" y="150" width="96" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="208.0" y="172.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">/dev</text><line x1="112" y1="102" x2="160" y2="102" stroke="var(--ink-3)" stroke-width="1.4"/><polyline points="136,102 136,168 160,168" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round"/><line x1="256" y1="102" x2="300" y2="57" stroke="var(--ink-3)" stroke-width="1.4"/><rect x="300" y="40" width="150" height="34" rx="5" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="375" y="62" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">/db/host</text><rect x="462" y="40" width="120" height="34" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="522" y="62" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">String</text><text x="596" y="62" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">平文で保存</text><line x1="256" y1="102" x2="300" y2="101" stroke="var(--ink-3)" stroke-width="1.4"/><rect x="300" y="84" width="150" height="34" rx="5" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="375" y="106" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">/db/password</text><rect x="462" y="84" width="120" height="34" rx="5" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><text x="522" y="106" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">SecureString</text><text x="596" y="106" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">KMS で暗号化</text><line x1="256" y1="102" x2="300" y2="145" stroke="var(--ink-3)" stroke-width="1.4"/><rect x="300" y="128" width="150" height="34" rx="5" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="375" y="150" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">/ami-id</text><rect x="462" y="128" width="120" height="34" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="522" y="150" font-size="11" fill="var(--ink-3)" text-anchor="middle" font-weight="700">String</text><text x="596" y="150" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">平文で保存</text><rect x="288" y="30" width="462" height="142" rx="8" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="5 4"/><text x="519" y="192" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">GetParametersByPath で /myapp/prod/ の下をまとめて取得</text><text x="16" y="226" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">パスワードを String 型で入れると平文で保存される（SecureString 型を選ぶ）</text></svg>
+  </div>
+  <figcaption><strong>Parameter Store は設定値の置き場。</strong>名前を階層にしておくと、環境ごと（prod・dev）にまとめて取り出せる。値の型は3つあり、<strong>SecureString を選んだときだけ KMS で暗号化される</strong>。String と StringList は平文のまま。</figcaption>
+</figure>
+  <p>置き場は2つあり、使い分けは頻出です。<strong>分かれ目は3点――自動ローテーションが要るか、コストを重視するか、階層でまとめて取りたいか。</strong></p>
   <div class="tw"><table>
     <thead><tr><th></th><th>Secrets Manager</th><th>Parameter Store（標準）</th><th>Parameter Store（アドバンスト）</th></tr></thead>
     <tbody>
-      <tr><td><strong>自動ローテーション</strong></td><td class="yes">組み込み。RDS・Aurora・Redshift・DocumentDB はマネージドローテーション、それ以外はLambdaで実装</td><td class="no">機能なし（EventBridge＋Lambdaで自作）</td><td class="no">機能なし</td></tr>
-      <tr><td><strong>料金</strong></td><td class="no">1シークレットあたり月額0.40USD＋1万API呼び出しあたり0.05USD</td><td class="yes">追加料金なし</td><td>パラメータ単位の月額課金＋API課金</td></tr>
+      <tr><td><strong>自動ローテーション</strong></td><td class="yes">組み込み。RDS・Aurora・Redshift・DocumentDB はマネージド、それ以外は Lambda で実装</td><td class="no">機能なし（EventBridge ＋ Lambda で自作）</td><td class="no">機能なし</td></tr>
+      <tr><td><strong>料金</strong></td><td class="no">1シークレットあたり月額 0.40 USD ＋ 1万 API 呼び出しあたり 0.05 USD</td><td class="yes">追加料金なし</td><td>パラメータ単位の月額課金 ＋ API 課金</td></tr>
       <tr><td><strong>保存数の上限</strong></td><td>アカウント・リージョンあたり多数</td><td>1万パラメータ</td><td class="yes">10万パラメータ</td></tr>
       <tr><td><strong>値のサイズ上限</strong></td><td>64 KB</td><td>4 KB</td><td>8 KB</td></tr>
-      <tr><td><strong>階層パス</strong></td><td>スラッシュ区切りの命名は可能だが機能としての階層取得はない</td><td class="yes"><code>/app/prod/db/password</code> のような階層。<code>GetParametersByPath</code> でまとめて取得</td><td class="yes">同左</td></tr>
-      <tr><td><strong>暗号化</strong></td><td class="yes">常にKMSで暗号化</td><td>SecureString 型を選んだときだけKMS。String / StringList は平文</td><td>同左</td></tr>
+      <tr><td><strong>階層でまとめて取得</strong></td><td>「/」区切りの名前は付けられるが、まとめて取る機能はない</td><td class="yes">できる（GetParametersByPath）</td><td class="yes">同左</td></tr>
+      <tr><td><strong>暗号化</strong></td><td class="yes">常に KMS で暗号化</td><td>SecureString 型を選んだときだけ</td><td>同左</td></tr>
       <tr><td><strong>クロスアカウント共有</strong></td><td class="yes">リソースベースポリシーで可能</td><td class="no">不可</td><td class="yes">共有可能</td></tr>
       <tr><td><strong>クロスリージョン複製</strong></td><td class="yes">レプリカを作れる</td><td class="no">なし</td><td class="no">なし</td></tr>
       <tr><td><strong>パラメータポリシー</strong></td><td>ローテーション設定として持つ</td><td class="no">なし</td><td class="yes">有効期限・通知を設定できる</td></tr>
     </tbody>
   </table></div>
+  <div class="note warn"><span class="label">よくある誤解</span>
+    <p>「Parameter Store は暗号化できない」――できます（SecureString 型）。両者の差はローテーション・コスト・共有であって、暗号化できるかどうかではありません。なお Parameter Store からは <code>/aws/reference/secretsmanager/</code> というパスで Secrets Manager のシークレットを参照できます。アプリのコードは Parameter Store を読む形に揃えたまま、秘密だけ Secrets Manager に置けます。</p>
+  </div>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「認証情報を定期的に自動でローテーション」「RDS のパスワードを 90日ごとに変更」→ <strong>Secrets Manager</strong>（「Parameter Store ＋ Lambda で実装」は、標準機能で済む方に負ける）。「人手を介さず、運用負荷は最小に」→ <strong>RDS のマネージドマスターユーザーパスワード</strong>。「コストを最小限に」「追加費用なしで」「大量の設定値」→ <strong>Parameter Store</strong>（ローテーションの要件がないのに Secrets Manager を選ぶとコストで負ける）。「環境ごとにまとめて取得」→ <strong>Parameter Store の階層</strong>。「AMI の ID やエンドポイントの URL のような、秘密ではない設定値」→ <strong>Parameter Store</strong>。「Parameter Store に入れたパスワードが平文だった」→ <strong>String 型で保存した</strong>のが原因。</p></div>
+</section>
 
-  <h3>設問での切り分け</h3>
+<section id="s7" data-toc="場面6 証明書">
+  
+  <span class="h2num">07</span>
+  <h2>場面6 ―― 「CloudFront に独自ドメインの HTTPS を付けたい。なのに、証明書が一覧に出てこない」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>証明書<small>TLS 証明書（SSL 証明書とも呼ぶ）</small></dt><dd>「このサーバーは、このドメインの正当な持ち主のものだ」と第三者が保証した電子の書類</dd>
+      <dt>認証局<small>CA：Certificate Authority</small></dt><dd>証明書を発行する機関。ブラウザはあらかじめ、信頼する認証局の一覧を持っている</dd>
+      <dt>秘密鍵</dt><dd>証明書と対になる、持ち主だけが持つ鍵。これが漏れると、他人がそのサイトになりすませる</dd>
+      <dt>TLS の終端</dt><dd>暗号化された通信を受け取り、元に戻す場所。そこに証明書と秘密鍵を置く</dd>
+      <dt>パブリック証明書／プライベート証明書</dt><dd>ブラウザが信頼する認証局が出すのがパブリック、社内だけで信頼する認証局が出すのがプライベート</dd>
+      <dt>AWS Private CA<small>AWS Private Certificate Authority</small></dt><dd>自分専用の認証局を作り、プライベート証明書を発行するサービス</dd>
+      <dt>DNS 検証／E メール検証</dt><dd>証明書を発行する前に「本当にそのドメインの持ち主か」を確かめる2つの方法。DNS 検証は指定された CNAME レコード（DNS の設定の1行）を置く。E メール検証は届いたメールで承認する</dd>
+      <dt>us-east-1</dt><dd>米国東部（バージニア北部）リージョンのコード。東京は ap-northeast-1</dd>
+      <dt>API Gateway<small>Amazon API Gateway</small></dt><dd>API の入口を作るサービス。入口の置き方に、リージョナル（1つのリージョン）とエッジ最適化（CloudFront 経由）がある</dd>
+    </dl>
+  </div>
+
+  <p>転送時の暗号化の主役は TLS で、TLS の主役は証明書です。まず、証明書がどこで何をしているかを見ます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 210" width="760" height="210" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="利用者のブラウザとCloudFrontやALBの間はHTTPSで暗号化される。CloudFrontやALBにACMの証明書を付けてTLSを終端し、背後のEC2には証明書を置かない"><rect x="16" y="46" width="130" height="52" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="81.0" y="76.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">利用者のブラウザ</text><rect x="304" y="46" width="176" height="52" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="392.0" y="70.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">CloudFront・ALB</text><text x="392.0" y="85.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">ここで TLS を終端</text><rect x="626" y="46" width="118" height="52" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="685.0" y="70.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><text x="685.0" y="85.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">アプリ</text><line x1="146" y1="72" x2="294.0" y2="72.0" stroke="var(--allow)" stroke-width="2.6"/><polygon points="304.0,72.0 294.0,77.5 294.0,66.5" fill="var(--allow)"/><text x="225" y="62" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">HTTPS（暗号化）</text><line x1="480" y1="72" x2="616.0" y2="72.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="626.0,72.0 616.0,77.5 616.0,66.5" fill="var(--ink-3)"/><text x="553" y="62" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">AWS の中の通信</text><line x1="392" y1="98" x2="392" y2="130" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="4 3"/><rect x="292" y="130" width="200" height="66" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="392.0" y="151.8" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">証明書（ACM が発行）</text><text x="392.0" y="168.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">このドメインの持ち主だ、の証明</text><text x="392.0" y="184.8" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">＋ 対になる秘密鍵</text><circle cx="26" cy="132" r="10" fill="var(--accent)"/><text x="26" y="136" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><text x="42" y="136" font-size="11" fill="var(--ink)" text-anchor="start">証明書を受け取る</text><circle cx="26" cy="158" r="10" fill="var(--accent)"/><text x="26" y="162" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><text x="42" y="162" font-size="11" fill="var(--ink)" text-anchor="start">認証局の署名を確かめる</text><circle cx="26" cy="184" r="10" fill="var(--accent)"/><text x="26" y="188" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><text x="42" y="188" font-size="11" fill="var(--ink)" text-anchor="start">以後の通信を暗号化する</text><text x="685" y="136" font-size="11" fill="var(--ink-2)" text-anchor="middle">EC2 には証明書を</text><text x="685" y="154" font-size="11" fill="var(--ink-2)" text-anchor="middle">置かなくてよい</text><circle cx="685" cy="180" r="9" fill="var(--allow)"/><polyline points="681.0,180.0 684.1,183.4 689.5,176.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <figcaption><strong>HTTPS は、サーバーが見せる証明書から始まる。</strong>証明書は「このドメインの持ち主である」ことを認証局（証明書を発行する機関）が保証したもの。ブラウザはこれを確かめてから暗号化通信を始める。暗号化された通信を受け取って元に戻す場所を <strong>TLS の終端</strong>と呼ぶ。AWS では CloudFront や ALB に証明書を付けて終端し、EC2 はその背後に置くのが基本形。</figcaption>
+</figure>
+  <p>ACM は、パブリック証明書を<strong>無料で発行し、自動で更新する</strong>サービスです。ACM のコンソールで「証明書をリクエスト」し、できた証明書を CloudFront のディストリビューションや ALB のリスナー（EC2 講義で既出）の設定で選びます。設問で問われるのは、機能そのものより<strong>置ける場所の制約</strong>です。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 764 246" width="764" height="246" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="ACMの証明書を置ける場所。CloudFrontとエッジ最適化のAPI Gatewayはus-east-1の証明書だけ、ALBやNLBとリージョナルのAPI Gatewayは同じリージョンの証明書、EC2上のWebサーバーとオンプレミスの機器には置けない"><text x="14" y="22" font-size="12.5" fill="var(--accent)" text-anchor="start" font-weight="700">us-east-1 で発行したものだけ</text><rect x="20" y="36" width="216" height="40" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="128.0" y="60.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">ACM（us-east-1）</text><line x1="128" y1="76" x2="128.0" y2="108.0" stroke="var(--allow)" stroke-width="2"/><polygon points="128.0,118.0 122.5,108.0 133.5,108.0" fill="var(--allow)"/><rect x="20" y="118" width="216" height="38" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="128.0" y="141.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">CloudFront</text><rect x="20" y="168" width="216" height="38" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="128.0" y="191.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">API Gateway（エッジ最適化）</text><line x1="254" y1="14" x2="254" y2="236" stroke="var(--line)" stroke-width="1.2"/><text x="268" y="22" font-size="12.5" fill="var(--accent)" text-anchor="start" font-weight="700">同じリージョンで発行したもの</text><rect x="274" y="36" width="216" height="40" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="382.0" y="60.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">ACM（例：東京）</text><line x1="382" y1="76" x2="382.0" y2="108.0" stroke="var(--allow)" stroke-width="2"/><polygon points="382.0,118.0 376.5,108.0 387.5,108.0" fill="var(--allow)"/><rect x="274" y="118" width="216" height="38" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="382.0" y="141.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ALB・NLB（東京）</text><rect x="274" y="168" width="216" height="38" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="382.0" y="191.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">API Gateway（リージョナル）</text><line x1="508" y1="14" x2="508" y2="236" stroke="var(--line)" stroke-width="1.2"/><text x="522" y="22" font-size="12.5" fill="var(--deny)" text-anchor="start" font-weight="700">置けない</text><rect x="528" y="36" width="216" height="40" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="636.0" y="60.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">ACM のパブリック証明書</text><line x1="636" y1="76" x2="636.0" y2="108.0" stroke="var(--deny)" stroke-width="2"/><polygon points="636.0,118.0 630.5,108.0 641.5,108.0" fill="var(--deny)"/><circle cx="636" cy="96" r="9" fill="var(--deny)"/><line x1="631.95" y1="91.95" x2="640.05" y2="100.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="631.95" y1="100.05" x2="640.05" y2="91.95" stroke="var(--bg)" stroke-width="2.4"/><rect x="528" y="118" width="216" height="38" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><text x="636.0" y="141.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2 上の Web サーバー</text><rect x="528" y="168" width="216" height="38" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><text x="636.0" y="191.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">オンプレミスの機器</text><text x="636" y="232" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">秘密鍵を取り出せないため</text><text x="128" y="232" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">CloudFront はここしか見ない</text><text x="382" y="232" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">ロードバランサーと同じ場所</text></svg>
+  </div>
+  <figcaption><strong>ACM の証明書は、発行したリージョンでしか使えない。</strong>CloudFront は世界共通のサービスだが、証明書は <strong>us-east-1（バージニア北部）</strong>の ACM しか参照しない。また ACM が発行したパブリック証明書は秘密鍵を取り出せないので、EC2 上の Nginx や Apache に置く使い方はできない。</figcaption>
+</figure>
   <ul>
-    <li><strong>「認証情報を定期的に自動でローテーションしたい」「RDSのマスターパスワードを90日ごとに変更」</strong>――Secrets Manager。ここは迷う余地がありません。Parameter Store にはローテーション機能そのものがないので、「Parameter Store＋Lambdaで実装する」という選択肢があっても、標準機能で満たせるSecrets Managerが正解になります。</li>
-    <li><strong>「コストを最小限に抑えたい」「追加費用なしで」「大量の設定値を管理したい」</strong>――Parameter Store。ローテーションの要件が書かれていないのに Secrets Manager を選ぶと、コスト面で減点される作りの設問が多いです。</li>
-    <li><strong>「環境ごと・アプリごとに設定を整理してまとめて取得したい」</strong>――Parameter Store の階層パス。<code>GetParametersByPath</code> で <code>/myapp/prod/</code> 配下を一括取得できます。</li>
-    <li><strong>「AMIのIDやエンドポイントURLのような、秘密ではない設定値」</strong>――Parameter Store。</li>
+    <li><strong>この場面の答え：</strong>証明書を us-east-1 以外（たとえば東京）で発行していた。<strong>ACM で us-east-1 に同じドメインの証明書を発行し、それを CloudFront に指定する</strong>。CloudFront を作り直す必要はない</li>
+    <li>1つのドメインについて、複数のリージョンで証明書を持っても問題ない</li>
   </ul>
-
-  <div class="note">
-    <span class="label">RDS のマネージドマスターパスワード</span>
-    <p>RDSとAuroraには、マスターユーザーのパスワードをSecrets Managerに自動で作らせ、ローテーションまで任せる設定があります。設問で「データベースの認証情報を人手を介さずに管理し、定期的にローテーションしたい。運用負荷は最小に」と来たら、<strong>Secrets Managerと統合したRDSのマネージドパスワード</strong>が正解です。Lambdaローテーション関数を自分で書く選択肢は、要件は満たしますが運用負荷の面で劣ります。SAAは「要件を満たす最も運用負荷の低い方法」を問うので、この差がそのまま正誤になります。</p>
-  </div>
-
-  <div class="trap">
-    <span class="label">よくある誤解</span>
-    <p>「Parameter Store は暗号化できない」――できます。<code>SecureString</code> 型を選べばKMSで暗号化されます。両者の差はローテーションとコストと共有機能であって、暗号化の可否ではありません。逆に、<strong>Parameter Store で <code>String</code> 型を選ぶと平文で保存される</strong>点は押さえてください。「Parameter Store にパスワードを保存したが平文だった」という設問は、型の選び間違いが原因です。なお Parameter Store からは <code>/aws/reference/secretsmanager/</code> というパスでSecrets Managerのシークレットを参照でき、アプリ側のコードをParameter Store一本に寄せたまま、秘密だけSecrets Managerに置くこともできます。</p>
-  </div></section>
-
-<section id="s6" data-toc="ACM">
-
-  <span class="h2num">06</span>
-  <h2>ACM ―― 証明書はどこに置けるか</h2>
-  <p class="lead">転送時の暗号化の主役はTLSで、TLSの主役は証明書です。ACMはパブリック証明書を<strong>無料で発行し、自動で更新する</strong>サービスですが、設問で問われるのは機能そのものより<strong>置ける場所の制約</strong>です。</p>
-
-  <h3>置ける場所と、置けない場所</h3>
-  <p>ACMの証明書は、<strong>AWSのマネージドな終端点に紐づけて使う</strong>のが基本形です。ALB、NLB、CloudFront、API Gateway あたりが代表です。ここで重要なのは、<strong>ACMが発行したパブリック証明書は秘密鍵をエクスポートできない</strong>という点です。EC2インスタンス上のNginxやApacheに証明書ファイルを置く、という使い方は成立しません。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th>置き先</th><th>ACMのパブリック証明書</th><th>証明書を用意するリージョン</th></tr></thead>
-    <tbody>
-      <tr><td><strong>CloudFront</strong></td><td class="yes">使える</td><td class="no"><strong>us-east-1（バージニア北部）固定</strong></td></tr>
-      <tr><td><strong>ALB / NLB</strong></td><td class="yes">使える</td><td>ロードバランサーと同じリージョン</td></tr>
-      <tr><td><strong>API Gateway（リージョナル）</strong></td><td class="yes">使える</td><td>APIと同じリージョン</td></tr>
-      <tr><td><strong>API Gateway（エッジ最適化）</strong></td><td class="yes">使える</td><td class="no">us-east-1 固定</td></tr>
-      <tr><td><strong>EC2 上のWebサーバー</strong></td><td class="no">直接は置けない（秘密鍵を取り出せない）</td><td>―</td></tr>
-      <tr><td><strong>オンプレミスの機器</strong></td><td class="no">置けない</td><td>―</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「CloudFrontディストリビューションにカスタムドメインのHTTPSを設定しようとしたが、コンソールの証明書の一覧に目的の証明書が出てこない。」――原因は<strong>証明書を us-east-1 以外のリージョンで発行した</strong>ことです。CloudFrontはグローバルサービスですが、証明書だけは us-east-1 のACMを参照します。東京リージョンで作った証明書は、どれだけ正しく発行されていても選べません。この設問は表現を変えて繰り返し出ます。</p>
-  </div>
-
-  <div class="note">
-    <span class="label">EC2にTLSが必要なとき</span>
-    <p>「EC2上のアプリでHTTPSを終端したい」という要件が出たら、SAAの答えは基本的に<strong>「ALBやCloudFrontでTLSを終端し、EC2は背後に置く」</strong>です。それでもEC2自身に証明書が要る場合は、AWS Private CA のプライベート証明書か、持ち込みの証明書になります。<strong>Private CA は内部通信用</strong>で、ブラウザには信頼されません。「社内システム間の相互TLS」と書いてあれば Private CA です。</p>
+  <div class="note"><span class="label">EC2 に TLS が必要なとき</span>
+    <p>「EC2 上のアプリで HTTPS を終端したい」と来たら、SAA の答えは基本的に<strong>「ALB や CloudFront で TLS を終端し、EC2 は背後に置く」</strong>です。それでも EC2 自身に証明書が要るなら、AWS Private CA のプライベート証明書か、自分で用意した証明書になります。<strong>Private CA は内部の通信用</strong>で、一般のブラウザには信頼されません。「社内システム間の相互 TLS（お互いに証明書を見せ合う通信）」とあれば Private CA です。</p>
   </div>
 
   <h3>自動更新が働く条件</h3>
-  <p>ACMの「自動更新」は無条件ではありません。条件を外すと更新されず、期限切れで障害になります。設問でも「証明書が期限切れになった。なぜか」という形で問われます。</p>
-  <ul>
-    <li><strong>ACMが発行した証明書であること。</strong>持ち込んだ（インポートした）証明書は自動更新の対象外です。期限が来る前に自分で入れ替える必要があります。</li>
-    <li><strong>使われていること。</strong>ACMに置いてあるだけで、どのAWSサービスにも紐づいていない証明書は、更新の対象になりません。</li>
-    <li><strong>DNS検証であること。</strong>DNS検証（Route 53などにCNAMEレコードを置く方式）なら、レコードが残っている限り人手を介さずに更新されます。Eメール検証の場合は、更新のたびに承認メールへの対応が必要です。<strong>「証明書の更新を完全に自動化したい」と書いてあればDNS検証</strong>が答えです。</li>
-  </ul>
-
-  <div class="note warn">
-    <span class="label">インポート証明書の見張り方</span>
-    <p>インポートした証明書は自動更新されませんが、ACMは有効期限が近づくとイベントを発行します。EventBridge でこれを受けて通知する、あるいは AWS Config のマネージドルールで期限切れ間近の証明書を非準拠として検出する、という構成が「期限切れを防ぎたい」型の設問の正解になります。<strong>手動でカレンダーに入れる、という選択肢は常に不正解です。</strong></p>
-  </div></section>
-
-<section id="s7" data-toc="守る層">
-
-  <span class="h2num">07</span>
-  <h2>守る層で並べる ―― SG・NACL・WAF・Network Firewall</h2>
-  <p class="lead">防御サービスが混乱するのは、全部が「通信を止めるもの」に見えるからです。<strong>止める場所と、見ている情報の深さ</strong>で並べると、設問の手がかりと一対一で対応します。</p>
-
-  <div class="tw"><table>
-    <thead><tr><th></th><th>どこに効くか</th><th>見ている情報</th><th>拒否ルール</th><th>状態管理</th></tr></thead>
-    <tbody>
-      <tr><td><strong>Shield</strong></td><td>AWSのエッジ全体</td><td>パケット量・トラフィックパターン（L3/L4）</td><td>AWSが自動で緩和</td><td>―</td></tr>
-      <tr><td><strong>WAF</strong></td><td>CloudFront、ALB、API Gateway、AppSync など</td><td class="yes">HTTPリクエストの中身（L7）。URL、ヘッダー、ボディ、クエリ文字列</td><td class="yes">許可も拒否も書ける</td><td>―</td></tr>
-      <tr><td><strong>Network Firewall</strong></td><td>VPC（専用サブネットに置いたエンドポイント）</td><td>パケットとセッション。<strong>ドメイン名でのフィルタリングも可能</strong></td><td class="yes">許可も拒否も書ける</td><td>ステートフル／ステートレス両方のルールグループ</td></tr>
-      <tr><td><strong>ネットワークACL</strong></td><td>サブネットの出入口</td><td>送信元／宛先IP、ポート、プロトコル（L3/L4）</td><td class="yes">許可と拒否の両方。番号の小さい順に評価</td><td class="no">ステートレス。戻りの通信も明示的に許可が要る</td></tr>
-      <tr><td><strong>セキュリティグループ</strong></td><td>ENI（インスタンス単位）</td><td>送信元／宛先、ポート、プロトコル（L3/L4）</td><td class="no">許可しか書けない</td><td class="yes">ステートフル。戻りは自動で通る</td></tr>
-    </tbody>
-  </table></div>
-
-  <h3>WAF が担当するもの</h3>
-  <p>WAFはHTTPリクエストの中身を読むので、IPとポートしか見ないSGやNACLでは絶対に止められない攻撃を扱えます。<strong>SQLインジェクション、クロスサイトスクリプティング（XSS）、既知の悪性ボット</strong>――これらが設問に出たらWAFです。</p>
-  <ul>
-    <li><strong>マネージドルールグループ</strong>――AWSやマーケットプレイスのベンダーが用意した既製のルール集。OWASP Top 10 相当の防御を、自分でルールを書かずに有効化できます。「迅速に、運用負荷を抑えて一般的な攻撃を防ぎたい」ならこれです。</li>
-    <li><strong>レートベースルール</strong>――5分間のウィンドウで、送信元IPごとのリクエスト数を数え、閾値を超えたIPをブロックします。<strong>「単一のIPから大量のリクエストが来ている」「ログインエンドポイントへの総当たり攻撃」</strong>と書いてあればこれです。</li>
-    <li><strong>地理的一致ルール</strong>――国単位で許可／拒否。「サービス提供国以外からのアクセスを遮断したい」に対応します。CloudFrontの地理的制限機能でも似たことができますが、WAFのほうが細かい条件と組み合わせられます。</li>
-    <li><strong>IPセット</strong>――特定のIPレンジの許可リスト・拒否リスト。</li>
-  </ul>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>「<strong>止めたい対象がHTTPリクエストの中身で決まる</strong>ならWAF、<strong>IPとポートで決まる</strong>ならSGかNACL、<strong>宛先ドメインで決まる</strong>なら Network Firewall（またはRoute 53 Resolver DNS Firewall）」。この3分岐で大半が片付きます。加えて、<strong>SGは拒否を書けない</strong>という一点だけは確実に。「特定のIPアドレスからのアクセスだけをブロックしたい」という設問でSGを選ぶ選択肢は、必ず不正解です。答えはネットワークACLの拒否ルール、あるいはWAFのIPセットです。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 246" width="760" height="246" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="ACMの自動更新が働く3つの条件。ACMが発行した証明書であること、どこかのサービスで使われていること、DNS検証であること。インポートした証明書は自動更新されないのでEventBridgeやAWS Configで期限を見張る"><rect x="16" y="14" width="232" height="104" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.4"/><circle cx="16" cy="14" r="10" fill="var(--accent)"/><text x="16" y="18" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><text x="132" y="40" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ACM が発行した証明書</text><circle cx="36" cy="66" r="8" fill="var(--allow)"/><polyline points="32.4,66.0 35.2,69.0 40.0,63.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="51" y="70" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">ACM で発行</text><circle cx="36" cy="94" r="8" fill="var(--deny)"/><line x1="32.4" y1="90.4" x2="39.6" y2="97.6" stroke="var(--bg)" stroke-width="2.4"/><line x1="32.4" y1="97.6" x2="39.6" y2="90.4" stroke="var(--bg)" stroke-width="2.4"/><text x="51" y="98" font-size="10.5" fill="var(--deny)" text-anchor="start" font-weight="700">インポートした証明書</text><rect x="264" y="14" width="232" height="104" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.4"/><circle cx="264" cy="14" r="10" fill="var(--accent)"/><text x="264" y="18" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><text x="380" y="40" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">どこかで使われている</text><circle cx="284" cy="66" r="8" fill="var(--allow)"/><polyline points="280.4,66.0 283.2,69.0 288.0,63.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="299" y="70" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">ALB などに付けてある</text><circle cx="284" cy="94" r="8" fill="var(--deny)"/><line x1="280.4" y1="90.4" x2="287.6" y2="97.6" stroke="var(--bg)" stroke-width="2.4"/><line x1="280.4" y1="97.6" x2="287.6" y2="90.4" stroke="var(--bg)" stroke-width="2.4"/><text x="299" y="98" font-size="10.5" fill="var(--deny)" text-anchor="start" font-weight="700">ACM に置いてあるだけ</text><rect x="512" y="14" width="232" height="104" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.4"/><circle cx="512" cy="14" r="10" fill="var(--accent)"/><text x="512" y="18" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><text x="628" y="40" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">DNS 検証で発行した</text><circle cx="532" cy="66" r="8" fill="var(--allow)"/><polyline points="528.4,66.0 531.2,69.0 536.0,63.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="547" y="70" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">CNAME レコードが残っている</text><circle cx="532" cy="94" r="8" fill="var(--deny)"/><line x1="528.4" y1="90.4" x2="535.6" y2="97.6" stroke="var(--bg)" stroke-width="2.4"/><line x1="528.4" y1="97.6" x2="535.6" y2="90.4" stroke="var(--bg)" stroke-width="2.4"/><text x="547" y="98" font-size="10.5" fill="var(--deny)" text-anchor="start" font-weight="700">E メール検証（毎回承認が要る）</text><line x1="380" y1="118" x2="380.0" y2="136.0" stroke="var(--allow)" stroke-width="2"/><polygon points="380.0,146.0 374.5,136.0 385.5,136.0" fill="var(--allow)"/><rect x="180" y="146" width="400" height="30" rx="6" fill="var(--allow-soft)" stroke="none" stroke-width="0"/><text x="380.0" y="165.14" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">3つそろえば、人手なしで自動更新される</text><rect x="16" y="190" width="728" height="46" rx="6" fill="var(--warn-soft)" stroke="none" stroke-width="0"/><text x="380" y="210" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">インポートした証明書は自動更新されない → 期限切れを仕組みで見張る</text><text x="380" y="228" font-size="11" fill="var(--warn)" text-anchor="middle">ACM の期限切れ間近のイベントを EventBridge で通知 ／ AWS Config のルールで検出</text></svg>
   </div>
+  <figcaption><strong>ACM の自動更新には条件がある。</strong>1つでも外れると更新されず、期限切れで障害になる。「更新を完全に自動化したい」と書いてあれば <strong>ACM 発行 ＋ DNS 検証</strong>。</figcaption>
+</figure>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「CloudFront の設定画面に証明書が出てこない」→ <strong>us-east-1 で発行し直す</strong>（「証明書をエクスポートして持っていく」は、秘密鍵を取り出せないので不可能）。「証明書の更新を完全に自動化したい」→ <strong>ACM 発行 ＋ DNS 検証</strong>。「証明書が期限切れになった。なぜか」→ インポートした証明書だった／どこにも付けていなかった／E メール検証の承認をしなかった。「インポートした証明書の期限切れを防ぎたい」→ <strong>EventBridge で通知、または AWS Config のルールで検出</strong>（EventBridge と Config は場面8）。手動でカレンダーに入れる選択肢は常に不正解。</p></div>
+</section>
 
-  <h3>Shield Standard と Advanced</h3>
-  <p>Shield Standard は<strong>すべてのAWS利用者に自動で適用され、追加料金はかかりません。</strong>SYNフラッドのようなL3/L4の一般的なDDoSを自動で緩和します。「最低限のDDoS対策は何か」の答えは「もう有効になっている」です。</p>
-  <p>Shield Advanced は<strong>月額3,000USD・1年契約</strong>の有償サービスで、差分は次の点です。</p>
-  <ul>
-    <li><strong>DDoSレスポンスチーム（SRT）</strong>への連絡と、攻撃中の支援。</li>
-    <li><strong>コスト保護</strong>――DDoSによってスケールアウトやデータ転送が急増した分の請求が還付されます。設問で「攻撃による予期しない課金を避けたい」と書いてあればこれです。</li>
-    <li>WAFのルール料金が含まれ、SRTによるWAFルールの代理作成が受けられる。</li>
-    <li>L7も含めた高度な検出と、攻撃の可視化。</li>
-  </ul>
-
-  <div class="trap">
-    <span class="label">よくある誤解</span>
-    <p>「DDoS対策と書いてあれば Shield Advanced」――これは半分だけ正しいです。設問に<strong>コストの制約が書かれている</strong>場合、月額3,000USDのサービスは選べません。その場合は「CloudFront と Route 53 の前段に置く」「WAFのレートベースルール」「Auto Scaling で吸収する」といった、Shield Standard を前提にした設計が正解になります。<strong>Advanced が正解になるのは、SRTの支援・コスト保護・専用のSLAといった Advanced 固有の機能が要件に書かれているとき</strong>です。</p>
-  </div></section>
-
-<section id="s8" data-toc="脅威検知">
-
+<section id="s8" data-toc="場面7 攻撃を止める">
+  
   <span class="h2num">08</span>
-  <h2>脅威検知と監査 ―― 誰が何を見張るのか</h2>
-  <p class="lead">ここが今日いちばん混乱しやすい領域です。名前からは役割が読み取れないサービスが並びます。<strong>入力（何を材料にするか）と出力（何を教えてくれるか）</strong>の2点だけで表にすると、設問の手がかりと直結します。</p>
+  <h2>場面7 ―― 「Web サイトへの SQL インジェクションを止めたい。攻撃してくる IP アドレスも遮断したい」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>L3・L4・L7</dt><dd>通信のどこを見るかの呼び名。L3 は IP アドレス、L4 はポート番号、L7 は HTTP の中身（EC2 講義の場面4で既出）</dd>
+      <dt>SQL インジェクション</dt><dd>入力欄にデータベースへの命令（SQL）を紛れ込ませ、データを盗んだり壊したりする攻撃</dd>
+      <dt>XSS<small>クロスサイトスクリプティング</small></dt><dd>Web ページに悪意のあるスクリプトを埋め込み、見た人のブラウザで動かす攻撃</dd>
+      <dt>DDoS<small>Distributed Denial of Service</small></dt><dd>多数の場所から大量の通信を送りつけ、サービスを使えなくする攻撃。<strong>SYN フラッド</strong>はその代表で、接続の開始要求だけを大量に送る</dd>
+      <dt>エッジ</dt><dd>利用者に近い場所にある AWS の拠点。CloudFront や Route 53 がここで通信を受ける</dd>
+      <dt>ENI<small>Elastic Network Interface</small></dt><dd>EC2 などに付く仮想のネットワークの口。セキュリティグループはこれに付く</dd>
+      <dt>Web ACL<small>Web Access Control List</small></dt><dd>WAF のルールを入れておく入れ物。これを CloudFront や ALB に関連付ける</dd>
+      <dt>OWASP Top 10</dt><dd>Web アプリの代表的な弱点を 10個にまとめた、業界で広く使われる一覧</dd>
+      <dt>Network Firewall<small>AWS Network Firewall</small></dt><dd>VPC を出入りする通信を検査する、AWS 提供のファイアウォール</dd>
+      <dt>ステートフル／ステートレス</dt><dd>行きの通信を覚えていて戻りを自動で通すのがステートフル、覚えておらず戻りも別に許可が要るのがステートレス（VPC 講義で既出）</dd>
+      <dt>SRT<small>Shield Response Team</small></dt><dd>DDoS 攻撃への対応を支援する AWS の専門チーム</dd>
+    </dl>
+  </div>
+
+  <p>通信を止めるサービスは、全部が同じに見えるので混乱します。<strong>止める場所</strong>と<strong>どこまで読むか</strong>で並べると、設問の手がかりと一対一で対応します。セキュリティグループ（SG）とネットワーク ACL は VPC 講義で扱いました。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 334" width="760" height="334" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="インターネットからEC2までの間に、Shield、WAF、Network Firewall、ネットワークACL、セキュリティグループの5つの関所が並ぶ。それぞれ効く場所、見ているもの、拒否ルールを書けるかが違う"><rect x="10" y="10" width="116" height="28" rx="14.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="68.0" y="28.2" font-size="12" fill="var(--ink-2)" text-anchor="middle">インターネット</text><rect x="650" y="10" width="100" height="28" rx="14.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="700.0" y="28.2" font-size="12" fill="var(--ink-2)" text-anchor="middle">EC2</text><line x1="126" y1="24" x2="640.0" y2="24.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="650.0,24.0 640.0,29.5 640.0,18.5" fill="var(--allow)"/><line x1="80" y1="38" x2="80" y2="52" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/><rect x="10" y="52" width="140" height="214" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="80" y="74" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Shield</text><line x1="20" y1="84" x2="140" y2="84" stroke="var(--line)" stroke-width="1"/><text x="80" y="100" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">効く場所</text><text x="80" y="116" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">AWS のエッジ全体</text><text x="80" y="154" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">見ているもの</text><text x="80" y="170" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">通信の量とパターン</text><text x="80" y="185" font-size="10.5" fill="var(--ink)" text-anchor="middle">（L3・L4）</text><text x="80" y="208" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">拒否のルール</text><text x="80" y="224" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">AWS が自動で緩和</text><line x1="230" y1="24" x2="230" y2="52" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/><rect x="160" y="52" width="140" height="214" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="230" y="74" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">WAF</text><line x1="170" y1="84" x2="290" y2="84" stroke="var(--line)" stroke-width="1"/><text x="230" y="100" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">効く場所</text><text x="230" y="116" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">CloudFront・ALB・</text><text x="230" y="131" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">API Gateway など</text><text x="230" y="154" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">見ているもの</text><text x="230" y="170" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">HTTP の中身（L7）</text><text x="230" y="185" font-size="10.5" fill="var(--ink)" text-anchor="middle">URL・ヘッダー・本文</text><text x="230" y="208" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">拒否のルール</text><text x="230" y="224" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">許可も拒否も書ける</text><line x1="380" y1="24" x2="380" y2="52" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/><rect x="310" y="52" width="140" height="214" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="380" y="74" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Network Firewall</text><line x1="320" y1="84" x2="440" y2="84" stroke="var(--line)" stroke-width="1"/><text x="380" y="100" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">効く場所</text><text x="380" y="116" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">VPC</text><text x="380" y="131" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">（専用のサブネット）</text><text x="380" y="154" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">見ているもの</text><text x="380" y="170" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">パケットとセッション</text><text x="380" y="185" font-size="10.5" fill="var(--ink)" text-anchor="middle">ドメイン名でも絞れる</text><text x="380" y="208" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">拒否のルール</text><text x="380" y="224" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">許可も拒否も書ける</text><text x="380" y="248" font-size="10" fill="var(--ink-3)" text-anchor="middle">ステートフル・レス両方</text><line x1="530" y1="24" x2="530" y2="52" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/><rect x="460" y="52" width="140" height="214" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="530" y="74" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ネットワーク ACL</text><line x1="470" y1="84" x2="590" y2="84" stroke="var(--line)" stroke-width="1"/><text x="530" y="100" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">効く場所</text><text x="530" y="116" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">サブネットの出入口</text><text x="530" y="154" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">見ているもの</text><text x="530" y="170" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">IP・ポート・プロトコル</text><text x="530" y="185" font-size="10.5" fill="var(--ink)" text-anchor="middle">（L3・L4）</text><text x="530" y="208" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">拒否のルール</text><text x="530" y="224" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">許可も拒否も書ける</text><text x="530" y="248" font-size="10" fill="var(--ink-3)" text-anchor="middle">ステートレス</text><line x1="680" y1="38" x2="680" y2="52" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/><rect x="610" y="52" width="140" height="214" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="680" y="74" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">セキュリティグループ</text><line x1="620" y1="84" x2="740" y2="84" stroke="var(--line)" stroke-width="1"/><text x="680" y="100" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">効く場所</text><text x="680" y="116" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ENI</text><text x="680" y="131" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">（インスタンス単位）</text><text x="680" y="154" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">見ているもの</text><text x="680" y="170" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">IP・ポート・プロトコル</text><text x="680" y="185" font-size="10.5" fill="var(--ink)" text-anchor="middle">（L3・L4）</text><text x="680" y="208" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">拒否のルール</text><text x="680" y="224" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">許可しか書けない</text><text x="680" y="248" font-size="10" fill="var(--ink-3)" text-anchor="middle">ステートフル</text><rect x="10" y="280" width="240" height="44" rx="6" fill="var(--accent-soft)" stroke="none" stroke-width="0"/><text x="130" y="298" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">止めたい相手が HTTP の中身で決まる</text><text x="130" y="316" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">→ WAF</text><rect x="260" y="280" width="240" height="44" rx="6" fill="var(--accent-soft)" stroke="none" stroke-width="0"/><text x="380" y="298" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">止めたい相手が IP とポートで決まる</text><text x="380" y="316" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">→ SG・ネットワーク ACL</text><rect x="510" y="280" width="240" height="44" rx="6" fill="var(--accent-soft)" stroke="none" stroke-width="0"/><text x="630" y="298" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">止めたい相手が 宛先のドメイン名で決まる</text><text x="630" y="316" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">→ Network Firewall</text></svg>
+  </div>
+  <figcaption><strong>通信を止めるサービスを、外から内へ並べた。</strong>違いは「どこに置くか」と「どこまで読むか」。IP とポートしか見ないセキュリティグループやネットワーク ACL には、HTTP の中身に仕込まれた攻撃は見えない。そこを読めるのが WAF。<strong>セキュリティグループだけは拒否を書けない</strong>ことも、この図で押さえる。</figcaption>
+</figure>
+  <ul>
+    <li><strong>この場面の答え：</strong>SQL インジェクションは HTTP の中身の話なので <strong>WAF</strong>。特定の IP の遮断は、<strong>WAF の IP セット</strong>か<strong>ネットワーク ACL の拒否ルール</strong></li>
+    <li><strong>セキュリティグループでは遮断できない：</strong>許可しか書けないので、「この IP だけ拒否」が書けない</li>
+    <li><strong>ネットワーク ACL：</strong>番号の小さいルールから順に評価する。ステートレスなので、戻りの通信も明示的に許可が要る</li>
+    <li><strong>外向きの通信を宛先のドメイン名で絞る：</strong>Network Firewall（または Route 53 Resolver DNS Firewall。VPC の中からの名前の問い合わせを、ドメイン名で許可・拒否する機能）</li>
+  </ul>
+
+  <h3>WAF のルール</h3>
+  <p>WAF は、WAF のコンソールで Web ACL を作り、守りたい CloudFront・ALB・API Gateway（API の入口を作るサービス、場面6で既出）・AppSync（GraphQL という形式の API を作るサービス）などに関連付けて使います。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 764 204" width="764" height="204" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="HTTPリクエストはWAFのWeb ACLでルールを順に当てられ、許可ならCloudFrontやALBに届き、ブロックなら捨てられる。ルールにはマネージドルールグループ、レートベースルール、地理的一致ルール、IPセットがある"><rect x="16" y="16" width="150" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="91.0" y="43.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">HTTP リクエスト</text><line x1="166" y1="39" x2="222.0" y2="39.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="232.0,39.0 222.0,44.5 222.0,33.5" fill="var(--ink-3)"/><rect x="232" y="12" width="200" height="54" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="332.0" y="37.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">WAF（Web ACL）</text><text x="332.0" y="52.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">ルールを上から順に当てる</text><line x1="432" y1="30" x2="510.0" y2="22.9" stroke="var(--allow)" stroke-width="2"/><polygon points="520.0,22.0 510.5,28.4 509.5,17.4" fill="var(--allow)"/><line x1="432" y1="50" x2="510.1" y2="60.6" stroke="var(--deny)" stroke-width="2"/><polygon points="520.0,62.0 509.3,66.1 510.8,55.2" fill="var(--deny)"/><circle cx="532" cy="20" r="9" fill="var(--allow)"/><polyline points="528.0,20.0 531.1,23.4 536.5,16.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="548" y="24" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">許可 → CloudFront・ALB へ届く</text><circle cx="532" cy="64" r="9" fill="var(--deny)"/><line x1="527.95" y1="59.95" x2="536.05" y2="68.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="527.95" y1="68.05" x2="536.05" y2="59.95" stroke="var(--bg)" stroke-width="2.4"/><text x="548" y="68" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">ブロック → 届く前に捨てる</text><rect x="16" y="96" width="174" height="96" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="103.0" y="124.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">マネージドルールグループ</text><text x="103.0" y="140.8" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">AWS やベンダーの既製品</text><text x="103.0" y="157.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">SQL インジェクション・XSS など</text><text x="103.0" y="173.8" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">自分でルールを書かない</text><rect x="202" y="96" width="174" height="96" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="289.0" y="124.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">レートベースルール</text><text x="289.0" y="140.8" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">IP ごとのリクエスト数を</text><text x="289.0" y="157.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">5分間の枠で数える</text><text x="289.0" y="173.8" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">総当たり・大量アクセス</text><rect x="388" y="96" width="174" height="96" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="475.0" y="132.5" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">地理的一致ルール</text><text x="475.0" y="149.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">国単位で許可・拒否</text><text x="475.0" y="165.5" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">提供国以外を遮断</text><rect x="574" y="96" width="174" height="96" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="661.0" y="132.5" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">IP セット</text><text x="661.0" y="149.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">IP の範囲のリスト</text><text x="661.0" y="165.5" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">許可リスト・拒否リスト</text><text x="16" y="86" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">Web ACL に入れるルールの種類</text></svg>
+  </div>
+  <figcaption><strong>WAF は、ルールを入れた「Web ACL」を CloudFront や ALB に関連付けて使う。</strong>届いた HTTP リクエストにルールを順に当て、通すか捨てるかを決める。ルールは4種類を覚えれば足りる。「一般的な攻撃を手早く」はマネージドルールグループ、「1つの IP から大量に」はレートベースルール。</figcaption>
+</figure>
+  <ul>
+    <li><strong>マネージドルールグループ：</strong>OWASP Top 10 相当の防御を、自分でルールを書かずに有効にできる。AWS のものと、マーケットプレイスのベンダーのものがある</li>
+    <li><strong>レートベースルール：</strong>5分間の枠で送信元 IP ごとのリクエスト数を数え、しきい値を超えた IP をブロックする</li>
+    <li><strong>地理的一致ルール：</strong>CloudFront の地理的制限でも似たことができるが、WAF のほうがほかの条件と細かく組み合わせられる</li>
+  </ul>
+
+  <h3>DDoS ―― Shield Standard と Advanced</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 236" width="760" height="236" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左のShield Standardは全利用者に自動で適用され無料でL3とL4のDDoSを緩和する。右のShield Advancedは月額3000ドルの1年契約で、SRTの支援、コスト保護、WAF料金込み、L7の検出が付く"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Shield Standard</text><rect x="16" y="34" width="350" height="132" rx="8" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><circle cx="36" cy="60" r="8" fill="var(--allow)"/><polyline points="32.4,60.0 35.2,63.0 40.0,57.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="51" y="64" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">すべての利用者に自動で適用</text><circle cx="36" cy="88" r="8" fill="var(--allow)"/><polyline points="32.4,88.0 35.2,91.0 40.0,85.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="51" y="92" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">追加料金なし</text><circle cx="36" cy="116" r="8" fill="var(--allow)"/><polyline points="32.4,116.0 35.2,119.0 40.0,113.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="51" y="120" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">L3・L4 の一般的な DDoS を自動で緩和</text><text x="51" y="144" font-size="10.5" fill="var(--ink-3)" text-anchor="start">例：SYN フラッド</text><text x="400" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Shield Advanced</text><rect x="394" y="34" width="350" height="132" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="414" y="58" font-size="12" fill="var(--deny)" text-anchor="start" font-weight="700">月額 3,000 USD・1年契約</text><circle cx="414" cy="82" r="7" fill="var(--allow)"/><polyline points="410.9,82.0 413.3,84.7 417.5,79.3" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="428" y="86" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">SRT（対応チーム）の支援</text><circle cx="414" cy="104" r="7" fill="var(--allow)"/><polyline points="410.9,104.0 413.3,106.7 417.5,101.3" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="428" y="108" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">コスト保護（攻撃で増えた請求を還付）</text><circle cx="414" cy="126" r="7" fill="var(--allow)"/><polyline points="410.9,126.0 413.3,128.7 417.5,123.3" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="428" y="130" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">WAF の料金込み・ルール作成の代行</text><circle cx="414" cy="148" r="7" fill="var(--allow)"/><polyline points="410.9,148.0 413.3,150.7 417.5,145.3" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="428" y="152" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">L7 も含めた検出と攻撃の可視化</text><rect x="16" y="180" width="728" height="46" rx="6" fill="var(--warn-soft)" stroke="none" stroke-width="0"/><text x="380" y="200" font-size="11.5" fill="var(--warn)" text-anchor="middle" font-weight="700">設問にコストの制約がある → Advanced は選べない</text><text x="380" y="218" font-size="11" fill="var(--warn)" text-anchor="middle">CloudFront・Route 53 を前段に置く ／ WAF のレートベースルール ／ Auto Scaling で吸収</text></svg>
+  </div>
+  <figcaption><strong>DDoS 対策の最低限は、もう有効になっている（Standard）。</strong>Advanced が正解になるのは、SRT の支援・コスト保護など <strong>Advanced にしかない機能</strong>が要件に書かれているときだけ。</figcaption>
+</figure>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「SQL インジェクション」「XSS」「既知の悪性ボット」→ <strong>WAF</strong>。「迅速に、運用負荷を抑えて一般的な攻撃を防ぐ」→ <strong>マネージドルールグループ</strong>。「単一の IP から大量のリクエスト」「ログイン画面への総当たり」→ <strong>レートベースルール</strong>。「サービス提供国以外を遮断」→ <strong>地理的一致ルール</strong>。「特定の IP だけをブロック」→ <strong>ネットワーク ACL の拒否ルールか WAF の IP セット</strong>（SG を選ぶ選択肢は必ず不正解）。「最低限の DDoS 対策」→ <strong>Shield Standard（すでに有効）</strong>。「攻撃による予期しない課金を避けたい」「SRT の支援」→ <strong>Shield Advanced</strong>。</p></div>
+</section>
+
+<section id="s9" data-toc="場面8 見張る">
+  
+  <span class="h2num">09</span>
+  <h2>場面8 ―― 「攻撃されていないか、弱点が残っていないか、個人情報が紛れ込んでいないかを知りたい」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>予防的統制／発見的統制</dt><dd>起きる前に止めるのが予防的統制、起きたことや今ある弱点を見つけるのが発見的統制</dd>
+      <dt>GuardDuty<small>Amazon GuardDuty</small></dt><dd>ログを分析して、侵害の兆候（不審な振る舞い）を見つけるサービス</dd>
+      <dt>Inspector<small>Amazon Inspector</small></dt><dd>EC2 やコンテナイメージの中身を調べて、脆弱性を見つけるサービス</dd>
+      <dt>Macie<small>Amazon Macie</small></dt><dd>S3 のオブジェクトの中身を読んで、個人情報などの機密データを見つけるサービス</dd>
+      <dt>AWS Config</dt><dd>リソースの設定（構成）と、その変更の履歴を記録し、決めたルールどおりかを判定するサービス</dd>
+      <dt>Security Hub<small>AWS Security Hub</small></dt><dd>各サービスの検出結果を1つの画面に集めるサービス</dd>
+      <dt>Detective<small>Amazon Detective</small></dt><dd>1件の出来事について、関係するリソースと操作をたどって原因を調べるサービス</dd>
+      <dt>検出結果<small>Findings</small></dt><dd>見張るサービスが「これは怪しい」「これは違反」と報告した1件1件のこと</dd>
+      <dt>VPC フローログ</dt><dd>VPC を流れた通信の記録（どの IP からどの IP のどのポートへ、通ったか拒否されたか）</dd>
+      <dt>DNS ログ<small>Route 53 Resolver の DNS クエリログ</small></dt><dd>VPC の中から「このドメイン名の IP は？」と問い合わせた記録</dd>
+      <dt>CVE<small>Common Vulnerabilities and Exposures</small></dt><dd>世の中で見つかったソフトウェアの弱点に付けられる通し番号。「既知の脆弱性」とほぼ同じ意味で使われる</dd>
+      <dt>ECR<small>Amazon Elastic Container Registry</small></dt><dd>コンテナイメージの置き場（EC2 講義の場面8で既出）</dd>
+      <dt>PII<small>Personally Identifiable Information</small></dt><dd>個人を特定できる情報。氏名・住所・クレジットカード番号など</dd>
+      <dt>EventBridge<small>Amazon EventBridge</small></dt><dd>AWS で起きた出来事を受け取り、条件に合うものを別のサービスへ流すサービス（次の「疎結合と監視」の講義で詳しく扱う）</dd>
+      <dt>SNS<small>Amazon Simple Notification Service</small></dt><dd>メールなどで通知を送るサービス（同じく次の講義で扱う）</dd>
+      <dt>Systems Manager Automation</dt><dd>決めておいた運用の手順を自動で実行する、Systems Manager の機能</dd>
+      <dt>C2 サーバー<small>Command and Control</small></dt><dd>マルウェアに指令を出す、攻撃者のサーバー</dd>
+      <dt>CIS ベンチマーク</dt><dd>業界団体 CIS が定めた、安全な設定の基準</dd>
+    </dl>
+  </div>
+
+  <p>ここが今日いちばん混乱しやすい領域です。名前からは役割が読み取れないサービスが並びます。<strong>何を材料にして、何を教えてくれるか</strong>の2点だけで並べます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 390" width="760" height="390" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="見張るサービスを材料と出力で並べた図。GuardDutyはログから侵害の兆候、InspectorはEC2などの中身から脆弱性、MacieはS3のオブジェクトから機密データの所在、Configは構成からルール準拠、CloudTrailはAPI呼び出しから操作の記録を出す。Security Hubが結果を集約し、Detectiveが1件を調査する"><text x="140" y="22" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">何を材料にするか</text><text x="375" y="22" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">サービス</text><text x="615" y="22" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">何を教えてくれるか</text><rect x="16" y="34" width="248" height="38" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="140" y="58" font-size="11" fill="var(--ink)" text-anchor="middle">CloudTrail・VPC フローログ・DNS ログ</text><line x1="264" y1="53" x2="290.0" y2="53.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="300.0,53.0 290.0,58.5 290.0,47.5" fill="var(--ink-3)"/><rect x="300" y="34" width="150" height="38" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="375.0" y="57.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">GuardDuty</text><line x1="450" y1="53" x2="476.0" y2="53.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="486.0,53.0 476.0,58.5 476.0,47.5" fill="var(--ink-3)"/><rect x="486" y="34" width="258" height="38" rx="5" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><text x="615" y="58" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">侵害の兆候（不審な振る舞い）</text><rect x="16" y="84" width="248" height="38" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="140" y="108" font-size="11" fill="var(--ink)" text-anchor="middle">EC2・ECR のイメージ・Lambda の中身</text><line x1="264" y1="103" x2="290.0" y2="103.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="300.0,103.0 290.0,108.5 290.0,97.5" fill="var(--ink-3)"/><rect x="300" y="84" width="150" height="38" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="375.0" y="107.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Inspector</text><line x1="450" y1="103" x2="476.0" y2="103.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="486.0,103.0 476.0,108.5 476.0,97.5" fill="var(--ink-3)"/><rect x="486" y="84" width="258" height="38" rx="5" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><text x="615" y="108" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">脆弱性（既知の CVE）</text><rect x="16" y="134" width="248" height="38" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="140" y="158" font-size="11" fill="var(--ink)" text-anchor="middle">S3 のオブジェクトの中身</text><line x1="264" y1="153" x2="290.0" y2="153.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="300.0,153.0 290.0,158.5 290.0,147.5" fill="var(--ink-3)"/><rect x="300" y="134" width="150" height="38" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="375.0" y="157.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Macie</text><line x1="450" y1="153" x2="476.0" y2="153.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="486.0,153.0 476.0,158.5 476.0,147.5" fill="var(--ink-3)"/><rect x="486" y="134" width="258" height="38" rx="5" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><text x="615" y="158" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">機密データの所在（個人情報など）</text><rect x="16" y="184" width="248" height="38" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="140" y="208" font-size="11" fill="var(--ink)" text-anchor="middle">リソースの構成と変更履歴</text><line x1="264" y1="203" x2="290.0" y2="203.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="300.0,203.0 290.0,208.5 290.0,197.5" fill="var(--ink-3)"/><rect x="300" y="184" width="150" height="38" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="375.0" y="207.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">AWS Config</text><line x1="450" y1="203" x2="476.0" y2="203.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="486.0,203.0 476.0,208.5 476.0,197.5" fill="var(--ink-3)"/><rect x="486" y="184" width="258" height="38" rx="5" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><text x="615" y="208" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">ルールに準拠しているか</text><rect x="16" y="234" width="248" height="38" rx="5" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="140" y="258" font-size="11" fill="var(--ink)" text-anchor="middle">API 呼び出しそのもの</text><line x1="264" y1="253" x2="290.0" y2="253.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="300.0,253.0 290.0,258.5 290.0,247.5" fill="var(--ink-3)"/><rect x="300" y="234" width="150" height="38" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="375.0" y="257.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">CloudTrail</text><line x1="450" y1="253" x2="476.0" y2="253.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="486.0,253.0 476.0,258.5 476.0,247.5" fill="var(--ink-3)"/><rect x="486" y="234" width="258" height="38" rx="5" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.2"/><text x="615" y="258" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">誰が何をしたかの記録</text><line x1="486" y1="288" x2="744" y2="288" stroke="var(--ink-3)" stroke-width="1.4"/><polyline points="615,288 615,304 200,304 200.0,312.0" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="5 4"/><polygon points="200.0,322.0 194.5,312.0 205.5,312.0" fill="var(--ink-3)"/><polyline points="615,304 560,304 560.0,312.0" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-linejoin="round" stroke-dasharray="5 4"/><polygon points="560.0,322.0 554.5,312.0 565.5,312.0" fill="var(--ink-3)"/><rect x="355.0" y="290.5" width="50.0" height="16.5" rx="3" fill="var(--surface)"/><text x="380" y="300" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">検出結果</text><rect x="40" y="322" width="320" height="56" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="200.0" y="338.8" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Security Hub</text><text x="200.0" y="355.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">結果を集めて1画面に（広く浅く）</text><text x="200.0" y="371.8" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">複数アカウント・基準への準拠スコア</text><rect x="400" y="322" width="320" height="56" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="560.0" y="338.8" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Detective</text><text x="560.0" y="355.2" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">1件を時系列でたどる（狭く深く）</text><text x="560.0" y="371.8" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">調査・根本原因</text></svg>
+  </div>
+  <figcaption><strong>見張るサービスは「何を読んで、何を出すか」で覚える。</strong>GuardDuty は<strong>振る舞い</strong>、Inspector は<strong>中身の弱点</strong>、Macie は <strong>S3 の中身</strong>、Config は<strong>設定</strong>、CloudTrail は<strong>操作の記録</strong>。どれも教えるだけで、止めはしない。下の2つは自分では検出しない。Security Hub は GuardDuty・Inspector・Macie・Config などの検出結果を<strong>集め</strong>、Detective は GuardDuty の検出結果・CloudTrail・VPC フローログをつないで1件を<strong>掘る</strong>。</figcaption>
+</figure>
+  <ul>
+    <li><strong>この場面の答え：</strong>攻撃されていないか → <strong>GuardDuty</strong>。弱点が残っていないか → <strong>Inspector</strong>。S3 に個人情報が紛れていないか → <strong>Macie</strong></li>
+    <li><strong>どれも有効にする単位はアカウントとリージョン。</strong>それぞれのコンソールで有効化する。複数アカウントをまとめるときは AWS Organizations（IAM 講義で既出）と組み合わせる</li>
+    <li><strong>GuardDuty の材料：</strong>CloudTrail の管理イベント、VPC フローログ、DNS ログ。自分でログを有効にしていなくても、GuardDuty が独立したコピーを読む。検出結果の例は、仮想通貨のマイニング、既知の悪性 IP との通信、異常な API 呼び出し</li>
+    <li><strong>Inspector の対象：</strong>EC2、ECR のコンテナイメージ、Lambda 関数。既知の CVE と、ネットワークから到達できてしまうかどうかを報告する</li>
+  </ul>
+
+  <h3>止めるのか、見つけるのか ―― 要件の動詞を読む</h3>
+  <p>場面7の WAF と Shield は<strong>予防的統制</strong>（起きる前に止める）、この場面のサービスは<strong>発見的統制</strong>（教えるだけ）です。設問が「防ぎたい」「ブロックしたい」と言っているのに見張る側を選ぶ、「検出したい」「可視化したい」と言っているのに止める側を選ぶ、というのが典型的な失点です。</p>
 
   <div class="tw"><table>
-    <thead><tr><th>サービス</th><th>何を材料にするか</th><th>何を教えてくれるか</th><th>設問に出たらこの語</th></tr></thead>
+    <thead><tr><th>サービス</th><th>止めるか</th><th>設問に出たらこの語</th></tr></thead>
     <tbody>
-      <tr><td><strong>WAF</strong></td><td>HTTPリクエストそのもの</td><td>――（検知ではなく<strong>遮断</strong>する）</td><td>SQLインジェクション、XSS、レート制限、特定の国をブロック</td></tr>
-      <tr><td><strong>Shield Standard / Advanced</strong></td><td>ネットワークトラフィック</td><td>――（DDoSを<strong>緩和</strong>する）</td><td>DDoS、SYNフラッド、攻撃時のコスト還付（Advanced）</td></tr>
-      <tr><td><strong>GuardDuty</strong></td><td class="yes">CloudTrail管理イベント、VPCフローログ、Route 53 Resolver DNSクエリログ<br><span style="color:var(--ink-3);font-size:13px">自分で有効化する必要はない。独立したコピーを読む</span></td><td><strong>侵害の兆候</strong>。仮想通貨マイニング、既知の悪性IPとの通信、異常なAPI呼び出し</td><td>脅威検出、機械学習、エージェント不要ですぐ有効化、既知の脅威インテリジェンス</td></tr>
-      <tr><td><strong>Inspector</strong></td><td>EC2・ECRのコンテナイメージ・Lambda関数の中身</td><td><strong>脆弱性</strong>。既知のCVE、ネットワーク到達可能性</td><td>脆弱性スキャン、パッチ未適用、CVE、コンテナイメージの検査</td></tr>
-      <tr><td><strong>Macie</strong></td><td class="yes">S3 のオブジェクト</td><td><strong>機密データの所在</strong>。個人情報、クレジットカード番号、認証情報</td><td>PII、個人情報、機密データがどこにあるか分からない、S3</td></tr>
-      <tr><td><strong>Detective</strong></td><td>GuardDutyの検出結果、CloudTrail、VPCフローログを<strong>グラフ化したもの</strong></td><td><strong>根本原因</strong>。いつ始まり、何が連鎖したか</td><td>調査、根本原因分析、なぜ起きたのかを掘り下げる</td></tr>
-      <tr><td><strong>Security Hub</strong></td><td class="yes">GuardDuty・Inspector・Macie・Config などの<strong>検出結果</strong></td><td><strong>集約されたダッシュボード</strong>とセキュリティ基準への準拠スコア</td><td>一元管理、複数アカウント、単一のビュー、CISベンチマーク</td></tr>
-      <tr><td><strong>AWS Config</strong></td><td>リソースの<strong>構成</strong>とその変更履歴</td><td><strong>ルールへの準拠／非準拠</strong>と構成の履歴</td><td>コンプライアンス、設定が規則どおりか、いつ誰が変えたか、自動修復</td></tr>
-      <tr><td><strong>CloudTrail</strong></td><td>APIコールそのもの</td><td><strong>誰が何をしたかの記録</strong></td><td>監査ログ、操作の追跡、証跡</td></tr>
+      <tr><td><strong>WAF</strong></td><td class="yes">遮断する</td><td>SQL インジェクション、XSS、レート制限、特定の国をブロック</td></tr>
+      <tr><td><strong>Shield</strong></td><td class="yes">緩和する</td><td>DDoS、SYN フラッド、攻撃時のコスト還付（Advanced）</td></tr>
+      <tr><td><strong>GuardDuty</strong></td><td class="no">教えるだけ</td><td>脅威検出、機械学習、エージェント不要ですぐ有効化、既知の脅威インテリジェンス</td></tr>
+      <tr><td><strong>Inspector</strong></td><td class="no">教えるだけ</td><td>脆弱性スキャン、パッチ未適用、CVE、コンテナイメージの検査</td></tr>
+      <tr><td><strong>Macie</strong></td><td class="no">教えるだけ</td><td>PII、個人情報、機密データがどこにあるか分からない、S3</td></tr>
+      <tr><td><strong>AWS Config</strong></td><td class="no">教える（自動修復を付けられる）</td><td>コンプライアンス、設定が規則どおりか、いつ誰が変えたか、自動修復</td></tr>
+      <tr><td><strong>CloudTrail</strong></td><td class="no">記録するだけ</td><td>監査ログ、操作の追跡、証跡</td></tr>
+      <tr><td><strong>Security Hub</strong></td><td class="no">集めるだけ</td><td>一元管理、複数アカウント、単一のビュー、CIS ベンチマーク</td></tr>
+      <tr><td><strong>Detective</strong></td><td class="no">調べるだけ</td><td>調査、根本原因分析、なぜ起きたのかを掘り下げる</td></tr>
     </tbody>
   </table></div>
 
-  <h3>予防的統制か、発見的統制か</h3>
-  <p>この表を上から2行と、それ以降で切ると性格が変わります。WAFとShieldは<strong>予防的統制</strong>――起きる前に止めます。GuardDuty以降は<strong>発見的統制</strong>――起きたことや今ある弱点を教えますが、それ自体は何も止めません。</p>
-  <p>設問が<strong>「防ぎたい」「ブロックしたい」</strong>と言っているのに検知系を選ぶ、<strong>「検出したい」「可視化したい」</strong>と言っているのに遮断系を選ぶ、というのが典型的な失点です。<strong>要件の動詞を読む</strong>――セキュリティ設問全体に効く技術です。</p>
+  <h3>Config と GuardDuty は、見ているものが違う</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 196" width="760" height="196" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左のAWS Configはリソースの設定が規則どおりかを見て準拠か非準拠かを出す。右のGuardDutyは通信やAPI呼び出しの振る舞いを見て侵害の兆候を検出結果として出す"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">AWS Config：見ているのは「設定」</text><rect x="16" y="34" width="350" height="104" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="32" y="58" font-size="11" fill="var(--ink)" text-anchor="start">この EBS ボリュームは暗号化されているか</text><text x="32" y="82" font-size="11" fill="var(--ink)" text-anchor="start">このセキュリティグループは 0.0.0.0/0 に</text><text x="32" y="98" font-size="11" fill="var(--ink)" text-anchor="start">22番を開けていないか</text><text x="32" y="124" font-size="11" fill="var(--accent)" text-anchor="start" font-weight="700">→ 準拠 / 非準拠 と、いつ誰が変えたか</text><text x="191" y="162" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">非準拠を自動で直すこともできる</text><text x="191" y="180" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">（Systems Manager Automation）</text><line x1="382" y1="14" x2="382" y2="190" stroke="var(--line)" stroke-width="1.2"/><text x="400" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">GuardDuty：見ているのは「振る舞い」</text><rect x="394" y="34" width="350" height="104" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="410" y="58" font-size="11" fill="var(--ink)" text-anchor="start">この EC2 が既知の悪性サーバーと通信している</text><text x="410" y="82" font-size="11" fill="var(--ink)" text-anchor="start">普段使わないリージョンで</text><text x="410" y="98" font-size="11" fill="var(--ink)" text-anchor="start">IAM ユーザーが作られた</text><text x="410" y="124" font-size="11" fill="var(--accent)" text-anchor="start" font-weight="700">→ 検出結果（重要度つき）</text><text x="569" y="162" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">有効にするだけで始まる</text><text x="569" y="180" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">（エージェントもログの有効化も不要）</text></svg>
+  </div>
+  <figcaption><strong>「設定が基準を満たしているか」は Config、「攻撃されていないか」は GuardDuty。</strong>Config はリソースの構成を見るので、動きが何もなくても違反を見つける。GuardDuty はログに現れた動きを見るので、設定が正しくても侵害を見つける。</figcaption>
+</figure>
 
-  <h3>GuardDuty をもう少し詳しく</h3>
-  <p>GuardDutyの設問での強みは、<strong>準備が要らない</strong>ことです。エージェントもログの有効化も保存先の設計も不要で、有効にすれば数分で分析が始まります。VPCフローログを自分で有効化していなくても、独立したストリームとして読み取ります。「最小の運用負荷で、すぐに脅威検知を始めたい」はほぼGuardDutyです。</p>
-  <p>検出結果（Findings）には重要度が付き、EventBridge に流せます。<strong>「脅威を検出したら自動で対応したい」という設問の正解は、GuardDuty → EventBridge → Lambda（またはSNS通知、Systems Manager Automation）</strong>という連鎖です。GuardDutyが単独で何かを遮断するわけではない、という点を押さえてください。</p>
+  <h3>見つけた後、自動で動かす</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 162" width="760" height="162" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="GuardDutyの検出結果をEventBridgeが受け取り、Lambda、SNS、Systems Manager Automationに流して自動で対応する"><rect x="16" y="46" width="140" height="52" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="86.0" y="70.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">GuardDuty</text><text x="86.0" y="85.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">見つける</text><line x1="156" y1="72" x2="220.0" y2="72.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="230.0,72.0 220.0,77.5 220.0,66.5" fill="var(--ink-3)"/><text x="193" y="62" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">検出結果</text><rect x="230" y="46" width="150" height="52" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="305.0" y="70.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EventBridge</text><text x="305.0" y="85.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">条件に合えば次へ流す</text><line x1="380" y1="72" x2="460.9" y2="35.1" stroke="var(--allow)" stroke-width="1.8"/><polygon points="470.0,31.0 463.2,40.2 458.6,30.1" fill="var(--allow)"/><rect x="470" y="10" width="274" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="607.0" y="29.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Lambda</text><text x="607.0" y="44.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">隔離などの処理を実行</text><line x1="380" y1="72" x2="460.0" y2="80.0" stroke="var(--allow)" stroke-width="1.8"/><polygon points="470.0,81.0 459.5,85.5 460.6,74.5" fill="var(--allow)"/><rect x="470" y="60" width="274" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="607.0" y="79.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">SNS</text><text x="607.0" y="94.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">担当者に通知</text><line x1="380" y1="72" x2="461.6" y2="125.5" stroke="var(--allow)" stroke-width="1.8"/><polygon points="470.0,131.0 458.6,130.1 464.7,120.9" fill="var(--allow)"/><rect x="470" y="110" width="274" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="607.0" y="129.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Systems Manager Automation</text><text x="607.0" y="144.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">決めた手順を実行</text><circle cx="30" cy="132" r="9" fill="var(--deny)"/><line x1="25.95" y1="127.95" x2="34.05" y2="136.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="25.95" y1="136.05" x2="34.05" y2="127.95" stroke="var(--bg)" stroke-width="2.4"/><text x="46" y="136" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">GuardDuty 自身は何も止めない。止めるのは、後ろにつないだ処理</text></svg>
+  </div>
+  <figcaption><strong>「脅威を検出したら自動で対応したい」の形。</strong>GuardDuty の検出結果は EventBridge（出来事を受け取り、条件に合うものを別のサービスへ流すサービス）に流せる。その先に Lambda（処理）・SNS（通知）・Systems Manager Automation（定型の手順）をつなぐ。</figcaption>
+</figure>
 
-  <div class="note">
-    <span class="label">Config と GuardDuty の分かれ目</span>
-    <p>両者は「見張る」という点では同じに見えますが、見ているものが違います。<strong>Configはリソースの構成</strong>――「このEBSボリュームは暗号化されているか」「このセキュリティグループは0.0.0.0/0で22番を開けていないか」。<strong>GuardDutyは振る舞い</strong>――「このインスタンスが既知のマルウェアのC2サーバーと通信している」「普段使わないリージョンでIAMユーザーが作られた」。</p>
-    <p>設問の言葉で言えば、<strong>「設定が基準を満たしているか確認したい」ならConfig、「攻撃されていないか知りたい」ならGuardDuty</strong>です。Config は非準拠を見つけたときに Systems Manager Automation で自動修復までできるので、「非準拠のリソースを自動的に是正したい」という設問もConfigです。</p>
+  <h3>集める Security Hub、掘る Detective</h3>
+  <p>どちらも「複数のサービスの情報をまとめる」ように見えますが、向きが逆です。<strong>Security Hub は広く浅く</strong>――組織全体・複数アカウントの検出結果を1画面に集め、CIS ベンチマークや「AWS 基礎セキュリティのベストプラクティス」への準拠をスコアで示します。日常的に見る画面です。<strong>Detective は狭く深く</strong>――GuardDuty の検出結果・CloudTrail・VPC フローログをつなぎ合わせ、1件について「いつ始まり、どのプリンシパルが関わり、何が連鎖したか」をたどります。事が起きた後に開く道具です。</p>
+
+  <div class="note warn"><span class="label">最頻出の引っかけ</span>
+    <p>「S3 バケットに個人情報が保存されていないか確認したい」で GuardDuty を選ぶ――不正解です。GuardDuty の S3 保護は「S3 へのアクセスが不審かどうか」を見るもので、オブジェクトの中身は分類しません。<strong>GuardDuty は中身を見ず、Inspector は振る舞いを見ず、Macie は S3 の外を見ない。</strong>この3つを言えれば、この系統の設問は落としません。</p>
+  </div>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「最小の運用負荷で、すぐに脅威検知を始めたい」→ <strong>GuardDuty</strong>。「脅威を検出したら自動で対応」→ <strong>GuardDuty → EventBridge → Lambda</strong>（または SNS、Systems Manager Automation）。「EC2 に未適用のパッチがないか」「コンテナイメージの検査」→ <strong>Inspector</strong>。「S3 のどこに個人情報があるか分からない」→ <strong>Macie</strong>。「設定が基準を満たしているか」「非準拠のリソースを自動で是正」→ <strong>Config</strong>。「一元的に把握」「複数アカウント」「準拠状況」→ <strong>Security Hub</strong>。「調査」「根本原因」「時系列で追う」→ <strong>Detective</strong>。</p></div>
+</section>
+
+<section id="s10" data-toc="場面9 利用者を確かめる">
+  
+  <span class="h2num">10</span>
+  <h2>場面9 ―― 「モバイルアプリの利用者に、S3 へ直接写真をアップロードさせたい」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>認証／認可</dt><dd>「この人は誰か」を確かめるのが認証、「この人に何をさせてよいか」を決めるのが認可</dd>
+      <dt>ユーザープール<small>Cognito user pool</small></dt><dd>アプリの利用者の名簿。サインアップ、サインイン、パスワードの再設定、MFA（多要素認証、IAM 講義で既出）を受け持つ</dd>
+      <dt>ID プール<small>Cognito identity pool</small></dt><dd>認証の結果を受け取り、AWS を操作するための一時認証情報に引き換える窓口。名簿は持たない</dd>
+      <dt>JWT<small>JSON Web Token</small></dt><dd>「この人は確かにサインインした」ことを示す、署名付きの短い文字列（トークン）。ID トークン・アクセストークン・更新トークンの3つが返る</dd>
+      <dt>一時認証情報</dt><dd>STS（AWS Security Token Service）が出す、期限付きのアクセスキー・シークレットキー・セッショントークンの組（IAM 講義で既出）</dd>
+      <dt>IdP<small>Identity Provider</small></dt><dd>認証を受け持つ外部のサービス。Google・Apple・Facebook や、企業の認証基盤など</dd>
+      <dt>SAML／OIDC</dt><dd>外部の IdP と認証結果をやり取りするための決まりごと（IAM 講義で既出）</dd>
+      <dt>オーソライザー</dt><dd>API Gateway が、届いたリクエストを通してよいかを確かめる仕組み</dd>
+    </dl>
   </div>
 
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「S3バケットに個人情報が保存されていないか確認したい」でGuardDutyを選ぶ――不正解です。<strong>中身を見て機密データを探すのはMacieだけ</strong>です。GuardDutyのS3保護は「S3へのアクセスが不審かどうか」を見るもので、オブジェクトの中身は分類しません。同様に「EC2に未適用のパッチがないか」はInspectorで、GuardDutyではありません。<strong>GuardDutyは中身を見ず、Inspectorは振る舞いを見ず、Macieは S3 の外を見ない。</strong>この3行を覚えておけば、この系統の設問はまず落としません。</p>
+  <p>Cognito は、Cognito のコンソールでユーザープールと ID プールを別々に作ります。名前は似ていますが、<em>認証</em>と <em>AWS への認可</em>という別の仕事をしています。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 276" width="760" height="276" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="アプリの利用者がユーザープールでサインインしてJWTを受け取り、そのJWTをIDプールに渡してSTSの一時認証情報を受け取り、その資格でS3やDynamoDBに直接アクセスする"><rect x="16" y="120" width="134" height="56" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="83.0" y="146.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">アプリの利用者</text><text x="83.0" y="161.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">モバイル・ブラウザ</text><rect x="300" y="26" width="190" height="56" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="395.0" y="52.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ユーザープール</text><text x="395.0" y="67.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">この人は誰か（認証）</text><rect x="300" y="206" width="190" height="56" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="395.0" y="232.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">ID プール</text><text x="395.0" y="247.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">AWS の何を触らせるか（認可）</text><rect x="606" y="120" width="138" height="56" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="675.0" y="152.6" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">S3・DynamoDB</text><line x1="150" y1="132" x2="290.9" y2="66.2" stroke="var(--ink-3)" stroke-width="2"/><polygon points="300.0,62.0 293.3,71.2 288.6,61.2" fill="var(--ink-3)"/><line x1="150" y1="164" x2="290.8" y2="224.1" stroke="var(--ink-3)" stroke-width="2"/><polygon points="300.0,228.0 288.6,229.1 293.0,219.0" fill="var(--ink-3)"/><circle cx="160" cy="66" r="10" fill="var(--accent)"/><text x="160" y="70" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><text x="176" y="70" font-size="11" fill="var(--ink)" text-anchor="start">サインイン</text><circle cx="160" cy="90" r="10" fill="var(--accent)"/><text x="160" y="94" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><text x="176" y="94" font-size="11" fill="var(--ink)" text-anchor="start">JWT が返る</text><circle cx="160" cy="222" r="10" fill="var(--accent)"/><text x="160" y="226" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><text x="176" y="226" font-size="11" fill="var(--ink)" text-anchor="start">JWT を渡す</text><circle cx="160" cy="246" r="10" fill="var(--accent)"/><text x="160" y="250" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">4</text><text x="176" y="250" font-size="11" fill="var(--ink)" text-anchor="start">一時認証情報が返る</text><line x1="150" y1="148" x2="596.0" y2="148.0" stroke="var(--allow)" stroke-width="2.4"/><polygon points="606.0,148.0 596.0,153.5 596.0,142.5" fill="var(--allow)"/><circle cx="300" cy="148" r="10" fill="var(--accent)"/><text x="300" y="152" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">5</text><text x="318" y="140" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">一時認証情報で AWS に直接アクセス</text><text x="675" y="196" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">ロールの権限の</text><text x="675" y="212" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">範囲でだけ触れる</text><text x="506" y="232" font-size="10.5" fill="var(--ink-2)" text-anchor="start">未認証（ゲスト）にも</text><text x="506" y="248" font-size="10.5" fill="var(--ink-2)" text-anchor="start">専用のロールを渡せる</text><text x="506" y="50" font-size="10.5" fill="var(--ink-2)" text-anchor="start">Google・Apple・SAML・OIDC</text><text x="506" y="66" font-size="10.5" fill="var(--ink-2)" text-anchor="start">でのサインインも受ける</text></svg>
   </div>
-
-  <div class="note warn">
-    <span class="label">Security Hub と Detective の違い</span>
-    <p>どちらも「複数のサービスの情報をまとめる」サービスに見えますが、目的が逆方向です。<strong>Security Hubは広く浅く</strong>――組織全体・複数アカウントの検出結果を一画面に集め、CISベンチマークやAWS基礎セキュリティベストプラクティスへの準拠状況をスコアで示します。日常的に見るダッシュボードです。<strong>Detectiveは狭く深く</strong>――一件のインシデントについて、関係するリソースとイベントをグラフでたどり、いつ始まったのか、何が連鎖したのかを突き止めます。インシデント発生後に開くツールです。設問に「調査」「根本原因」「時系列で追う」とあればDetective、「一元的に把握」「複数アカウント」「準拠状況」とあればSecurity Hubです。</p>
-  </div></section>
-
-<section id="s9" data-toc="Cognito">
-
-  <span class="h2num">09</span>
-  <h2>Cognito ―― 2つのプールを確定させる</h2>
-  <p class="lead">IAM講義でも触れましたが、ここで決着をつけます。Cognitoの2つのプールは、<em>認証</em>と<em>AWSへの認可</em>という別々の仕事をしていて、名前が似ているだけです。</p>
-
+  <figcaption><strong>Cognito の2つのプールは、仕事が違う。</strong>ユーザープールは利用者の名簿を持ち、サインインさせて<strong>JWT</strong>（本人であることを示すトークン）を返す。ID プールは名簿を持たず、認証の結果を受け取って <strong>STS の一時認証情報</strong>（IAM 講義で既出）に引き換える。利用者が S3 に直接アップロードする構成では、この①〜⑤が一続きになる。</figcaption>
+</figure>
   <div class="tw"><table>
-    <thead><tr><th></th><th>ユーザープール<br><span style="font-weight:400;text-transform:none;letter-spacing:0">User Pool</span></th><th>IDプール<br><span style="font-weight:400;text-transform:none;letter-spacing:0">Identity Pool</span></th></tr></thead>
+    <thead><tr><th></th><th>ユーザープール</th><th>ID プール</th></tr></thead>
     <tbody>
-      <tr><td><strong>答える問い</strong></td><td>この人は誰か（認証）</td><td>この人にAWSの何を触らせるか（認可）</td></tr>
-      <tr><td><strong>持っているもの</strong></td><td class="yes">ユーザーディレクトリ。サインアップ、サインイン、パスワードリセット、MFA</td><td class="no">ユーザーは持たない。外部の認証結果を受け取るだけ</td></tr>
-      <tr><td><strong>返すもの</strong></td><td>JWT（IDトークン、アクセストークン、更新トークン）</td><td class="yes">STSの一時認証情報（アクセスキー・シークレット・セッショントークン）</td></tr>
-      <tr><td><strong>受け付ける認証元</strong></td><td>自前のユーザー、Google・Apple・Facebook、SAML、OIDC</td><td>ユーザープール、外部IdP、そして<strong>未認証（ゲスト）</strong></td></tr>
-      <tr><td><strong>AWSリソースへの直接アクセス</strong></td><td class="no">できない</td><td class="yes">できる。ロールを割り当てる</td></tr>
+      <tr><td><strong>答える問い</strong></td><td>この人は誰か（認証）</td><td>この人に AWS の何を触らせるか（認可）</td></tr>
+      <tr><td><strong>持っているもの</strong></td><td class="yes">利用者の名簿。サインアップ、サインイン、パスワードの再設定、MFA</td><td class="no">名簿は持たない。外部の認証の結果を受け取るだけ</td></tr>
+      <tr><td><strong>返すもの</strong></td><td>JWT（ID トークン、アクセストークン、更新トークン）</td><td class="yes">STS の一時認証情報</td></tr>
+      <tr><td><strong>受け付ける認証元</strong></td><td>自前の名簿、Google・Apple・Facebook、SAML、OIDC</td><td>ユーザープール、外部の IdP、そして<strong>未認証（ゲスト）</strong></td></tr>
+      <tr><td><strong>AWS リソースへの直接アクセス</strong></td><td class="no">できない</td><td class="yes">できる。ロールを割り当てる</td></tr>
       <tr><td><strong>使いどころ</strong></td><td>ALB / API Gateway のオーソライザー、アプリのログイン画面</td><td>モバイルアプリから S3 に直接アップロード、DynamoDB を直接読む</td></tr>
     </tbody>
   </table></div>
+  <ul>
+    <li><strong>この場面の答え：</strong>ユーザープールでサインインさせ、その JWT を ID プールに渡して一時認証情報を受け取り、その資格で S3 にアップロードする。<strong>S3 に直接触るなら、必ず ID プールが絡む</strong></li>
+    <li><strong>未ログインの利用者にも限定的に触らせる：</strong>ID プールのゲスト用ロール。ユーザープールではできない</li>
+    <li><strong>社内の従業員の認証は Cognito ではない：</strong>IAM Identity Center（IAM 講義で既出）。Cognito は社外の一般の利用者向け</li>
+  </ul>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「アプリの利用者が直接 S3 にアップロード」「モバイルアプリから DynamoDB を読む」→ <strong>ID プール</strong>。「ログイン機能を実装したい」「Google アカウントでサインインさせたい」「API Gateway で認証を強制したい」→ <strong>ユーザープール</strong>。「未ログインの利用者にも限定的にアクセスさせたい」→ <strong>ID プールのゲストロール</strong>。「従業員のシングルサインオン」→ <strong>IAM Identity Center</strong>。</p></div>
+</section>
 
-  <p>実務での典型構成は両方の組み合わせです。<strong>ユーザープールでサインインさせてトークンを得る → そのトークンをIDプールに渡す → 一時認証情報を受け取る → その資格でS3にアップロードする。</strong>この流れが書けるかどうかが問われます。</p>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>設問に<strong>「アプリの利用者が直接S3にファイルをアップロードする」「モバイルアプリからDynamoDBを読む」</strong>と書いてあれば、必ず<strong>IDプール</strong>が絡みます。<strong>「ログイン機能を実装したい」「既存のGoogleアカウントでサインインさせたい」「API Gatewayで認証を強制したい」</strong>なら<strong>ユーザープール</strong>です。そして<strong>「未ログインの利用者にも限定的にアクセスさせたい」はIDプールのゲストロール</strong>――これはユーザープールでは実現できません。なお、社内の従業員の認証は Cognito ではなく IAM Identity Center です。<strong>Cognitoは社外の一般利用者向け</strong>という線引きを忘れないでください。</p>
-  </div></section>
-
-<section id="s10" data-toc="試験での判断軸">
-
-  <span class="h2num">10</span>
-  <h2>試験での判断軸</h2>
-  <p class="lead">設問文にこの手がかりが出たら、この答えに寄せる――という対応表です。今日の内容は、最終的にこの表に圧縮されます。</p>
-
+<section id="s11" data-toc="場面→答えの早見表">
+  
+  <span class="h2num">11</span>
+  <h2>場面 → 答えの早見表</h2>
+  <p class="lead">左を読んで右を思い出す訓練に使ってください。実際の設問では、左側の手がかりが2つ3つ重ねて書かれています。1つしか見つからないときは読み落としがあります。</p>
   <div class="judge">
+    <div class="row"><span class="cue">スナップショット・バケット・媒体の廃棄を守りたい</span><span class="arrow">→</span><span class="ans">保管時の暗号化（KMS）</span></div>
+    <div class="row"><span class="cue">盗聴・傍受・中間者から守りたい</span><span class="arrow">→</span><span class="ans">転送時の暗号化（ACM ＋ HTTPS）</span></div>
+    <div class="row"><span class="cue">インターネットを経由させたくない</span><span class="arrow">→</span><span class="ans">VPC エンドポイント / PrivateLink</span></div>
+    <div class="row"><span class="cue">マネージドサービスでのアクセス制御・暗号化の有効化は誰の担当か</span><span class="arrow">→</span><span class="ans">常に顧客</span></div>
     <div class="row"><span class="cue">鍵の使用を監査したい／特定ロールだけに復号を許す</span><span class="arrow">→</span><span class="ans">カスタマー管理キー（CMK）</span></div>
-    <div class="row"><span class="cue">専用HSM／FIPS 140-3 レベル3／鍵素材をAWSに触らせない</span><span class="arrow">→</span><span class="ans">CloudHSM</span></div>
+    <div class="row"><span class="cue">IAM で kms:Decrypt を許可したのに読めない</span><span class="arrow">→</span><span class="ans">キーポリシーを確認する</span></div>
+    <div class="row"><span class="cue">別アカウントから暗号化データを使う</span><span class="arrow">→</span><span class="ans">キーポリシー ＋ 相手の IAM ポリシー ＋ リソース側</span></div>
+    <div class="row"><span class="cue">SSE-KMS のリクエスト料金を抑えたい</span><span class="arrow">→</span><span class="ans">S3 バケットキー</span></div>
+    <div class="row"><span class="cue">オンプレミスで作った鍵素材を使うキーを替えたい</span><span class="arrow">→</span><span class="ans">手動ローテーション（エイリアスの付け替え）</span></div>
     <div class="row"><span class="cue">暗号化データを別リージョンでも復号したい</span><span class="arrow">→</span><span class="ans">マルチリージョンキー</span></div>
     <div class="row"><span class="cue">鍵を消したいが影響が読めない</span><span class="arrow">→</span><span class="ans">まず無効化、その後に削除をスケジュール</span></div>
-    <div class="row"><span class="cue">DB認証情報を自動でローテーション</span><span class="arrow">→</span><span class="ans">Secrets Manager</span></div>
+    <div class="row"><span class="cue">専用 HSM／FIPS 140-3 レベル3／鍵素材を AWS に触らせない</span><span class="arrow">→</span><span class="ans">CloudHSM</span></div>
+    <div class="row"><span class="cue">DB 認証情報を自動でローテーション</span><span class="arrow">→</span><span class="ans">Secrets Manager</span></div>
     <div class="row"><span class="cue">追加コストなしで設定値を階層管理</span><span class="arrow">→</span><span class="ans">Parameter Store（標準）</span></div>
-    <div class="row"><span class="cue">CloudFront に証明書が出てこない／更新を自動にしたい</span><span class="arrow">→</span><span class="ans">us-east-1 で発行、ACM発行＋DNS検証</span></div>
-    <div class="row"><span class="cue">SQLインジェクション／XSS／総当たり</span><span class="arrow">→</span><span class="ans">WAF（レートベースルールを含む）</span></div>
+    <div class="row"><span class="cue">CloudFront に証明書が出てこない</span><span class="arrow">→</span><span class="ans">us-east-1 で発行する</span></div>
+    <div class="row"><span class="cue">証明書の更新を完全に自動にしたい</span><span class="arrow">→</span><span class="ans">ACM 発行 ＋ DNS 検証</span></div>
+    <div class="row"><span class="cue">社内システム間の相互 TLS</span><span class="arrow">→</span><span class="ans">AWS Private CA</span></div>
+    <div class="row"><span class="cue">SQL インジェクション／XSS／総当たり</span><span class="arrow">→</span><span class="ans">WAF（レートベースルールを含む）</span></div>
+    <div class="row"><span class="cue">特定の IP アドレスだけをブロック</span><span class="arrow">→</span><span class="ans">ネットワーク ACL の拒否ルール / WAF の IP セット</span></div>
     <div class="row"><span class="cue">外向き通信を宛先ドメインで制限</span><span class="arrow">→</span><span class="ans">Network Firewall / Route 53 Resolver DNS Firewall</span></div>
-    <div class="row"><span class="cue">DDoS時の想定外課金を避けたい</span><span class="arrow">→</span><span class="ans">Shield Advanced（コスト保護）</span></div>
+    <div class="row"><span class="cue">DDoS 時の想定外課金を避けたい</span><span class="arrow">→</span><span class="ans">Shield Advanced（コスト保護）</span></div>
     <div class="row"><span class="cue">エージェント不要ですぐ脅威検知を始めたい</span><span class="arrow">→</span><span class="ans">GuardDuty</span></div>
+    <div class="row"><span class="cue">脅威を検出したら自動で対応したい</span><span class="arrow">→</span><span class="ans">GuardDuty → EventBridge → Lambda</span></div>
     <div class="row"><span class="cue">EC2／コンテナイメージの脆弱性を洗い出す</span><span class="arrow">→</span><span class="ans">Inspector</span></div>
     <div class="row"><span class="cue">S3 のどこに個人情報があるか分からない</span><span class="arrow">→</span><span class="ans">Macie</span></div>
+    <div class="row"><span class="cue">設定が規則どおりか確かめ、違反を自動で直す</span><span class="arrow">→</span><span class="ans">AWS Config（＋ Systems Manager Automation）</span></div>
     <div class="row"><span class="cue">複数アカウントで一元管理／根本原因を時系列で追う</span><span class="arrow">→</span><span class="ans">Security Hub／Detective</span></div>
-  </div></section>
+    <div class="row"><span class="cue">アプリの利用者が S3 に直接アップロード</span><span class="arrow">→</span><span class="ans">Cognito ID プール</span></div>
+    <div class="row"><span class="cue">アプリにログイン機能／API Gateway で認証</span><span class="arrow">→</span><span class="ans">Cognito ユーザープール</span></div>
+  </div>
+</section>
 
-<section id="s11" data-toc="確認問題">
-
-  <span class="h2num">11</span>
+<section id="s12" data-toc="確認問題">
+  
+  <span class="h2num">12</span>
   <h2>確認問題</h2>
   <p class="lead">先に自分で答えを決めてから開いてください。特に3問目と4問目は、紛らわしい選択肢をわざと残してあります。</p>
 
@@ -678,8 +854,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>エンベロープ暗号化の説明そのものです。KMSが直接暗号化できるのは4KBまでで、それを超えるデータはこの2段階で扱います。KMSを往復するのはデータキーだけで、データ本体は送られません。</p>
-      <p><strong>判断軸:</strong> Aは4KBの制限に反し、性能面でも成立しません。Cは「鍵素材はKMSの外に出ない」というKMSの根本原則に反します。Dは復号にKMSが不要としている点が誤りで、<strong>復号のたびにKMSへのアクセス権が必要</strong>だからこそ「鍵を無効化してアクセスを断つ」という運用が成立します。</p>
+      <p>場面3の手順の図（①〜④）そのもの。KMS を往復するのはデータキーだけで、データ本体は送られない。</p>
+      <p><strong>判断軸:</strong> A は「KMS が直接暗号化できるのは 4 KB まで」に反する（場面3の最初の図の赤い点線）。C は「鍵素材は KMS の外に出ない」に反する。D は復号に KMS が不要としている点が誤りで、手順の⑥のとおり<strong>復号のたびに KMS へのアクセス権が要る</strong>。だから「鍵を無効化してアクセスを断つ」が成り立つ。</p>
     </div>
   </details>
 
@@ -694,8 +870,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>Secrets Manager は Aurora・RDS・Redshift・DocumentDB について、ローテーション用のLambdaを自分で書かなくても済むマネージドローテーションを提供します。ローテーション要件があり、かつ運用負荷の最小化が条件なら、ここは一択です。</p>
-      <p><strong>判断軸:</strong> Aは手動なので「運用負荷を最小限」を満たしません。Cは動きますが、Lambdaの実装と保守を自分で抱えることになり、標準機能で済む選択肢に劣ります。Dはそもそも認証情報の置き場所として不適切です。<strong>「ローテーション」という語が出たらSecrets Manager</strong>、というのが第一反応です。</p>
+      <p>場面5の図。Secrets Manager は Aurora・RDS・Redshift・DocumentDB について、Lambda 関数を自分で書かなくて済むマネージドローテーションを持っている。</p>
+      <p><strong>判断軸:</strong> A は手動なので「運用負荷を最小限」を満たさない（Parameter Store にはローテーションの機能がない）。C は動くが、Lambda の実装と保守を自分で抱えるので、標準機能で済む選択肢に負ける。D はそもそも認証情報の置き場所として不適切。<strong>「ローテーション」を見たら Secrets Manager</strong>。</p>
     </div>
   </details>
 
@@ -710,8 +886,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>S3オブジェクトの中身を読んで機密データを分類できるのはMacieだけです。EC2・ECRイメージ・Lambdaの既知のCVEをスキャンするのがInspectorです。この2つは担当が重なりません。</p>
-      <p><strong>判断軸:</strong> Aは両方外しています。GuardDutyはS3への<strong>アクセスの不審さ</strong>を見るだけでオブジェクトの中身を分類せず、Configは<strong>構成</strong>が規則どおりかを見るのでCVEは扱いません。Cは、Security Hubが他サービスの結果を集約するだけで自分では検出せず、Detectiveは既存の検出結果を掘り下げる調査ツールです。Dは役割が完全に入れ替わっています。<strong>「中身を分類するのはMacie」「弱点を探すのはInspector」</strong>の2行で判定できます。</p>
+      <p>場面8の「材料と出力」の図の2行目と3行目。S3 のオブジェクトの中身を読んで機密データを見つけるのは Macie だけ。EC2・ECR のイメージ・Lambda の既知の CVE を調べるのが Inspector。</p>
+      <p><strong>判断軸:</strong> A は両方外している。GuardDuty は S3 への<strong>アクセスの不審さ</strong>を見るだけで中身を分類せず、Config は<strong>設定</strong>が規則どおりかを見るので CVE は扱わない。C の Security Hub は結果を集めるだけで自分では検出せず、Detective は既にある検出結果を掘る道具。D は役割が入れ替わっている。<strong>「中身を分類するのは Macie」「弱点を探すのは Inspector」</strong>。</p>
     </div>
   </details>
 
@@ -726,8 +902,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>CloudFrontに紐づける証明書は、us-east-1（バージニア北部）のACMにあるものしか参照できません。CloudFront自体はグローバルサービスなので作り直す必要はなく、証明書だけを us-east-1 で発行し直します。1つのドメインに対して複数リージョンで証明書を持つことは問題ありません。</p>
-      <p><strong>判断軸:</strong> Aは、CloudFrontにリージョンという概念がないので意味を成しません。Cは、<strong>ACMのパブリック証明書は秘密鍵をエクスポートできない</strong>ため不可能です。Dは検証方法の話であって、リージョンの制約とは無関係です。<strong>「CloudFront に関わる証明書は常に us-east-1」</strong>は、そのまま覚えてよい数少ない固定知識です。</p>
+      <p>場面6の「置ける場所」の図の左。CloudFront に付ける証明書は、us-east-1（バージニア北部）の ACM にあるものしか参照できない。CloudFront 自体は世界共通のサービスなので作り直す必要はなく、証明書だけを us-east-1 で発行する。</p>
+      <p><strong>判断軸:</strong> A は、CloudFront にリージョンという考え方がないので意味を成さない。C は、<strong>ACM のパブリック証明書は秘密鍵を取り出せない</strong>ので不可能（同じ図の右）。D は検証方法の話で、リージョンの制約とは無関係。<strong>「CloudFront に関わる証明書は常に us-east-1」</strong>は、そのまま覚えてよい数少ない固定の知識。</p>
     </div>
   </details>
 
@@ -742,33 +918,35 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: C</span></p>
-      <p>Detective は、GuardDutyの検出結果・CloudTrail・VPCフローログを取り込んでグラフモデルを作り、「いつ始まったか」「どのプリンシパルが関与したか」「何が連鎖したか」を時系列でたどれるようにするサービスです。まさに根本原因分析のためのツールです。</p>
-      <p><strong>判断軸:</strong> Aは構成の変更履歴は分かりますが、ネットワークの振る舞いと結び付けられません。Bは全体の準拠状況を見るダッシュボードで、一件の深掘りには向きません。Dは脆弱性の有無を教えてくれますが、すでに起きた通信の経緯は分かりません。<strong>「調査」「根本原因」「時系列」の3語はDetectiveの指定席</strong>です。逆に「全社の状況を一画面で」ならSecurity Hub、と対で覚えてください。</p>
+      <p>場面8の「材料と出力」の図の下段右。Detective は、GuardDuty の検出結果・CloudTrail・VPC フローログをつなぎ合わせ、「いつ始まったか」「どのプリンシパルが関わったか」「何が連鎖したか」を時系列でたどれるようにする。</p>
+      <p><strong>判断軸:</strong> A は設定の変更履歴は分かるが、通信の振る舞いと結び付けられない。B は全体の準拠状況を見る画面で、1件の深掘りには向かない。D は脆弱性の有無は分かるが、すでに起きた通信の経緯は分からない。<strong>「調査」「根本原因」「時系列」は Detective</strong>。「全社の状況を1画面で」なら Security Hub、と対で覚える。</p>
     </div>
-  </details></section>
+  </details>
+</section>
 
-<section id="s12" data-toc="今日の宿題">
-
-  <span class="h2num">12</span>
+<section id="s13" data-toc="今日の宿題">
+  
+  <span class="h2num">13</span>
   <h2>今日の宿題</h2>
-  <p>今日は表が多い回でした。表は読むだけでは残りません。手で書き直したものだけが残ります。25分でここまでやってください。</p>
+  <p>20分で、ここまでやってください。</p>
 
   <div class="hw">
-    <div class="item"><span class="box"></span><span class="t"><code>notes/security/</code> の README にチェックリストを追加<small>「暗号化」「シークレット」「証明書」「脅威検知」の4項目。それぞれ、自分が説明できるかどうかの欄を作る</small></span></div>
-    <div class="item"><span class="box"></span><span class="t">エンベロープ暗号化を、図を見ずに5行で書く<small>データキーが2つの形で存在すること、平文キーを破棄すること、復号にKMSが要ること。書けなければ04に戻る</small></span></div>
-    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d1-secure.md</code> に脅威検知の対応表を追記<small>08の表を、サービス名と「何を材料にするか」の2列だけに削って写す。3列目以降は書かない</small></span></div>
-    <div class="item"><span class="box"></span><span class="t">W5のIssueのチェックボックスを2つ埋める<small>「KMS: キーの種類、キーポリシー、エンベロープ暗号化」と「検知: WAF / GuardDuty / Inspector / Macie / Config の役割分担」</small></span></div>
-    <div class="item"><span class="box"></span><span class="t"><code>plan/log.md</code> に1行残す<small>時間と、10の判断軸のうち一番あやしかった行</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">9つの場面を、資料を閉じて書き出す<small>「どんな依頼で、答えは何だったか」を9行。書けたら、チャットに貼ってもらえれば私が notes/ に清書します</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">各場面の「初めて出る言葉」を、正式名称なしで一言ずつ言えるか試す<small>言えなかった言葉だけ、その場面に戻る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">エンベロープ暗号化の手順を、図を見ずに順に言う<small>データキーが2つの形で返ること、平文のキーを捨てること、復号に KMS が要ること。言えなければ場面3に戻る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">見張るサービス6つを「何を読んで、何を出すか」で言う<small>GuardDuty・Inspector・Macie・Config・Security Hub・Detective。場面8の図の左と右を、サービス名だけ見て言えるか</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">終わったことを伝える<small>Issue のチェックと plan/log.md は私が更新します。早見表のうち一番あやしかった行も教えてください</small></span></div>
   </div>
 
   <div class="note">
-    <span class="label">次回に向けて</span>
-    <p>これでドメイン1は一通り終わりです。次はドメイン2――回復力のあるアーキテクチャ。マルチAZとマルチリージョン、Auto Scaling、ELBのヘルスチェック、RTOとRPOの読み分け。<strong>ドメイン1とドメイン2は模試で混ざって出ます。</strong>「暗号化されたスナップショットを別リージョンにコピーする」型の設問は、今日のマルチリージョンキーの知識がないと解けません。</p>
-  </div></section>
+    <span class="label">ほかの講義とのつながり</span>
+    <p>これでドメイン1（セキュアなアーキテクチャ）は一通り終わりです。<strong>ドメイン1とドメイン2（回復性）は模試で混ざって出ます。</strong>「暗号化されたスナップショットを別リージョンにコピーする」型の設問は、場面4のマルチリージョンキーを知らないと解けません。場面8で名前だけ出した EventBridge と SNS は、次の「疎結合と監視の設計」で仕組みから扱います。</p>
+  </div>
+</section>
 
 <footer>
   AWS SAA-C03 / W5 座学<br>
-  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
+  サービス仕様と数値は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
 </footer>
 
 </main>

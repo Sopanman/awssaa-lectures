@@ -174,9 +174,9 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 
 <header class="masthead">
   <p class="eyebrow">AWS SAA-C03 / W3 座学</p>
-  <h1>ストレージ ―― どこに置き、いつ移すか</h1>
-  <p class="standfirst">ストレージはSAAで最も選択肢の数が多い領域です。S3のストレージクラスだけで6種類以上あり、さらにEBS・EFS・FSxが並びます。設問は必ず「アクセス頻度」「共有の要否」「プロトコル」「取り出しまでの許容時間」のどれかを手がかりとして与えてきます。その手がかりと答えの対応を作るのが今日の目的です。</p>
-  <div class="meta"><span>所要 60-90分</span><span>前提 W2 読了</span><span>ドメイン3・4</span></div>
+  <h1>ストレージ ―― 図で見る9つの依頼</h1>
+  <p class="standfirst">ストレージは SAA で選択肢の数がいちばん多い領域ですが、設問が聞いているのは「どれくらい読むか」「誰と共有するか」「消えてよいか」だけです。この講義は図が主役です。各場面の最初に「この場面で初めて出る言葉」を置いてあるので、知らない言葉はそこで確かめてから図を見てください。緑は通る・うまくいく、赤と ✕ は止まる・失敗する、青は自分が決めるものです。</p>
+  <div class="meta"><span>所要 80-100分</span><span>前提 IAM・VPC・EC2 講義を読了</span><span>ドメイン3・4</span></div>
 </header>
 
 <div class="cols">
@@ -184,17 +184,17 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 <nav class="toc">
   <h2>目次</h2>
   <ol>
-    <li><a href="#s1"><span class="n">01</span>ゴール</a></li>
-    <li><a href="#s2"><span class="n">02</span>ストレージクラス</a></li>
-    <li><a href="#s3"><span class="n">03</span>ライフサイクル</a></li>
-    <li><a href="#s4"><span class="n">04</span>バージョンと保持</a></li>
-    <li><a href="#s5"><span class="n">05</span>アクセス制御</a></li>
-    <li><a href="#s6"><span class="n">06</span>暗号化</a></li>
-    <li><a href="#s7"><span class="n">07</span>性能と転送</a></li>
-    <li><a href="#s8"><span class="n">08</span>EBS</a></li>
-    <li><a href="#s9"><span class="n">09</span>EFS と FSx</a></li>
-    <li><a href="#s10"><span class="n">10</span>移行とハイブリッド</a></li>
-    <li><a href="#s11"><span class="n">11</span>試験での判断軸</a></li>
+    <li><a href="#s1"><span class="n">01</span>全体の地図</a></li>
+    <li><a href="#s2"><span class="n">02</span>場面1 クラスを選ぶ</a></li>
+    <li><a href="#s3"><span class="n">03</span>場面2 いつ移す</a></li>
+    <li><a href="#s4"><span class="n">04</span>場面3 消させない</a></li>
+    <li><a href="#s5"><span class="n">05</span>場面4 誰に見せるか</a></li>
+    <li><a href="#s6"><span class="n">06</span>場面5 暗号化</a></li>
+    <li><a href="#s7"><span class="n">07</span>場面6 速く送る</a></li>
+    <li><a href="#s8"><span class="n">08</span>場面7 EC2 のディスク</a></li>
+    <li><a href="#s9"><span class="n">09</span>場面8 共有する</a></li>
+    <li><a href="#s10"><span class="n">10</span>場面9 オンプレミス</a></li>
+    <li><a href="#s11"><span class="n">11</span>場面→答えの早見表</a></li>
     <li><a href="#s12"><span class="n">12</span>確認問題</a></li>
     <li><a href="#s13"><span class="n">13</span>今日の宿題</a></li>
   </ol>
@@ -202,133 +202,161 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
 
 <main>
 
-<section id="s1" data-toc="ゴール">
-
+<section id="s1" data-toc="全体の地図">
+  
   <span class="h2num">01</span>
-  <h2>この講義のゴール</h2>
-  <p class="lead">ストレージの設問は、サービス名を知っているかではなく、<em>要件の一文からどの軸で切るかを判断できるか</em>を問います。今日終わったときに、次の3つができていれば合格です。</p>
-  <ul class="goals">
-    <li><span class="tick">01</span><div><strong>アクセス頻度と取り出し時間から、S3のストレージクラスを1つに絞れる。</strong><br>最小保存期間という落とし穴も含めて、なぜそれを選ぶか言える。</div></li>
-    <li><span class="tick">02</span><div><strong>ブロック・ファイル・オブジェクトの3分類を反射的に切り分けられる。</strong><br>「複数EC2から共有」「Windowsから」「1台に速いディスク」が、それぞれどこに着地するか即答できる。</div></li>
-    <li><span class="tick">03</span><div><strong>暗号化とアクセス制御を、要件の言葉から逆引きできる。</strong><br>「監査したい」「鍵を預けられない」「期限付きで外部に渡す」が、それぞれ何を指すか分かる。</div></li>
-  </ul>
-  <div class="note">
-    <span class="label">今日の全体像</span>
-    <p>ストレージは3つの型しかありません。<strong>オブジェクト</strong>（S3。HTTPで出し入れする、部分更新しない）、<strong>ブロック</strong>（EBS・インスタンスストア。OSがファイルシステムを載せる生ディスク）、<strong>ファイル</strong>（EFS・FSx。NFSやSMBでマウントして複数台から共有する）。設問を読んだらまずこの3つのどれかを決める。それだけで選択肢の半分は消えます。</p>
-  </div></section>
+  <h2>全体の地図</h2>
+  <p class="lead">ストレージのサービスは多く見えますが、型は3つしかありません。まず3つの型と登場人物を紹介してから、9つの場面がどこの話かを見ます。</p>
 
-<section id="s2" data-toc="ストレージクラス">
+  <div class="note terms"><span class="label">この講義の登場人物</span>
+    <dl>
+      <dt>オブジェクトストレージ</dt><dd>ファイルを1個ずつ、名前を付けて丸ごと出し入れする置き場。フォルダの階層や「途中だけ書き換える」操作はない</dd>
+      <dt>S3<small>Amazon Simple Storage Service</small></dt><dd>AWS のオブジェクトストレージ。容量の上限を気にせず置ける → 場面1〜6</dd>
+      <dt>バケット</dt><dd>S3 の入れ物。作るときにリージョンを選ぶ。設定の多くはバケット単位で行う</dd>
+      <dt>オブジェクト</dt><dd>バケットに入れた1個1個のファイルのこと。1個の上限は 5TB</dd>
+      <dt>キー</dt><dd>オブジェクトの名前（例：<code>logs/2026/a.csv</code>）。<code>/</code> で区切るとフォルダのように見えるが、実際は長い名前が付いているだけ</dd>
+      <dt>ブロックストレージ</dt><dd>OS がディスクとして使う、生の記憶領域。OS がその上にファイルシステム（ファイルやフォルダを管理する仕組み）を作る</dd>
+      <dt>EBS<small>Amazon Elastic Block Store</small></dt><dd>EC2 につなぐディスク（ブロックストレージ）→ 場面7</dd>
+      <dt>ファイルストレージ</dt><dd>複数のサーバーから、ネットワーク越しに同じフォルダを開ける置き場（共有フォルダ）</dd>
+      <dt>EFS<small>Amazon Elastic File System</small></dt><dd>Linux 向けの共有フォルダのサービス → 場面8</dd>
+      <dt>FSx<small>Amazon FSx</small></dt><dd>Windows 向けなど、既存のファイルサーバー製品を AWS が運用してくれるサービス群 → 場面8</dd>
+      <dt>NFS・SMB<small>Network File System / Server Message Block</small></dt><dd>共有フォルダにつなぐときの通信の決まり（プロトコル）。Linux は主に NFS、Windows は SMB を使う</dd>
+      <dt>マウント</dt><dd>ディスクや共有フォルダを OS につないで、フォルダとして使えるようにすること</dd>
+      <dt>オンプレミス</dt><dd>自社の建物やデータセンターにある、自前の設備のこと（VPC 講義で既出）→ 場面9</dd>
+    </dl>
+  </div>
 
-  <span class="h2num">02</span>
-  <h2>S3 のストレージクラス</h2>
-  <p class="lead">6つ以上あって覚えにくく見えますが、実際に効いている軸は<strong>3つだけ</strong>です。どれくらいの頻度で読むか、読むときに何秒待てるか、AZが1つ落ちたときに失われてよいか。この3つを設問から拾えば、クラスは自動的に決まります。</p>
-
-  <h3>比較表</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 306" width="760" height="306" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="ストレージの3つの型。オブジェクトはS3、ブロックはEBS、ファイルはEFSとFSx。下にオンプレミスとつなぐサービスが並ぶ"><rect x="8" y="10" width="236" height="240" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.4"/><text x="126" y="36" font-size="14.5" fill="var(--ink)" text-anchor="middle" font-weight="700">オブジェクト</text><text x="126" y="55" font-size="11" fill="var(--ink-3)" text-anchor="middle">HTTP で1個ずつ出し入れする</text><rect x="262" y="10" width="236" height="240" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.4"/><text x="380" y="36" font-size="14.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ブロック</text><text x="380" y="55" font-size="11" fill="var(--ink-3)" text-anchor="middle">OS が使う生のディスク</text><rect x="516" y="10" width="236" height="240" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.4"/><text x="634" y="36" font-size="14.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ファイル</text><text x="634" y="55" font-size="11" fill="var(--ink-3)" text-anchor="middle">複数の台から同じフォルダを見る</text><rect x="30" y="72" width="192" height="92" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="42" y="91" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">S3 バケット</text><rect x="42" y="104" width="52" height="44" rx="5" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><text x="68" y="123" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">a.csv</text><text x="68" y="139" font-size="10" fill="var(--ink-3)" text-anchor="middle">1個</text><rect x="100" y="104" width="52" height="44" rx="5" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><text x="126" y="123" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">b.png</text><text x="126" y="139" font-size="10" fill="var(--ink-3)" text-anchor="middle">1個</text><rect x="158" y="104" width="52" height="44" rx="5" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><text x="184" y="123" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">c.log</text><text x="184" y="139" font-size="10" fill="var(--ink-3)" text-anchor="middle">1個</text><text x="126" y="186" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">中身の一部だけの書き換えはできない</text><text x="126" y="203" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">置き換えるときは丸ごと</text><circle cx="56" cy="228" r="10" fill="var(--accent)"/><text x="56" y="232" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><circle cx="84" cy="228" r="10" fill="var(--accent)"/><text x="84" y="232" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><circle cx="112" cy="228" r="10" fill="var(--accent)"/><text x="112" y="232" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><circle cx="140" cy="228" r="10" fill="var(--accent)"/><text x="140" y="232" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">4</text><circle cx="168" cy="228" r="10" fill="var(--accent)"/><text x="168" y="232" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">5</text><circle cx="196" cy="228" r="10" fill="var(--accent)"/><text x="196" y="232" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">6</text><rect x="280" y="96" width="80" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="320.0" y="122.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="400" y="96" width="80" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="440.0" y="116.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EBS</text><text x="440.0" y="131.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">ディスク</text><line x1="360" y1="118" x2="400" y2="118" stroke="var(--accent)" stroke-width="2.2"/><text x="380" y="88" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">つなぐ</text><text x="380" y="186" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">1台の EC2 につないで使う</text><text x="380" y="203" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">EC2 と同じ AZ に置く</text><circle cx="380" cy="228" r="10" fill="var(--accent)"/><text x="380" y="232" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">7</text><rect x="530" y="78" width="70" height="32" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="565.0" y="98.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="530" y="126" width="70" height="32" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="565.0" y="146.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="640" y="92" width="98" height="52" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="689.0" y="116.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EFS / FSx</text><text x="689.0" y="131.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">共有フォルダ</text><line x1="600" y1="94" x2="630.7" y2="106.3" stroke="var(--allow)" stroke-width="2"/><polygon points="640.0,110.0 628.7,111.4 632.8,101.2" fill="var(--allow)"/><line x1="600" y1="142" x2="630.7" y2="129.7" stroke="var(--allow)" stroke-width="2"/><polygon points="640.0,126.0 632.8,134.8 628.7,124.6" fill="var(--allow)"/><text x="634" y="186" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">NFS や SMB でマウントする</text><text x="634" y="203" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">何台からでも同時に読み書き</text><circle cx="634" cy="228" r="10" fill="var(--accent)"/><text x="634" y="232" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">8</text><rect x="8" y="262" width="744" height="36" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.3"/><circle cx="30" cy="280" r="10" fill="var(--accent)"/><text x="30" y="284" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">9</text><text x="50" y="284" font-size="11.5" fill="var(--ink-2)" text-anchor="start" font-weight="700">オンプレミスから運ぶ・つなぐ：Storage Gateway / DataSync / Snowball Edge</text></svg>
+  </div>
+  <figcaption><strong>この講義の地図。</strong>丸数字は場面の番号。ストレージは3つの型しかない。①〜⑥は S3（オブジェクト）、⑦は EBS（ブロック）、⑧は EFS と FSx（ファイル）、⑨はオンプレミスとのやり取り。設問を読んだら、まずこの3つのどれの話かを決める。</figcaption>
+</figure>
   <div class="tw"><table>
-    <thead><tr><th>クラス</th><th>想定アクセス頻度</th><th>取り出しにかかる時間</th><th>最小保存期間</th><th>AZ</th></tr></thead>
+    <thead><tr><th>設問の言葉</th><th>型</th><th>サービス</th></tr></thead>
+    <tbody>
+      <tr><td>ログ・画像・バックアップを大量に、安く、長く置く</td><td>オブジェクト</td><td><strong>S3</strong></td></tr>
+      <tr><td>1台の EC2 に速いディスクを付ける。データベースを載せる</td><td>ブロック</td><td><strong>EBS</strong>（消えてよい一時領域ならインスタンスストア）</td></tr>
+      <tr><td>複数の EC2 から同じフォルダを読み書きする</td><td>ファイル</td><td><strong>EFS</strong>（Linux）／ <strong>FSx</strong>（Windows など）</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">
+    <span class="label">この講義の見取り図</span>
+    <p>場面1〜6は <strong>S3</strong> の話です。前半（場面1〜3）は<strong>データをどこに置き、いつ移し、どう守るか</strong>、後半（場面4〜6）は<strong>誰に見せ、どう暗号化し、どう速く送るか</strong>。場面7は EBS、場面8は EFS と FSx、場面9はオンプレミスとのやり取りです。
+    設問を読んだら、まず3つの型のどれかを決めてください。それだけで選択肢の半分は消えます。</p>
+  </div>
+</section>
+
+<section id="s2" data-toc="場面1 クラスを選ぶ">
+  
+  <span class="h2num">02</span>
+  <h2>場面1 ―― 「監査用のログを7年残す。読むのは年に数回。どこに置けば安いか」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>ストレージクラス</dt><dd>S3 の「置き場の等級」。同じバケットの中で、オブジェクトごとに選べる。等級によって保存料金と読むときの条件が変わる</dd>
+      <dt>IA<small>Infrequent Access（低頻度アクセス）</small></dt><dd>たまにしか読まないデータ向けのクラスに付く名前。保存は安いが、読むたびに<strong>取り出し料金</strong>がかかる</dd>
+      <dt>取り出し料金</dt><dd>オブジェクトを読むときに、読んだ量に応じてかかる料金。Standard にはない</dd>
+      <dt>Glacier<small>S3 Glacier</small></dt><dd>長期保管（アーカイブ）向けのクラスに付く名前。Instant Retrieval・Flexible Retrieval・Deep Archive の3つがある</dd>
+      <dt>取り出し（復元）<small>restore</small></dt><dd>Glacier Flexible Retrieval と Deep Archive に置いたオブジェクトを、読める状態に戻す操作。頼んでから終わるまで待つ</dd>
+      <dt>最小保存期間</dt><dd>「最低でもこの日数分は保存料金をもらう」という決まり。それより早く消したり移したりしても、残りの日数分を請求される</dd>
+      <dt>Intelligent-Tiering<small>S3 Intelligent-Tiering</small></dt><dd>読まれ方を S3 が見張って、安い階層へ自動で移してくれるクラス</dd>
+    </dl>
+  </div>
+
+  <p>ストレージクラスは、オブジェクトをアップロードするときに指定します。何も指定しなければ Standard です。後から変えるときは、次の場面のライフサイクルルールで自動的に移すのが普通です。クラスは6つ以上ありますが、並べると1本の線になります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 312" width="760" height="312" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="S3の6つのストレージクラスを左から右へ並べた図。右へ行くほど保存料金は安いが、読むときに待つ時間と最小保存期間が増える"><text x="8" y="16" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="700">← よく読む</text><text x="752" y="16" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">ほとんど読まない →</text><rect x="8" y="24" width="119" height="44" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="67.5" y="44.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Standard</text><text x="67.5" y="59.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">標準</text><text x="67.5" y="106" font-size="11" fill="var(--ink)" text-anchor="middle">日常的に読む</text><rect x="22" y="132" width="91" height="24" rx="12" fill="var(--allow-soft)" stroke="none" stroke-width="0"/><text x="67.5" y="149" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">ミリ秒</text><text x="67.5" y="194" font-size="12" fill="var(--allow)" text-anchor="middle" font-weight="700">なし</text><text x="67.5" y="234" font-size="12" fill="var(--ink-2)" text-anchor="middle">3以上</text><rect x="38" y="260" width="59" height="44" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2"/><rect x="133" y="24" width="119" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="192.5" y="44.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Standard-IA</text><text x="192.5" y="59.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">低頻度アクセス</text><text x="192.5" y="106" font-size="11" fill="var(--ink)" text-anchor="middle">月1回程度</text><rect x="147" y="132" width="91" height="24" rx="12" fill="var(--allow-soft)" stroke="none" stroke-width="0"/><text x="192.5" y="149" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">ミリ秒</text><text x="192.5" y="194" font-size="12" fill="var(--warn)" text-anchor="middle" font-weight="700">30日</text><text x="192.5" y="234" font-size="12" fill="var(--ink-2)" text-anchor="middle">3以上</text><rect x="163" y="274" width="59" height="30" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2"/><rect x="258" y="24" width="119" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="317.5" y="44.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">One Zone-IA</text><text x="317.5" y="59.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">低頻度・AZ は1つ</text><text x="317.5" y="106" font-size="11" fill="var(--ink)" text-anchor="middle">月1回程度</text><rect x="272" y="132" width="91" height="24" rx="12" fill="var(--allow-soft)" stroke="none" stroke-width="0"/><text x="317.5" y="149" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">ミリ秒</text><text x="317.5" y="194" font-size="12" fill="var(--warn)" text-anchor="middle" font-weight="700">30日</text><text x="317.5" y="234" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">1</text><rect x="288" y="279" width="59" height="25" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2"/><rect x="383" y="24" width="119" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="442.5" y="44.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier</text><text x="442.5" y="59.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">Instant Retrieval</text><text x="442.5" y="106" font-size="11" fill="var(--ink)" text-anchor="middle">四半期に1回</text><rect x="397" y="132" width="91" height="24" rx="12" fill="var(--allow-soft)" stroke="none" stroke-width="0"/><text x="442.5" y="149" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">ミリ秒</text><text x="442.5" y="194" font-size="12" fill="var(--warn)" text-anchor="middle" font-weight="700">90日</text><text x="442.5" y="234" font-size="12" fill="var(--ink-2)" text-anchor="middle">3以上</text><rect x="413" y="286" width="59" height="18" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2"/><rect x="508" y="24" width="119" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="567.5" y="44.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier</text><text x="567.5" y="59.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">Flexible Retrieval</text><text x="567.5" y="106" font-size="11" fill="var(--ink)" text-anchor="middle">年に1〜2回</text><rect x="522" y="132" width="91" height="24" rx="12" fill="var(--deny-soft)" stroke="none" stroke-width="0"/><text x="567.5" y="149" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">分〜12時間</text><text x="567.5" y="194" font-size="12" fill="var(--warn)" text-anchor="middle" font-weight="700">90日</text><text x="567.5" y="234" font-size="12" fill="var(--ink-2)" text-anchor="middle">3以上</text><rect x="538" y="291" width="59" height="13" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2"/><rect x="633" y="24" width="119" height="44" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="692.5" y="44.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier</text><text x="692.5" y="59.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">Deep Archive</text><text x="692.5" y="106" font-size="11" fill="var(--ink)" text-anchor="middle">年1回未満</text><rect x="647" y="132" width="91" height="24" rx="12" fill="var(--deny-soft)" stroke="none" stroke-width="0"/><text x="692.5" y="149" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">12〜48時間</text><text x="692.5" y="194" font-size="12" fill="var(--warn)" text-anchor="middle" font-weight="700">180日</text><text x="692.5" y="234" font-size="12" fill="var(--ink-2)" text-anchor="middle">3以上</text><rect x="663" y="298" width="59" height="6" rx="2" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.2"/><text x="8" y="88" font-size="10.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">読む頻度の目安</text><text x="8" y="126" font-size="10.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">読むときに待つ時間</text><text x="8" y="176" font-size="10.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">最小保存期間（これより早く消しても、この日数分は払う）</text><text x="8" y="216" font-size="10.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">データを置く AZ の数</text><text x="8" y="254" font-size="10.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">1GB あたりの保存料金（高さはイメージ）</text><line x1="8" y1="304" x2="752" y2="304" stroke="var(--ink-3)" stroke-width="1.2"/></svg>
+  </div>
+  <figcaption><strong>右へ行くほど置いておく料金は安い。代わりに、読むときの手間が増える。</strong>設問から拾うのは3つだけ。どれくらいの頻度で読むか、読むときに何秒待てるか、AZ が1つ壊れたときに失ってよいか。なお、アクセスの頻度が読めないときのための Intelligent-Tiering は、この並びとは別の仕組み（下の図）。</figcaption>
+</figure>
+  <div class="tw"><table>
+    <thead><tr><th>クラス</th><th>読む頻度の目安</th><th>読むときに待つ時間</th><th>最小保存期間</th><th>AZ</th></tr></thead>
     <tbody>
       <tr><td><strong>S3 Standard</strong></td><td>頻繁（日常的に読む）</td><td>ミリ秒</td><td class="yes">なし</td><td>3以上</td></tr>
       <tr><td><strong>S3 Intelligent-Tiering</strong></td><td><strong>予測できない／変動する</strong></td><td>階層による（既定の階層はミリ秒）</td><td class="yes">なし</td><td>3以上</td></tr>
       <tr><td><strong>S3 Standard-IA</strong></td><td>月1回程度</td><td>ミリ秒</td><td>30日</td><td>3以上</td></tr>
-      <tr><td><strong>S3 One Zone-IA</strong></td><td>月1回程度かつ<strong>失っても再作成できる</strong></td><td>ミリ秒</td><td>30日</td><td class="no">1</td></tr>
+      <tr><td><strong>S3 One Zone-IA</strong></td><td>月1回程度かつ<strong>失っても作り直せる</strong></td><td>ミリ秒</td><td>30日</td><td class="no">1</td></tr>
       <tr><td><strong>S3 Glacier Instant Retrieval</strong></td><td>四半期に1回程度</td><td class="yes">ミリ秒</td><td>90日</td><td>3以上</td></tr>
-      <tr><td><strong>S3 Glacier Flexible Retrieval</strong></td><td>年に1〜2回</td><td>Expedited 1〜5分 / Standard 3〜5時間 / Bulk 5〜12時間</td><td>90日</td><td>3以上</td></tr>
-      <tr><td><strong>S3 Glacier Deep Archive</strong></td><td>年1回未満（ほぼ読まない）</td><td>Standard 12時間以内 / Bulk 48時間以内</td><td>180日</td><td>3以上</td></tr>
+      <tr><td><strong>S3 Glacier Flexible Retrieval</strong></td><td>年に1〜2回</td><td class="no">Expedited 1〜5分 / Standard 3〜5時間 / Bulk 5〜12時間</td><td>90日</td><td>3以上</td></tr>
+      <tr><td><strong>S3 Glacier Deep Archive</strong></td><td>年1回未満（ほぼ読まない）</td><td class="no">Standard 12時間以内 / Bulk 48時間以内</td><td>180日</td><td>3以上</td></tr>
     </tbody>
   </table></div>
-
-  <p>この表で最も設問に直結するのは<strong>「取り出しにかかる時間」の列</strong>です。設問は必ず、要件のどこかに待てる時間を書いてきます。「監査時には即座に参照できる必要がある」と書いてあれば Glacier Flexible Retrieval は消えます。「取り出しに数時間かかっても問題ない」と書いてあれば、Glacier Instant Retrieval を選ぶ理由はなくなります（より高いので）。</p>
-
-  <h3>Intelligent-Tiering が正解になる条件</h3>
-  <p>Intelligent-Tiering は、オブジェクトごとのアクセス状況を監視して自動で階層を移します。既定では次のように進みます。</p>
+  <p>Expedited・Standard・Bulk は、取り出し（復元）を頼むときに選ぶ速さの種類です。速いほど高くなります。</p>
+  <p>設問にいちばん効くのは<strong>「読むときに待つ時間」</strong>です。設問は必ず、待てる時間をどこかに書いてきます。「監査時には即座に参照できる必要がある」とあれば Glacier Flexible Retrieval は消えます。「取り出しに数時間かかっても問題ない」とあれば、Glacier Instant Retrieval を選ぶ理由はなくなります（より高いので）。</p>
   <ul>
-    <li><strong>Frequent Access</strong>（最初はここ）→ 30日連続で未アクセス → <strong>Infrequent Access</strong> → さらに90日連続で未アクセス → <strong>Archive Instant Access</strong>。ここまではすべてミリ秒で読めます。</li>
-    <li>任意で <strong>Archive Access</strong>（90日以上）と <strong>Deep Archive Access</strong>（180日以上）を有効化できます。こちらに落ちると取り出しに分〜時間かかるので、業務要件を確認してから有効にします。</li>
-    <li><strong>取り出し料金がかかりません。</strong>代わりにオブジェクト単位の監視・自動化料金がかかります。</li>
-    <li>128KB未満のオブジェクトは監視対象外で、Frequent Access に留まります。小さいファイルが大量にある場合、思ったほどコストが下がりません。</li>
+    <li><strong>この場面の答え：</strong>7年残して、読むのは年に数回。読むときに半日待てるなら <strong>Glacier Deep Archive</strong>、数時間なら Glacier Flexible Retrieval、すぐ読めないと困るなら Glacier Instant Retrieval</li>
   </ul>
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>設問に「<strong>アクセスパターンが予測できない</strong>」「時間とともに変化する」「運用の手間をかけずに」という語が出たら Intelligent-Tiering です。逆に「<strong>30日後にはほとんど読まれないことが分かっている</strong>」と明言されていたら、それはライフサイクルルールで Standard-IA に落とす設問であって、Intelligent-Tiering ではありません。パターンが既知かどうかが分かれ目です。</p>
+
+  <h3>「安いクラス」が高くつくとき</h3>
+  <p>右のクラスほど安く見えますが、最小保存期間と課金の下限があるので、短命なデータや小さなファイルではかえって高くなります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 204" width="760" height="204" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左は7日で消すファイルをStandard-IAに置くと30日分請求される図。右は10KBのファイルが128KB分として課金される図"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">7日で消すファイルを置くと</text><text x="112" y="59" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">Standard</text><rect x="120.0" y="42" width="73.5" height="26" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="203.5" y="59" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">7日分を払う</text><text x="112" y="107" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">Standard-IA</text><rect x="120.0" y="90" width="73.5" height="26" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><rect x="193.5" y="90" width="241.5" height="26" rx="3" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4" stroke-dasharray="5 4"/><text x="314.25" y="107" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">消したあとの 23日分も請求される</text><line x1="120.0" y1="138" x2="435.0" y2="138" stroke="var(--ink-3)" stroke-width="1.2"/><line x1="120.0" y1="134" x2="120.0" y2="142" stroke="var(--ink-3)" stroke-width="1.2"/><text x="120.0" y="158" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">0日</text><line x1="193.5" y1="134" x2="193.5" y2="142" stroke="var(--ink-3)" stroke-width="1.2"/><text x="193.5" y="158" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">7日</text><line x1="435.0" y1="134" x2="435.0" y2="142" stroke="var(--ink-3)" stroke-width="1.2"/><text x="435.0" y="158" font-size="10.5" fill="var(--ink-3)" text-anchor="end">30日（最小保存期間）</text><text x="10" y="190" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">安いクラスに置いたつもりが、Standard より高くつく</text><line x1="462" y1="14" x2="462" y2="200" stroke="var(--line)" stroke-width="1.2"/><text x="478" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">小さいファイルを置くと</text><rect x="500" y="84" width="26" height="26" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/><text x="513" y="128" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">10KB</text><line x1="538" y1="97" x2="596.0" y2="97.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="606.0,97.0 596.0,102.5 596.0,91.5" fill="var(--ink-3)"/><rect x="618" y="42" width="110" height="110" rx="6" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="673" y="92" font-size="13" fill="var(--deny)" text-anchor="middle" font-weight="700">128KB 分</text><text x="673" y="112" font-size="11" fill="var(--deny)" text-anchor="middle">として課金</text><text x="478" y="176" font-size="10.5" fill="var(--ink-2)" text-anchor="start">IA 系と Glacier Instant Retrieval には</text><text x="478" y="193" font-size="10.5" fill="var(--ink-2)" text-anchor="start">1個あたり 128KB の課金の下限がある</text></svg>
+  </div>
+  <figcaption><strong>「安いクラス」が高くつく2つの落とし穴。</strong>左：最小保存期間より早く消したり移したりすると、残りの日数分も請求される。右：IA 系と Glacier Instant Retrieval は、小さなファイルも 128KB として数える。短命なデータや細かいファイルの山は Standard のままのほうが安い。</figcaption>
+</figure>
+  <div class="note warn">
+    <span class="label">いちばん多い引っかけ</span>
+    <p>7日間だけ保持する一時ファイルを Standard-IA に置く選択肢は、コスト最適化に見えて逆です。30日分の保存料金を請求されるので、Standard に置いたほうが安い。<strong>短命なデータに IA 系・Glacier 系を選ばせる選択肢は不正解</strong>です。10KB のファイルを大量に IA へ落とす選択肢も、128KB の下限があるので同じ罠です。</p>
   </div>
 
-  <h3>One Zone-IA を選んでよい場面は限られる</h3>
-  <p>One Zone-IA は単一AZにしかデータを置きません。安いのは事実ですが、そのAZが失われればオブジェクトも失われます。設問で正解になるのは、<em>元データが別の場所にあり、再作成できるもの</em>に限られます。具体的には、S3にある原本から生成したサムネイル、別リージョンにレプリカがあるコピー、オンプレにマスターがあるバックアップの二次コピーなどです。監査ログ、法定保存文書、唯一の原本を One Zone-IA に置く選択肢は、コストが安くても不正解です。</p>
-
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「最小保存期間」を無視した選択肢です。たとえば7日間だけ保持する一時ファイルを Standard-IA に置くと、30日分の保存料金を請求されます。Standard に置いたほうが安い。<strong>短命なデータに IA 系・Glacier 系を選ばせる選択肢は、コスト最適化に見えて逆</strong>です。加えて IA 系と Glacier Instant Retrieval には<strong>128KBの課金下限</strong>があり、10KBのファイルも128KB分として課金されます。小さいファイルを大量に IA へ落とす選択肢も同じ罠です。</p>
-  </div></section>
-
-<section id="s3" data-toc="ライフサイクル">
-
-  <span class="h2num">03</span>
-  <h2>ライフサイクルと遷移の制約</h2>
-  <p class="lead">クラスを選べたら、次は「いつ移すか」です。ライフサイクルルールは、日数を条件にして自動で遷移・削除を行います。ここには方向と日数の制約があり、設問はその制約を突いてきます。</p>
-
+  <h3>読まれ方が分からないとき ―― Intelligent-Tiering</h3>
+  <p>ここまでのクラスは「どれくらい読むか」が分かっている前提でした。分からないときは、S3 に見張らせます。</p>
   <figure>
-    <div class="fig">
-      <svg viewBox="0 0 860 300" width="860" height="300" role="img" aria-label="S3ライフサイクルの遷移が左から右への一方通行であり、逆方向にはrestoreとコピーが必要であることを示す図">
-        <text x="15" y="28" font-size="12.5" fill="var(--ink-3)" font-weight="600">遷移は一方通行 ―― 右へは進めるが、左へは戻れない</text>
+  <div class="fig">
+    <svg viewBox="0 0 760 250" width="760" height="250" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="Intelligent-Tieringの中の階層。30日読まれないとInfrequent Access、さらに90日でArchive Instant Accessへ自動で移り、読まれるとFrequent Accessに戻る"><rect x="10" y="46" width="600" height="68" rx="10" fill="var(--allow-soft)" stroke="none" stroke-width="0"/><rect x="20" y="56" width="160" height="48" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="100.0" y="78.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Frequent Access</text><text x="100.0" y="93.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">最初はここ</text><rect x="230" y="56" width="160" height="48" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="310.0" y="78.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Infrequent Access</text><text x="310.0" y="93.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">低頻度</text><rect x="440" y="56" width="160" height="48" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="520.0" y="78.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Archive Instant Access</text><text x="520.0" y="93.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">アーカイブ（即時）</text><line x1="180" y1="80" x2="220.0" y2="80.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="230.0,80.0 220.0,85.5 220.0,74.5" fill="var(--ink-3)"/><line x1="390" y1="80" x2="430.0" y2="80.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="440.0,80.0 430.0,85.5 430.0,74.5" fill="var(--ink-3)"/><text x="205" y="124" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">30日</text><text x="205" y="139" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">読まれない</text><text x="415" y="124" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">さらに90日</text><text x="415" y="139" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">読まれない</text><polyline points="520,56 520,28 100,28 100.0,46.0" fill="none" stroke="var(--allow)" stroke-width="2" stroke-linejoin="round"/><polygon points="100.0,56.0 94.5,46.0 105.5,46.0" fill="var(--allow)"/><text x="310" y="20" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">読まれたら Frequent Access に戻る</text><text x="686" y="70" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">緑の3つは</text><text x="686" y="88" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">ミリ秒で読める</text><text x="686" y="106" font-size="10.5" fill="var(--allow)" text-anchor="middle">取り出し料金なし</text><line x1="520" y1="104" x2="520.0" y2="154.0" stroke="var(--ink-3)" stroke-width="1.8" stroke-dasharray="5 4"/><polygon points="520.0,164.0 514.5,154.0 525.5,154.0" fill="var(--ink-3)"/><rect x="230" y="164" width="522" height="54" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.4" stroke-dasharray="6 4"/><text x="246" y="186" font-size="10.5" fill="var(--ink)" text-anchor="start" font-weight="700">任意で有効にする階層：Archive Access（90日以上）／ Deep Archive Access（180日以上）</text><text x="246" y="205" font-size="10.5" fill="var(--deny)" text-anchor="start">ここへ落ちると、取り出しに分〜時間かかる。業務で待てるかを確かめてから有効にする</text><text x="20" y="186" font-size="10.5" fill="var(--ink-2)" text-anchor="start">S3 がオブジェクトごとに</text><text x="20" y="203" font-size="10.5" fill="var(--ink-2)" text-anchor="start">読まれ方を見張って移す</text><text x="20" y="240" font-size="10.5" fill="var(--ink-3)" text-anchor="start">128KB 未満のオブジェクトは見張らない（Frequent Access のまま）。見張る分の監視料金がオブジェクトごとにかかる</text></svg>
+  </div>
+  <figcaption><strong>Intelligent-Tiering は、クラスの中にさらに階層を持つ。</strong>読まれなければ自動で安い階層へ移り、読まれれば戻る。自分でルールを書かなくてよい。「読まれ方が予測できない」ときの答えがこれで、「30日後には読まれないと分かっている」ならライフサイクルルール（場面2）の出番になる。</figcaption>
+</figure>
+  <ul>
+    <li><strong>取り出し料金がかかりません。</strong>代わりに、オブジェクト1個ごとに見張りと自動化の料金がかかります</li>
+    <li>128KB 未満のオブジェクトは見張りの対象外で、Frequent Access に留まります。小さいファイルが大量にあると、思ったほど安くなりません</li>
+    <li>任意の階層（Archive Access・Deep Archive Access）は、バケットの「プロパティ」タブにある Intelligent-Tiering のアーカイブ設定で有効にします</li>
+  </ul>
 
-        <rect x="15" y="60" width="142" height="72" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.8"/>
-        <text x="86" y="90" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 Standard</text>
-        <text x="86" y="112" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">最小保存期間なし</text>
+  <h3>One Zone-IA を選んでよい場面は限られる</h3>
+  <p>One Zone-IA は1つの AZ にしかデータを置きません。安いのは事実ですが、その AZ が失われればオブジェクトも失われます。正解になるのは、<em>元のデータが別の場所にあり、作り直せるもの</em>に限られます。S3 にある原本から作ったサムネイル、別のリージョンに複製があるコピー、オンプレミスに原本があるバックアップの二次コピーなどです。監査ログ、法定保存の文書、唯一の原本を One Zone-IA に置く選択肢は、安くても不正解です。</p>
 
-        <rect x="187" y="60" width="142" height="72" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="258" y="90" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Standard-IA</text>
-        <text x="258" y="112" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">最小 30 日</text>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「アクセスパターンが<strong>予測できない</strong>」「時間とともに変化する」「運用の手間をかけずに」→ <strong>Intelligent-Tiering</strong>。「<strong>30日後にはほとんど読まれないと分かっている</strong>」→ ライフサイクルルールで Standard-IA へ（場面2）。読まれ方が分かっているかどうかが分かれ目。「アーカイブだが即座に」→ Glacier Instant Retrieval。「取り出しは12時間でよい」→ Glacier Deep Archive。</p></div>
+</section>
 
-        <rect x="359" y="60" width="142" height="72" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="430" y="90" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier IR</text>
-        <text x="430" y="112" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">最小 90 日</text>
+<section id="s3" data-toc="場面2 いつ移す">
+  
+  <span class="h2num">03</span>
+  <h2>場面2 ―― 「30日たったら安いクラスへ、7年たったら消したい」「請求書に、説明のつかない S3 の容量がある」</h2>
 
-        <rect x="531" y="60" width="142" height="72" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="602" y="90" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier Flexible</text>
-        <text x="602" y="112" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">最小 90 日</text>
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>ライフサイクルルール</dt><dd>「置いてから何日たったら、別のクラスへ移す／消す」を S3 に予約しておく設定。バケットごとに作る</dd>
+      <dt>遷移<small>Transition</small></dt><dd>オブジェクトを別のストレージクラスへ移すこと</dd>
+      <dt>失効<small>Expiration</small></dt><dd>期限が来たオブジェクトを S3 が削除すること</dd>
+      <dt>プレフィックス</dt><dd>キーの先頭の部分（<code>logs/</code> など）。「この名前で始まるものだけ」と対象を絞るのに使う</dd>
+      <dt>現行バージョン・古いバージョン</dt><dd>上書きの履歴を残す設定（バージョニング → 場面3）にしているとき、いちばん新しいものが現行バージョン、その前のものが古いバージョン（非現行バージョン）</dd>
+      <dt>マルチパートアップロード</dt><dd>大きなファイルをいくつかの断片（パート）に分けて送る方法 → 場面6</dd>
+      <dt>メタデータ</dt><dd>オブジェクトの中身ではなく、名前や日付などの管理用の情報</dd>
+    </dl>
+  </div>
 
-        <rect x="703" y="60" width="142" height="72" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
-        <text x="774" y="90" font-size="13.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Deep Archive</text>
-        <text x="774" y="112" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">最小 180 日</text>
-
-        <line x1="157" y1="96" x2="183" y2="96" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M187 96 l-9 -5 v10 z" fill="var(--ink-3)"/>
-        <line x1="329" y1="96" x2="355" y2="96" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M359 96 l-9 -5 v10 z" fill="var(--ink-3)"/>
-        <line x1="501" y1="96" x2="527" y2="96" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M531 96 l-9 -5 v10 z" fill="var(--ink-3)"/>
-        <line x1="673" y1="96" x2="699" y2="96" stroke="var(--ink-3)" stroke-width="1.8"/>
-        <path d="M703 96 l-9 -5 v10 z" fill="var(--ink-3)"/>
-
-        <rect x="15" y="160" width="830" height="40" rx="6" fill="var(--inset)"/>
-        <text x="86" y="185" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">ミリ秒</text>
-        <text x="258" y="185" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">ミリ秒</text>
-        <text x="430" y="185" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">ミリ秒</text>
-        <text x="602" y="185" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">分〜12時間</text>
-        <text x="774" y="185" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="600">12〜48時間</text>
-
-        <line x1="770" y1="240" x2="95" y2="240" stroke="var(--deny)" stroke-width="1.8" stroke-dasharray="6 4"/>
-        <path d="M86 240 l9 -5 v10 z" fill="var(--deny)"/>
-        <rect x="316" y="222" width="228" height="36" rx="6" fill="var(--deny-soft)"/>
-        <text x="430" y="245" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">ライフサイクルでは戻せない</text>
-
-        <text x="430" y="285" font-size="11.5" fill="var(--ink-3)" text-anchor="middle">戻すには restore してから別クラスへコピーし直す</text>
-      </svg>
-    </div>
-    <figcaption>遷移はウォーターフォール（一方通行）です。Glacier 系から Standard に「戻す」ライフサイクルルールは書けません。設問で「アーカイブしたデータを通常クラスに戻す運用」が出たら、<strong>restore してコピーし直す</strong>という手順が正解側にあります。</figcaption>
-  </figure>
-
-  <h3>ルールに書ける5つのアクション</h3>
-  <ol class="body">
-    <li><strong>Transition</strong> ―― 現行バージョンを別クラスへ移す。</li>
-    <li><strong>Expiration</strong> ―― 現行バージョンを削除する。バージョニング有効なら削除マーカーが付くだけです。</li>
-    <li><strong>NoncurrentVersionTransition / NoncurrentVersionExpiration</strong> ―― 非現行（古い）バージョンを移す・消す。バージョニングを有効にしたまま容量を抑える定番です。</li>
-    <li><strong>AbortIncompleteMultipartUpload</strong> ―― 途中で失敗したマルチパートアップロードの断片を消す。これを設定していないと、見えないパートに課金され続けます。<strong>「請求額に説明のつかないS3の容量がある」型の設問の答え</strong>です。</li>
-    <li><strong>ExpiredObjectDeleteMarker</strong> ―― 中身のない削除マーカーだけが残った状態を掃除します。</li>
-  </ol>
+  <p>ライフサイクルルールは、バケットの「管理」タブで作ります。まず知っておくのは、移せる方向が決まっていることです。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 224" width="760" height="224" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="ライフサイクルの遷移はStandardからDeep Archiveへの一方通行。逆方向には戻せず、復元してコピーし直す必要がある"><text x="10" y="18" font-size="12" fill="var(--ink-2)" text-anchor="start" font-weight="700">移せるのは左から右へだけ</text><rect x="10" y="56" width="136" height="48" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="78.0" y="78.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Standard</text><text x="78.0" y="93.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">標準</text><rect x="161" y="56" width="136" height="48" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="229.0" y="78.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Standard-IA</text><text x="229.0" y="93.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">低頻度アクセス</text><line x1="146" y1="80" x2="151.0" y2="80.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="161.0,80.0 151.0,85.5 151.0,74.5" fill="var(--allow)"/><rect x="312" y="56" width="136" height="48" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="380.0" y="78.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier</text><text x="380.0" y="93.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">Instant Retrieval</text><line x1="297" y1="80" x2="302.0" y2="80.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="312.0,80.0 302.0,85.5 302.0,74.5" fill="var(--allow)"/><rect x="463" y="56" width="136" height="48" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="531.0" y="78.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier</text><text x="531.0" y="93.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">Flexible Retrieval</text><line x1="448" y1="80" x2="453.0" y2="80.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="463.0,80.0 453.0,85.5 453.0,74.5" fill="var(--allow)"/><rect x="614" y="56" width="136" height="48" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="682.0" y="78.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier</text><text x="682.0" y="93.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">Deep Archive</text><line x1="599" y1="80" x2="604.0" y2="80.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="614.0,80.0 604.0,85.5 604.0,74.5" fill="var(--allow)"/><text x="153.5" y="46" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">30日以上たってから</text><polyline points="682,104 682,160 78,160 78.0,118.0" fill="none" stroke="var(--deny)" stroke-width="2" stroke-linejoin="round" stroke-dasharray="6 4"/><polygon points="78.0,108.0 83.5,118.0 72.5,118.0" fill="var(--deny)"/><circle cx="380" cy="160" r="11" fill="var(--deny)"/><line x1="375.05" y1="155.05" x2="384.95" y2="164.95" stroke="var(--bg)" stroke-width="2.4"/><line x1="375.05" y1="164.95" x2="384.95" y2="155.05" stroke="var(--bg)" stroke-width="2.4"/><text x="380" y="190" font-size="12" fill="var(--deny)" text-anchor="middle" font-weight="700">ライフサイクルルールでは左へ戻せない</text><text x="380" y="212" font-size="11" fill="var(--ink-2)" text-anchor="middle">戻すには：いったん復元（restore）して、別のクラスへコピーし直す</text></svg>
+  </div>
+  <figcaption><strong>遷移は滝のように一方通行。</strong>右へは日数を条件に自動で移せるが、Glacier 系から Standard へ「戻す」ルールは書けない。Standard から Standard-IA・One Zone-IA へは、置いてから 30日以上たたないと移せない（29日のルールは保存できない）。途中のクラスを飛ばして右へ進むのはよい。</figcaption>
+</figure>
+  <p>1つのルールには、いくつかの動きをまとめて書けます。場面の依頼をそのまま図にすると、こうなります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 252" width="760" height="252" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="ライフサイクルルールの時間軸。現行バージョンは30日でStandard-IA、120日でDeep Archive、7年で削除。古いバージョンは30日で削除、送りかけの断片は7日で掃除"><text x="140" y="60" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">現行バージョン</text><rect x="150" y="42" width="140" height="30" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="220.0" y="62" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">Standard</text><rect x="290" y="42" width="180" height="30" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="380.0" y="62" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">Standard-IA</text><rect x="470" y="42" width="220" height="30" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="580.0" y="62" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">Glacier Deep Archive</text><circle cx="706" cy="57" r="10" fill="var(--deny)"/><line x1="701.5" y1="52.5" x2="710.5" y2="61.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="701.5" y1="61.5" x2="710.5" y2="52.5" stroke="var(--bg)" stroke-width="2.4"/><text x="722" y="61" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">削除</text><line x1="150" y1="72" x2="150" y2="80" stroke="var(--ink-3)" stroke-width="1.2"/><text x="150" y="95" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">0日</text><line x1="290" y1="72" x2="290" y2="80" stroke="var(--ink-3)" stroke-width="1.2"/><text x="290" y="95" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">30日</text><line x1="470" y1="72" x2="470" y2="80" stroke="var(--ink-3)" stroke-width="1.2"/><text x="470" y="95" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">120日</text><line x1="690" y1="72" x2="690" y2="80" stroke="var(--ink-3)" stroke-width="1.2"/><text x="690" y="95" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">2,555日（7年）</text><text x="290" y="30" font-size="10" fill="var(--ink-3)" text-anchor="middle">Transition</text><text x="470" y="30" font-size="10" fill="var(--ink-3)" text-anchor="middle">Transition</text><text x="690" y="30" font-size="10" fill="var(--ink-3)" text-anchor="middle">Expiration</text><text x="140" y="146" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">古いバージョン</text><rect x="150" y="128" width="140" height="28" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="220" y="147" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">古くなってから 30日</text><circle cx="306" cy="142" r="10" fill="var(--deny)"/><line x1="301.5" y1="137.5" x2="310.5" y2="146.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="301.5" y1="146.5" x2="310.5" y2="137.5" stroke="var(--bg)" stroke-width="2.4"/><text x="322" y="146" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">削除</text><text x="750" y="146" font-size="10" fill="var(--ink-3)" text-anchor="end">NoncurrentVersionExpiration</text><text x="140" y="206" font-size="11.5" fill="var(--ink-2)" text-anchor="end" font-weight="700">送りかけの断片</text><rect x="150" y="188" width="70" height="28" rx="3" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4" stroke-dasharray="5 4"/><text x="185" y="207" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">7日</text><circle cx="236" cy="202" r="10" fill="var(--deny)"/><line x1="231.5" y1="197.5" x2="240.5" y2="206.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="231.5" y1="206.5" x2="240.5" y2="197.5" stroke="var(--bg)" stroke-width="2.4"/><text x="252" y="206" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">掃除</text><text x="750" y="206" font-size="10" fill="var(--ink-3)" text-anchor="end">AbortIncompleteMultipartUpload</text><text x="150" y="240" font-size="11" fill="var(--ink-2)" text-anchor="start">1つのルールに、3つの動きをまとめて書ける。対象はプレフィックス（logs/ など）やタグで絞る</text></svg>
+  </div>
+  <figcaption><strong>ライフサイクルルールは「何日たったら、どうする」の予約表。</strong>上段は今のデータを段階的に安いクラスへ落として最後に消す。中段は上書きされて古くなったバージョン（場面3）を早めに消す。下段は送りかけのまま放置された断片（場面6）を掃除する。下の JSON がこの図と同じ内容。</figcaption>
+</figure>
 
   <div class="code">
-    <div class="cap">ライフサイクルルールの例（現行版を段階的に落とし、古い版は短く切る）</div>
+    <div class="cap">上の図と同じ内容のライフサイクルルール</div>
 <pre>{
   <span class="k">"ID"</span>: <span class="s">"logs-tiering"</span>,
   <span class="k">"Filter"</span>: { <span class="k">"Prefix"</span>: <span class="s">"logs/"</span> },
@@ -337,303 +365,591 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     { <span class="k">"Days"</span>: 30,  <span class="k">"StorageClass"</span>: <span class="s">"STANDARD_IA"</span> },   <span class="c">// 30日未満は指定できない</span>
     { <span class="k">"Days"</span>: 120, <span class="k">"StorageClass"</span>: <span class="s">"DEEP_ARCHIVE"</span> }
   ],
+  <span class="k">"Expiration"</span>: { <span class="k">"Days"</span>: 2555 },
   <span class="k">"NoncurrentVersionExpiration"</span>: { <span class="k">"NoncurrentDays"</span>: 30 },
   <span class="k">"AbortIncompleteMultipartUpload"</span>: { <span class="k">"DaysAfterInitiation"</span>: 7 }
 }</pre>
   </div>
 
+  <h3>ルールに書ける5つの動き</h3>
+  <ol class="body">
+    <li><strong>Transition</strong> ―― 現行バージョンを別のクラスへ移す</li>
+    <li><strong>Expiration</strong> ―― 現行バージョンを削除する。バージョニングが有効なら、実際には削除マーカー（場面3）が付くだけ</li>
+    <li><strong>NoncurrentVersionTransition / NoncurrentVersionExpiration</strong> ―― 古いバージョンを移す・消す。バージョニングを有効にしたまま容量を抑える定番</li>
+    <li><strong>AbortIncompleteMultipartUpload</strong> ―― 途中で失敗したマルチパートアップロードの断片を消す。設定していないと、一覧に見えない断片に課金され続ける。<strong>「請求額に説明のつかない S3 の容量がある」の答え</strong></li>
+    <li><strong>ExpiredObjectDeleteMarker</strong> ―― 中身がなくなり、削除マーカーだけが残った状態を掃除する</li>
+  </ol>
+
   <h3>覚えておく制約</h3>
   <ul>
-    <li><strong>Standard から Standard-IA / One Zone-IA へは、最低30日経ってから。</strong>29日で移すルールは作れません。</li>
-    <li><strong>128KB未満のオブジェクトは、既定ではどのクラスにも遷移しません。</strong>移したい場合は <code>ObjectSizeGreaterThan</code> などのサイズフィルタを明示します。ただし遷移のリクエスト料金のほうが節約額を上回ることが多く、AWS自身が推奨していません。</li>
-    <li><strong>Glacier 系に置いたオブジェクトには、1件あたり約40KBのメタデータ課金が付きます。</strong>内訳は S3 Standard 料金で8KB、Glacier 料金で32KBです。小さいファイルを何億件も Deep Archive に送ると、本体より管理データのほうが高くなります。この場合は先にまとめて（アーカイブファイル化して）から送るのが正解です。</li>
-    <li><strong>最小保存期間より前に削除・遷移すると、残りの期間分が課金されます。</strong>Deep Archive に入れた翌日に消しても180日分払います。</li>
-  </ul></section>
-
-<section id="s4" data-toc="バージョンと保持">
-
-  <span class="h2num">04</span>
-  <h2>バージョニング・保持・レプリケーション</h2>
-  <p class="lead">「消えては困る」という要件には段階があります。<em>うっかり消したものを戻したい</em>のか、<em>規制で誰にも消させたくない</em>のか、<em>リージョンごと失われても残したい</em>のか。設問はこの3段階のどれかを書いてきます。</p>
-
-  <h3>バージョニング ―― すべての前提</h3>
-  <p>バージョニングを有効にすると、上書きも削除も既存データを壊しません。削除は<strong>削除マーカー</strong>という新しいバージョンを積むだけで、マーカーを消せば元に戻ります。</p>
-  <ul>
-    <li>一度有効にしたバージョニングは<strong>無効化できません</strong>。できるのは「停止（Suspended）」までで、それまでに作られたバージョンは残り続けます。</li>
-    <li>古いバージョンも課金対象です。ライフサイクルの <code>NoncurrentVersionExpiration</code> とセットで設計するのが実務の定石です。</li>
-    <li><strong>この後に出てくる Object Lock もレプリケーションも、バージョニングが有効であることが前提</strong>です。ここが試験で最も繰り返し問われます。</li>
+    <li><strong>Standard から Standard-IA / One Zone-IA へは、最低30日たってから。</strong>29日で移すルールは作れません</li>
+    <li><strong>128KB 未満のオブジェクトは、既定ではどのクラスにも遷移しません。</strong>移したいときは <code>ObjectSizeGreaterThan</code> などのサイズの条件を明示します。ただし遷移のリクエスト料金が節約額を上回ることが多く、AWS も勧めていません</li>
+    <li><strong>Glacier Flexible Retrieval と Deep Archive に置いたオブジェクトには、1件あたり約40KB のメタデータの課金が付きます。</strong>内訳は S3 Standard の料金で 8KB、Glacier の料金で 32KB。小さいファイルを何億件も Deep Archive に送ると、本体より管理用のデータのほうが高くなります。先に1つのファイルにまとめてから送るのが正解です</li>
+    <li><strong>最小保存期間より前に削除・遷移すると、残りの期間分が課金されます。</strong>Deep Archive に入れた翌日に消しても、180日分を払います（場面1の図）</li>
   </ul>
 
-  <h3>MFA Delete</h3>
-  <p>バージョンの完全削除と、バージョニング状態の変更に、MFAのコードを要求する設定です。特徴が2つあります。<strong>バージョニングが有効でなければ設定できないこと</strong>、そして<strong>バケット所有者のルートユーザーが CLI / API から設定する必要があること</strong>（マネジメントコンソールからは設定できません）。「IAM管理者が有効化する」という選択肢は不正解です。</p>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「30日後にはほとんど読まれない」→ <strong>ライフサイクルルールで Standard-IA へ</strong>。「説明のつかない容量に課金されている」→ <strong>AbortIncompleteMultipartUpload</strong>。「アーカイブしたデータを通常のクラスに戻す」→ ルールでは戻せない。<strong>復元（restore）してからコピーし直す</strong>。「バージョニングで容量が増え続ける」→ <strong>NoncurrentVersionExpiration</strong>。</p></div>
+</section>
 
-  <h3>Object Lock ―― WORM</h3>
-  <p>Object Lock は書き込み後に変更できない状態（Write Once Read Many）を作ります。モードが2つあり、<strong>誰が解除できるか</strong>だけが違います。</p>
+<section id="s4" data-toc="場面3 消させない">
+  
+  <span class="h2num">04</span>
+  <h2>場面3 ―― 「うっかり消したファイルを戻したい」「規制で、誰にも消せないようにしたい」「リージョンごと失っても残したい」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>バージョニング</dt><dd>上書きや削除をしても、前の中身を「版」として残す設定。バケットごとに有効にする</dd>
+      <dt>削除マーカー</dt><dd>バージョニングが有効なバケットで削除したときに置かれる「消したことにする」印。中身は消えていない</dd>
+      <dt>MFA Delete</dt><dd>版を完全に消す操作などに、MFA（多要素認証。IAM 講義で既出）のコードを求める設定</dd>
+      <dt>ルートユーザー</dt><dd>AWS アカウントを作ったときの、何でもできる最初のユーザー</dd>
+      <dt>Object Lock<small>S3 Object Lock</small></dt><dd>決めた期間、オブジェクトを消せない・書き換えられない状態にする設定</dd>
+      <dt>WORM<small>Write Once Read Many</small></dt><dd>「一度書いたら、読むことしかできない」という保存の仕方。規制でよく求められる</dd>
+      <dt>保持期間</dt><dd>Object Lock で「この日までは消せない」と決める期間</dd>
+      <dt>リーガルホールド</dt><dd>期限を決めずに「消せない」印を付けること。訴訟や監査の間に使う</dd>
+      <dt>レプリケーション</dt><dd>バケットのオブジェクトを、別のバケットへ自動で写すこと</dd>
+      <dt>CRR・SRR<small>Cross-Region Replication / Same-Region Replication</small></dt><dd>写す先が別のリージョンなら CRR、同じリージョンなら SRR</dd>
+      <dt>DR<small>Disaster Recovery（災害復旧）</small></dt><dd>リージョン全体が使えなくなるような災害から立ち直るための備え</dd>
+    </dl>
+  </div>
+
+  <p>「消えては困る」には3つの段階があります。<em>うっかり消したものを戻したい</em>、<em>誰にも消させたくない</em>、<em>リージョンごと失っても残したい</em>。順に見ます。どれも土台はバージョニングです。</p>
+
+  <h3>うっかり消したものを戻す ―― バージョニング</h3>
+  <p>バージョニングは、バケットの「プロパティ」タブで有効にします。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 256" width="760" height="256" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はバージョニング無効で上書きすると前の中身が消える。右は有効にすると上書きで版が積まれ、削除は削除マーカーが積まれるだけで、マーカーを消せば元に戻る"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">無効（既定）</text><rect x="30" y="48" width="170" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="115.0" y="64.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">report.pdf</text><text x="115.0" y="79.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">最初の中身</text><line x1="115" y1="84" x2="115.0" y2="108.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="115.0,118.0 109.5,108.0 120.5,108.0" fill="var(--ink-3)"/><text x="125" y="106" font-size="10.5" fill="var(--ink-2)" text-anchor="start">上書き</text><rect x="30" y="118" width="170" height="36" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="115.0" y="134.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">report.pdf</text><text x="115.0" y="149.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">新しい中身</text><circle cx="216" cy="66" r="9" fill="var(--deny)"/><line x1="211.95" y1="61.95" x2="220.05" y2="70.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="211.95" y1="70.05" x2="220.05" y2="61.95" stroke="var(--bg)" stroke-width="2.4"/><text x="30" y="182" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">前の中身は消える。削除したら戻せない</text><line x1="262" y1="14" x2="262" y2="250" stroke="var(--line)" stroke-width="1.2"/><text x="278" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">有効にすると、上書きも削除も「積む」だけになる</text><text x="346" y="50" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">① 上書きした</text><rect x="278" y="150" width="136" height="26" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.3"/><text x="346" y="168" font-size="11" fill="var(--ink-2)" text-anchor="middle">古い版（v1）</text><rect x="278" y="118" width="136" height="26" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="346" y="136" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">現行（v2）</text><text x="516" y="50" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">② 削除した</text><rect x="448" y="150" width="136" height="26" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.3"/><text x="516" y="168" font-size="11" fill="var(--ink-2)" text-anchor="middle">古い版（v1）</text><rect x="448" y="118" width="136" height="26" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.3"/><text x="516" y="136" font-size="11" fill="var(--ink-2)" text-anchor="middle">古い版（v2）</text><rect x="448" y="86" width="136" height="26" rx="4" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.6" stroke-dasharray="5 4"/><text x="516" y="104" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">削除マーカー</text><text x="686" y="50" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">③ マーカーを消した</text><rect x="618" y="150" width="136" height="26" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.3"/><text x="686" y="168" font-size="11" fill="var(--ink-2)" text-anchor="middle">古い版（v1）</text><rect x="618" y="118" width="136" height="26" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="686" y="136" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">現行（v2）</text><line x1="418" y1="163" x2="436.0" y2="163.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="446.0,163.0 436.0,168.5 436.0,157.5" fill="var(--ink-3)"/><line x1="588" y1="163" x2="606.0" y2="163.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="616.0,163.0 606.0,168.5 606.0,157.5" fill="var(--ink-3)"/><text x="516" y="196" font-size="10.5" fill="var(--deny)" text-anchor="middle">一覧からは消えて見える</text><circle cx="628" cy="192" r="8" fill="var(--allow)"/><polyline points="624.4,192.0 627.2,195.0 632.0,189.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="642" y="196" font-size="10.5" fill="var(--allow)" text-anchor="start" font-weight="700">元に戻る</text><text x="278" y="226" font-size="11" fill="var(--ink-2)" text-anchor="start">古い版も容量として課金される → 場面2のライフサイクルで古い版を消す</text><text x="278" y="246" font-size="11" fill="var(--ink-2)" text-anchor="start">一度有効にすると無効には戻せない。できるのは「停止」まで</text></svg>
+  </div>
+  <figcaption><strong>バージョニングは「消さずに積む」仕組み。</strong>上書きすると古い版が下に残る。削除は、いちばん上に<strong>削除マーカー</strong>という印を置くだけ。印を消せば前の版が現行に戻る。この後の Object Lock もレプリケーションも、この「版を持っている」ことを前提に動く。</figcaption>
+</figure>
+  <ul>
+    <li>一度有効にしたバージョニングは<strong>無効には戻せません</strong>。できるのは「停止（Suspended）」までで、それまでに作られた版は残り続けます</li>
+    <li>古い版も課金の対象です。場面2の <code>NoncurrentVersionExpiration</code> と組み合わせて設計するのが定石です</li>
+    <li><strong>この後の Object Lock もレプリケーションも、バージョニングが有効であることが前提</strong>です。ここが試験でいちばん繰り返し問われます</li>
+  </ul>
+  <p><strong>MFA Delete</strong> は、版の完全な削除と、バージョニングの状態の変更に、MFA のコードを求める設定です。特徴は2つ。<strong>バージョニングが有効でなければ設定できないこと</strong>、そして<strong>バケットの所有者のルートユーザーが CLI か API から設定する必要があること</strong>（マネジメントコンソールからは設定できません）。「IAM の管理者が有効にする」という選択肢は不正解です。</p>
+
+  <h3>誰にも消させない ―― Object Lock</h3>
+  <p>Object Lock は WORM の状態を作ります。バケットのプロパティで有効にし、保持期間はオブジェクトごと、またはバケットの既定値として決めます。モードが2つあります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 248" width="760" height="248" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="Object Lockの2つのモード。ガバナンスモードは解除の権限を持つ人なら消せる。コンプライアンスモードは管理者もルートユーザーも消せない"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">ガバナンスモード</text><rect x="10" y="34" width="360" height="148" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.4"/><rect x="26" y="48" width="176" height="30" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="114.0" y="67.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">一般のユーザー</text><circle cx="222" cy="63" r="9" fill="var(--deny)"/><line x1="217.95" y1="58.95" x2="226.05" y2="67.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="217.95" y1="67.05" x2="226.05" y2="58.95" stroke="var(--bg)" stroke-width="2.4"/><text x="238" y="67" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">消せない</text><rect x="26" y="88" width="176" height="30" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="114.0" y="107.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">解除の権限を持つ人</text><circle cx="222" cy="103" r="9" fill="var(--allow)"/><polyline points="217.9,103.0 221.1,106.4 226.5,99.6" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="238" y="107" font-size="11" fill="var(--allow)" text-anchor="start" font-weight="700">消せる・期間も縮められる</text><text x="26" y="142" font-size="10.5" fill="var(--ink-3)" text-anchor="start">権限の名前：s3:BypassGovernanceRetention</text><text x="26" y="166" font-size="11" fill="var(--ink-2)" text-anchor="start">目的：誤操作を防ぐ、設定を試す</text><text x="390" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">コンプライアンスモード</text><rect x="390" y="34" width="360" height="148" rx="8" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><rect x="406" y="44" width="176" height="28" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="494.0" y="62.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">一般のユーザー</text><circle cx="602" cy="58" r="9" fill="var(--deny)"/><line x1="597.95" y1="53.95" x2="606.05" y2="62.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="597.95" y1="62.05" x2="606.05" y2="53.95" stroke="var(--bg)" stroke-width="2.4"/><text x="618" y="62" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">消せない</text><rect x="406" y="78" width="176" height="28" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="494.0" y="96.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">管理者</text><circle cx="602" cy="92" r="9" fill="var(--deny)"/><line x1="597.95" y1="87.95" x2="606.05" y2="96.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="597.95" y1="96.05" x2="606.05" y2="87.95" stroke="var(--bg)" stroke-width="2.4"/><text x="618" y="96" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">消せない</text><rect x="406" y="112" width="176" height="28" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="494.0" y="130.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">ルートユーザー</text><circle cx="602" cy="126" r="9" fill="var(--deny)"/><line x1="597.95" y1="121.95" x2="606.05" y2="130.05" stroke="var(--bg)" stroke-width="2.4"/><line x1="597.95" y1="130.05" x2="606.05" y2="121.95" stroke="var(--bg)" stroke-width="2.4"/><text x="618" y="130" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">消せない</text><text x="406" y="160" font-size="10.5" fill="var(--deny)" text-anchor="start" font-weight="700">保持期間の短縮も、モードの変更もできない</text><text x="406" y="176" font-size="10.5" fill="var(--ink-2)" text-anchor="start">目的：金融・医療などの法規制</text><rect x="10" y="194" width="740" height="46" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.3"/><text x="24" y="213" font-size="11" fill="var(--ink)" text-anchor="start" font-weight="700">リーガルホールド：期限を決めずに保持する印。上の2つとは別で、同時にかけられる</text><text x="24" y="231" font-size="10.5" fill="var(--ink-2)" text-anchor="start">権限（s3:PutObjectLegalHold）があれば、いつでも付け外しできる。訴訟や監査の間だけ止めたいときに使う</text></svg>
+  </div>
+  <figcaption><strong>2つのモードの違いは「誰が解除できるか」だけ。</strong>ガバナンスモードは特別な権限を持つ人なら外せる。コンプライアンスモードは、保持期間が終わるまでルートユーザーを含め誰にも消せない。設問に「誰も」「ルートユーザーでも」とあれば右。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th></th><th>ガバナンスモード</th><th>コンプライアンスモード</th></tr></thead>
     <tbody>
       <tr><td><strong>解除できる人</strong></td><td><code>s3:BypassGovernanceRetention</code> を持つプリンシパル</td><td class="no">誰も解除できない（ルートユーザーを含む）</td></tr>
       <tr><td><strong>保持期間の短縮</strong></td><td class="yes">権限があれば可能</td><td class="no">不可</td></tr>
-      <tr><td><strong>典型的な目的</strong></td><td>誤操作の防止。設定のテスト</td><td>金融・医療などの法規制対応</td></tr>
+      <tr><td><strong>典型的な目的</strong></td><td>誤操作の防止。設定のテスト</td><td>金融・医療などの法規制への対応</td></tr>
     </tbody>
   </table></div>
-  <p>これとは別に<strong>リーガルホールド</strong>があります。期限がなく、<code>s3:PutObjectLegalHold</code> の権限があればいつでも着脱できます。訴訟対応や監査中など、<em>いつまで保持すべきか分からない</em>ときに使います。保持期間とリーガルホールドは独立していて、同時にかけられます。</p>
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>「管理者を含め<strong>誰も</strong>削除できないようにしたい」という要件に、<em>バケットポリシーで <code>s3:DeleteObject</code> を Deny する</em>という選択肢が並びます。これは不正解です。バケットポリシー自体を管理者が書き換えられるからです。同じ理由でガバナンスモードも不正解。<strong>「誰も」「ルートユーザーでも」と書いてあったらコンプライアンスモード</strong>、と直結させてください。</p>
+  <div class="note warn">
+    <span class="label">いちばん多い引っかけ</span>
+    <p>「管理者を含め<strong>誰も</strong>削除できないようにしたい」という要件に、<em>バケットポリシーで <code>s3:DeleteObject</code> を Deny する</em>選択肢が並びます。不正解です。バケットポリシーそのものを管理者が書き換えられるからです。同じ理由でガバナンスモードも不正解。<strong>「誰も」「ルートユーザーでも」とあったらコンプライアンスモード</strong>、と直結させてください。</p>
   </div>
 
-  <h3>レプリケーション ―― CRR と SRR</h3>
+  <h3>リージョンごと失っても残す ―― レプリケーション</h3>
+  <p>レプリケーションは、バケットの「管理」タブでレプリケーションルールとして作ります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 256" width="760" height="256" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="レプリケーションの図。コピー元バケットの新しいオブジェクトだけが、別リージョン（CRR）または同じリージョン（SRR）のバケットへ少し遅れて複製される。ルール作成前からあるオブジェクトは運ばれない"><rect x="10" y="30" width="316" height="164" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="24" y="50" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">コピー元バケット（バージョニング有効）</text><rect x="24" y="62" width="136" height="28" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="92.0" y="79.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">古いオブジェクト</text><rect x="24" y="98" width="136" height="28" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="92.0" y="115.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">古いオブジェクト</text><rect x="176" y="62" width="136" height="28" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="244.0" y="79.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">新しいオブジェクト</text><rect x="176" y="98" width="136" height="28" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="244.0" y="115.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">新しいオブジェクト</text><text x="92" y="148" font-size="10.5" fill="var(--deny)" text-anchor="middle">ルールを作る前からある</text><text x="92" y="165" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">→ 運ばれない</text><text x="244" y="148" font-size="10.5" fill="var(--allow)" text-anchor="middle">ルールを作った後に</text><text x="244" y="165" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">書いた分 → 運ばれる</text><rect x="470" y="30" width="280" height="60" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="610.0" y="58.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">CRR：別のリージョンのバケット</text><text x="610.0" y="73.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">災害対策・遠い利用者の近くに置く</text><rect x="470" y="134" width="280" height="60" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="610.0" y="162.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">SRR：同じリージョンの別バケット</text><text x="610.0" y="177.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">ログの集約・検証環境・別アカウントに隔離</text><line x1="326" y1="84" x2="460.1" y2="63.5" stroke="var(--allow)" stroke-width="2" stroke-dasharray="6 4"/><polygon points="470.0,62.0 460.9,68.9 459.3,58.1" fill="var(--allow)"/><line x1="326" y1="126" x2="460.3" y2="159.6" stroke="var(--allow)" stroke-width="2" stroke-dasharray="6 4"/><polygon points="470.0,162.0 459.0,164.9 461.6,154.2" fill="var(--allow)"/><rect x="357.2" y="102.5" width="81.5" height="16.5" rx="3" fill="var(--surface)"/><text x="398" y="112" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">少し遅れて届く</text><text x="10" y="222" font-size="11" fill="var(--ink-2)" text-anchor="start">前提：コピー元とコピー先の両方でバージョニングを有効にする。S3 が複製に使う IAM ロールを用意する</text><text x="10" y="244" font-size="11" fill="var(--ink-2)" text-anchor="start">前からある分は S3 Batch Replication で別に流す。時間の保証が要るなら S3 Replication Time Control（RTC）</text></svg>
+  </div>
+  <figcaption><strong>レプリケーションは「これから書く分」を、別のバケットへ少し遅れて写す。</strong>別のリージョンへ写すのが CRR、同じリージョンの別バケットへ写すのが SRR。「設定したのに古いデータが写っていない」のは故障ではなく仕様で、前からある分は S3 Batch Replication で流す。</figcaption>
+</figure>
   <div class="tw"><table>
-    <thead><tr><th></th><th>CRR（クロスリージョン）</th><th>SRR（同一リージョン）</th></tr></thead>
+    <thead><tr><th></th><th>CRR（別のリージョンへ）</th><th>SRR（同じリージョンへ）</th></tr></thead>
     <tbody>
-      <tr><td><strong>目的</strong></td><td>DR、地理的に離れた利用者へのレイテンシ短縮、法規制による地理分散</td><td>ログの集約、本番から検証環境へのデータ複製、アカウント分離による保護</td></tr>
+      <tr><td><strong>目的</strong></td><td>DR、地理的に離れた利用者の遅延を縮める、法規制による地理的な分散</td><td>ログの集約、本番から検証環境へのデータの複製、アカウントを分けて保護する</td></tr>
       <tr><td><strong>設問の手がかり</strong></td><td>「別リージョンに」「災害復旧」「海外拠点からの読み取りが遅い」</td><td>「同じリージョンの別バケット／別アカウントに」「監査用に隔離」</td></tr>
     </tbody>
   </table></div>
-  <p>どちらにも共通する前提と挙動があります。</p>
   <ul>
-    <li><strong>送信元・送信先の両方でバージョニングが有効であること。</strong>片方だけでは設定できません。</li>
-    <li>S3がレプリケートするための<strong>IAMロール</strong>が必要です。</li>
-    <li><strong>非同期</strong>です。書き込んだ瞬間に相手側にあるとは限りません。所要時間に保証が欲しい場合は <strong>S3 Replication Time Control（RTC）</strong> を使うと、99.99%のオブジェクトを15分以内に複製するSLAが付きます。</li>
-    <li><strong>ルール作成時点で既に存在しているオブジェクトは複製されません。</strong>既存分は <strong>S3 Batch Replication</strong> で別途流します。「設定したのに古いデータが複製されない」型の設問の答えです。</li>
-    <li>削除マーカーの複製は任意設定です。バージョンIDを指定した削除は複製されません（複製先に削除が伝播して両方消える、という事故を防ぐ設計です）。</li>
-  </ul></section>
+    <li><strong>コピー元・コピー先の両方でバージョニングが有効であること。</strong>片方だけでは設定できません</li>
+    <li>S3 が複製するための <strong>IAM ロール</strong>が必要です（S3 がそのロールを引き受けて、コピー元を読み、コピー先へ書く）</li>
+    <li><strong>非同期</strong>です。書き込んだ瞬間に相手側にあるとは限りません。時間の保証が欲しいときは <strong>S3 Replication Time Control（RTC）</strong>を使うと、99.99% のオブジェクトを15分以内に複製するという SLA（サービスの品質の約束）が付きます</li>
+    <li><strong>ルールを作った時点ですでにあるオブジェクトは複製されません。</strong>前からある分は <strong>S3 Batch Replication</strong> で別に流します</li>
+    <li>削除マーカーを複製するかどうかは任意の設定です。版を指定した削除は複製されません（コピー先まで削除が伝わって両方消える、という事故を防ぐ設計です）</li>
+  </ul>
 
-<section id="s5" data-toc="アクセス制御">
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「誤って上書き・削除したものを戻したい」→ <strong>バージョニング</strong>。「ルートユーザーでも削除できない」→ <strong>Object Lock のコンプライアンスモード</strong>。「期限は未定だが、訴訟の間は消させない」→ <strong>リーガルホールド</strong>。「設定したのに古いデータが複製されない」→ <strong>S3 Batch Replication</strong>。「15分以内に複製される保証」→ <strong>RTC</strong>。</p></div>
+</section>
 
+<section id="s5" data-toc="場面4 誰に見せるか">
+  
   <span class="h2num">05</span>
-  <h2>S3 のアクセス制御</h2>
-  <p class="lead">S3には権限の書ける場所が複数あります。並べて覚えるのではなく、<strong>「誰に」「何を」「どの粒度で」渡したいか</strong>から逆引きします。</p>
+  <h2>場面4 ―― 「社外のパートナーに、このレポートだけ 48時間渡したい」「バケットが意図せず公開されていた」</h2>
 
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>IAM ポリシー</dt><dd>ユーザーやロールに付ける「この人は何をしてよいか」の決まり（IAM 講義で既出）</dd>
+      <dt>バケットポリシー</dt><dd>バケットに付ける「このバケットに誰が何をしてよいか」の決まり。IAM 講義のリソースベースポリシーの一種</dd>
+      <dt>クロスアカウント</dt><dd>別の AWS アカウントからアクセスすること（IAM 講義で既出）</dd>
+      <dt>ACL<small>Access Control List</small></dt><dd>バケットやオブジェクトごとに付ける古い方式の権限。今は使わないのが原則</dd>
+      <dt>Block Public Access<small>S3 ブロックパブリックアクセス</small></dt><dd>ポリシーや ACL に何と書いてあっても、インターネットへの公開を無効にするスイッチ</dd>
+      <dt>署名付き URL<small>presigned URL</small></dt><dd>期限つきで、特定のオブジェクト1個だけにアクセスできる URL</dd>
+      <dt>アクセスポイント<small>S3 Access Points</small></dt><dd>1つのバケットに付ける、名前つきの入口。入口ごとにポリシーを持てる</dd>
+      <dt>CloudFront<small>Amazon CloudFront</small></dt><dd>世界中の拠点（エッジロケーション）からコンテンツを配る AWS のサービス（VPC 講義で既出）</dd>
+      <dt>OAC<small>Origin Access Control</small></dt><dd>「このバケットは CloudFront 経由でしか読ませない」とする CloudFront の設定</dd>
+    </dl>
+  </div>
+
+  <p>S3 には権限を書ける場所がいくつもあります。並べて覚えるのではなく、<strong>「誰に」「何を」「どの細かさで」渡したいか</strong>から逆に引きます。バケットポリシーと Block Public Access は、バケットの「アクセス許可」タブにあります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 302" width="760" height="302" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="S3の権限を書く場所。自アカウントの人はIAMポリシー、別アカウントの人はバケットポリシーで許可する。インターネットの誰でもというアクセスはBlock Public Accessが止める"><rect x="20" y="40" width="180" height="30" rx="15.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="110.0" y="59.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">インターネットの誰でも</text><line x1="200" y1="55" x2="418.0" y2="55.0" stroke="var(--deny)" stroke-width="2"/><polygon points="428.0,55.0 418.0,60.5 418.0,49.5" fill="var(--deny)"/><circle cx="442" cy="55" r="10" fill="var(--deny)"/><line x1="437.5" y1="50.5" x2="446.5" y2="59.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="437.5" y1="59.5" x2="446.5" y2="50.5" stroke="var(--bg)" stroke-width="2.4"/><text x="318" y="45" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">ポリシーが「誰でも」でも止める</text><rect x="462" y="24" width="16" height="62" rx="4" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.6"/><text x="470" y="16" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">Block Public Access</text><polyline points="478,55 630,55 630,100" fill="none" stroke="var(--ink-3)" stroke-width="1.4" stroke-linejoin="round" stroke-dasharray="4 4"/><rect x="20" y="112" width="180" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="110.0" y="133.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">別アカウントの人</text><text x="110.0" y="148.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">クロスアカウント</text><line x1="200" y1="135" x2="510.0" y2="135.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="520.0,135.0 510.0,140.5 510.0,129.5" fill="var(--allow)"/><text x="360" y="126" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">バケットポリシーで許可する</text><rect x="20" y="192" width="180" height="46" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="110.0" y="213.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">自分のアカウントの人・EC2</text><text x="110.0" y="228.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">IAM ポリシーを持つ</text><line x1="200" y1="215" x2="510.0" y2="215.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="520.0,215.0 510.0,220.5 510.0,209.5" fill="var(--allow)"/><text x="360" y="206" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">IAM ポリシーで許可する</text><rect x="520" y="100" width="230" height="146" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="635" y="124" font-size="13" fill="var(--accent)" text-anchor="middle" font-weight="700">S3 バケット</text><rect x="540" y="150" width="190" height="60" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="635.0" y="178.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">バケットポリシー</text><text x="635.0" y="193.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">条件をバケット全体に強制</text><text x="635" y="232" font-size="10.5" fill="var(--accent)" text-anchor="middle">例：HTTPS のみ</text><text x="20" y="272" font-size="11" fill="var(--ink-2)" text-anchor="start">署名付き URL：期限つきの URL を渡された人に、その1個だけ（次の図）</text><text x="20" y="292" font-size="11" fill="var(--ink-2)" text-anchor="start">アクセスポイント：1つのバケットに、チームごとの入口を作る（その次の図）</text></svg>
+  </div>
+  <figcaption><strong>許可を書く場所は「人の側」と「バケットの側」の2つ。上からふたをするのが Block Public Access。</strong>自分のアカウントの人には IAM ポリシー、別アカウントの人にはバケットポリシーで許可する。Block Public Access は許可を与える仕組みではなく、公開につながる許可が書かれていても無効にするスイッチ。</figcaption>
+</figure>
   <div class="tw"><table>
-    <thead><tr><th>仕組み</th><th>主語</th><th>これが正解になる要件</th></tr></thead>
+    <thead><tr><th>仕組み</th><th>付ける相手</th><th>これが正解になる要件</th></tr></thead>
     <tbody>
-      <tr><td><strong>IAMポリシー</strong></td><td>自アカウントのユーザー／ロール</td><td>「この人（このEC2）は何にアクセスできるか」を管理したい。対象バケットが多数あり、人の側でまとめたい</td></tr>
-      <tr><td><strong>バケットポリシー</strong></td><td>バケット</td><td><strong>クロスアカウント</strong>で許可したい。VPCエンドポイント経由のみ（<code>aws:SourceVpce</code>）、HTTPSのみ（<code>aws:SecureTransport</code>）といった条件をバケット全体に強制したい</td></tr>
-      <tr><td><strong>ACL</strong></td><td>バケット／オブジェクト個別</td><td class="no">原則として使わない。新規バケットでは既定で無効（Object Ownership が Bucket owner enforced）。AWSも無効化を推奨</td></tr>
-      <tr><td><strong>署名付きURL</strong></td><td>URLを渡された誰か</td><td><strong>期限付き</strong>で特定のオブジェクトだけを、AWSアカウントを持たない相手に渡したい。アップロード用にも発行できる</td></tr>
-      <tr><td><strong>Block Public Access</strong></td><td>アカウント／バケット</td><td>ポリシーやACLが何と書かれていても<strong>公開を上書きで禁じたい</strong>。既定で有効。ガードレール</td></tr>
-      <tr><td><strong>Access Points</strong></td><td>アプリケーション／チーム</td><td>1つの大きなバケットを多数のチームが共有していて、<strong>バケットポリシーが肥大化して管理できなくなった</strong></td></tr>
+      <tr><td><strong>IAM ポリシー</strong></td><td>自分のアカウントのユーザー／ロール</td><td>「この人（この EC2）は何にアクセスできるか」を管理したい。対象のバケットが多く、人の側でまとめたい</td></tr>
+      <tr><td><strong>バケットポリシー</strong></td><td>バケット</td><td><strong>クロスアカウント</strong>で許可したい。VPC エンドポイント経由のみ（<code>aws:SourceVpce</code>）、HTTPS のみ（<code>aws:SecureTransport</code>）といった条件をバケット全体に強制したい</td></tr>
+      <tr><td><strong>ACL</strong></td><td>バケット／オブジェクト個別</td><td class="no">原則として使わない。新しいバケットでは既定で無効（オブジェクト所有者の設定が「バケット所有者の強制」）。AWS も無効を勧めている</td></tr>
+      <tr><td><strong>署名付き URL</strong></td><td>URL を渡された誰か</td><td><strong>期限つき</strong>で特定のオブジェクトだけを、AWS アカウントを持たない相手に渡したい。アップロード用にも発行できる</td></tr>
+      <tr><td><strong>Block Public Access</strong></td><td>アカウント／バケット</td><td>ポリシーや ACL に何と書かれていても<strong>公開を上書きで禁じたい</strong>。既定で有効。安全装置</td></tr>
+      <tr><td><strong>アクセスポイント</strong></td><td>アプリケーション／チーム</td><td>1つの大きなバケットを多くのチームが共有していて、<strong>バケットポリシーが肥大化して管理できなくなった</strong></td></tr>
     </tbody>
   </table></div>
 
-  <h3>署名付きURLの性質</h3>
-  <p>署名付きURLは<strong>発行した主体の権限の範囲でしか動きません</strong>。読み取り権限しかないロールが発行したURLで書き込むことはできません。有効期限は発行時に指定します。「社外のパートナーに、このレポートだけ、48時間だけ渡したい」という設問は常にこれです。逆に「動画を世界中の視聴者に配信」なら CloudFront であり、その場合はバケットを公開せず <strong>OAC（Origin Access Control）</strong> で CloudFront 経由だけに絞るのが正解の形です。</p>
+  <h3>このファイルだけ、48時間だけ ―― 署名付き URL</h3>
+  <p>署名付き URL は、設定画面で作るものではありません。S3 を読む権限を持つアプリやユーザーが、SDK や CLI で「このオブジェクトを、この期限まで」と指定して発行します。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 206" width="760" height="206" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="署名付きURLの流れ。自社のアプリが期限付きのURLを発行し、パートナーに渡す。パートナーはAWSアカウントなしでそのURLから1つのオブジェクトだけ取得でき、期限を過ぎると使えない"><rect x="20" y="50" width="180" height="52" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="110.0" y="74.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">自社のアプリ</text><text x="110.0" y="89.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">S3 を読めるロール</text><rect x="290" y="50" width="180" height="52" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="380.0" y="74.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">社外のパートナー</text><text x="380.0" y="89.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">AWS アカウントなし</text><rect x="560" y="50" width="180" height="52" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="650.0" y="74.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 のオブジェクト</text><text x="650.0" y="89.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">report.pdf だけ</text><circle cx="20" cy="50" r="10" fill="var(--accent)"/><text x="20" y="54" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><text x="110" y="126" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">署名付き URL を発行する</text><text x="110" y="143" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">（期限 48時間）</text><line x1="200" y1="76" x2="280.0" y2="76.0" stroke="var(--ink-3)" stroke-width="2"/><polygon points="290.0,76.0 280.0,81.5 280.0,70.5" fill="var(--ink-3)"/><circle cx="245" cy="58" r="10" fill="var(--accent)"/><text x="245" y="62" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><text x="245" y="96" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">URL を渡す</text><line x1="470" y1="76" x2="550.0" y2="76.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="560.0,76.0 550.0,81.5 550.0,70.5" fill="var(--allow)"/><circle cx="515" cy="58" r="10" fill="var(--accent)"/><text x="515" y="62" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><text x="515" y="96" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">URL で取得</text><circle cx="396" cy="134" r="10" fill="var(--deny)"/><text x="396" y="138" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">4</text><text x="414" y="138" font-size="11" fill="var(--deny)" text-anchor="start" font-weight="700">48時間を過ぎると、同じ URL はもう使えない</text><text x="20" y="176" font-size="11" fill="var(--ink-2)" text-anchor="start">URL でできるのは、発行した主体の権限の範囲だけ。読み取りしかできないロールが出した URL では書き込めない</text><text x="20" y="196" font-size="11" fill="var(--ink-2)" text-anchor="start">アップロード用の URL も発行できる</text></svg>
+  </div>
+  <figcaption><strong>署名付き URL は「期限つきの合鍵」。</strong>バケットは非公開のまま、URL を持っている人が、決めた時間だけ、決めた1個だけを取り出せる。相手に AWS アカウントは要らない。「社外に」「このファイルだけ」「何時間だけ」が揃ったらこれ。</figcaption>
+</figure>
+  <ul>
+    <li><strong>この場面の答え（1つ目）：</strong>バケットは非公開のまま、レポートの署名付き URL を期限 48時間で発行して渡す</li>
+    <li>「動画を世界中の視聴者に配信」なら署名付き URL ではなく <strong>CloudFront</strong> です。その場合もバケットは公開せず、<strong>OAC</strong> で CloudFront 経由だけに絞るのが正解の形です</li>
+  </ul>
 
-  <h3>Access Points の役割</h3>
-  <p>Access Points は、1つのバケットに対して<strong>名前付きのエンドポイントを複数作り、それぞれに個別のポリシーを付ける</strong>仕組みです。分析チームは <code>analytics/</code> 配下だけ読める、取り込みジョブは <code>raw/</code> 配下にだけ書ける、といった分割を、巨大な1枚のバケットポリシーを書かずに実現できます。VPCからのみアクセスできるアクセスポイントも作れます。さらに <strong>Multi-Region Access Points</strong> は、複数リージョンのバケット群に対して単一のグローバルなエンドポイントを提供し、最も近いバケットへルーティングします。</p>
+  <h3>チームごとに入口を分ける ―― アクセスポイント</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 226" width="760" height="226" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左は1枚のバケットポリシーに全チームの条件が積もって読めなくなる図。右はアクセスポイントでチームごとの入口を作り、入口ごとに小さなポリシーを付ける図"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">1枚のバケットポリシーに全部書く</text><rect x="40" y="40" width="170" height="150" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.5"/><line x1="54" y1="58" x2="154" y2="58" stroke="var(--ink-3)" stroke-width="1.6"/><line x1="54" y1="72" x2="184" y2="72" stroke="var(--ink-3)" stroke-width="1.6"/><line x1="54" y1="86" x2="184" y2="86" stroke="var(--ink-3)" stroke-width="1.6"/><line x1="54" y1="100" x2="154" y2="100" stroke="var(--ink-3)" stroke-width="1.6"/><line x1="54" y1="114" x2="184" y2="114" stroke="var(--ink-3)" stroke-width="1.6"/><line x1="54" y1="128" x2="184" y2="128" stroke="var(--ink-3)" stroke-width="1.6"/><line x1="54" y1="142" x2="154" y2="142" stroke="var(--ink-3)" stroke-width="1.6"/><line x1="54" y1="156" x2="184" y2="156" stroke="var(--ink-3)" stroke-width="1.6"/><line x1="54" y1="170" x2="184" y2="170" stroke="var(--ink-3)" stroke-width="1.6"/><circle cx="210" cy="40" r="10" fill="var(--deny)"/><line x1="205.5" y1="35.5" x2="214.5" y2="44.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="205.5" y1="44.5" x2="214.5" y2="35.5" stroke="var(--bg)" stroke-width="2.4"/><text x="125" y="212" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">全チームの条件が1枚に積もる</text><line x1="262" y1="14" x2="262" y2="222" stroke="var(--line)" stroke-width="1.2"/><text x="278" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">アクセスポイントで入口を分ける</text><rect x="630" y="40" width="120" height="162" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="690" y="58" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">S3 バケット</text><text x="512" y="38" font-size="10.5" fill="var(--ink-3)" text-anchor="middle" font-weight="700">アクセスポイント</text><rect x="278" y="48" width="130" height="30" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="343.0" y="67.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">分析チーム</text><line x1="408" y1="63" x2="440.0" y2="63.0" stroke="var(--allow)" stroke-width="2"/><polygon points="450.0,63.0 440.0,68.5 440.0,57.5" fill="var(--allow)"/><rect x="450" y="48" width="124" height="30" rx="15.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="512.0" y="67.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">入口 A</text><line x1="574" y1="63" x2="620.0" y2="63.0" stroke="var(--allow)" stroke-width="2"/><polygon points="630.0,63.0 620.0,68.5 620.0,57.5" fill="var(--allow)"/><text x="512" y="93" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">analytics/ を読むだけ</text><text x="690" y="82" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">analytics/</text><rect x="278" y="102" width="130" height="30" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="343.0" y="121.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">取り込みジョブ</text><line x1="408" y1="117" x2="440.0" y2="117.0" stroke="var(--allow)" stroke-width="2"/><polygon points="450.0,117.0 440.0,122.5 440.0,111.5" fill="var(--allow)"/><rect x="450" y="102" width="124" height="30" rx="15.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="512.0" y="121.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">入口 B</text><line x1="574" y1="117" x2="620.0" y2="117.0" stroke="var(--allow)" stroke-width="2"/><polygon points="630.0,117.0 620.0,122.5 620.0,111.5" fill="var(--allow)"/><text x="512" y="147" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">raw/ に書くだけ</text><text x="690" y="136" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">raw/</text><rect x="278" y="156" width="130" height="30" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="343.0" y="175.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">VPC 内のアプリ</text><line x1="408" y1="171" x2="440.0" y2="171.0" stroke="var(--allow)" stroke-width="2"/><polygon points="450.0,171.0 440.0,176.5 440.0,165.5" fill="var(--allow)"/><rect x="450" y="156" width="124" height="30" rx="15.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="512.0" y="175.025" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">入口 C</text><line x1="574" y1="171" x2="620.0" y2="171.0" stroke="var(--allow)" stroke-width="2"/><polygon points="630.0,171.0 620.0,176.5 620.0,165.5" fill="var(--allow)"/><text x="512" y="201" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">VPC からのみ通す</text><text x="690" y="190" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">app/</text></svg>
+  </div>
+  <figcaption><strong>アクセスポイントは、1つのバケットに付ける「名前つきの入口」。</strong>入口ごとに小さなポリシーを持てるので、分析チームは analytics/ を読むだけ、取り込みジョブは raw/ に書くだけ、と分けられる。「多くのチームが共有していて、バケットポリシーが肥大化した」が合図。</figcaption>
+</figure>
+  <p>アクセスポイントは、バケットの「アクセスポイント」タブで作ります。VPC からしか使えないアクセスポイントも作れます。さらに <strong>Multi-Region Access Points</strong> は、複数のリージョンにあるバケットをまとめて1つの入口にし、いちばん近いバケットへ届けます。</p>
 
   <div class="note warn">
     <span class="label">Block Public Access の位置づけ</span>
-    <p>これは権限を与える仕組みではなく、<strong>与えられた公開権限を無効化する上書きスイッチ</strong>です。バケットポリシーに <code>"Principal": "*"</code> と書いてあっても、Block Public Access が有効なら公開されません。設問で「バケットが意図せず公開されていた。再発を防ぐには」と来たら、アカウントレベルでの Block Public Access 有効化と、IAM Access Analyzer for S3 による検知が答えになります。</p>
-  </div></section>
+    <p>これは権限を与える仕組みではなく、<strong>与えられた公開の権限を無効にする上書きスイッチ</strong>です。バケットポリシーに <code>"Principal": "*"</code>（誰でも）と書いてあっても、Block Public Access が有効なら公開されません。バケットごとにも、アカウント全体にも設定できます。</p>
+    <p><strong>この場面の答え（2つ目）：</strong>「バケットが意図せず公開されていた。再発を防ぐには」→ <strong>アカウント単位で Block Public Access を有効にする</strong>。あわせて <strong>IAM Access Analyzer for S3</strong>（外部から読めるバケットを見つけて知らせる機能）で検知する。</p>
+  </div>
 
-<section id="s6" data-toc="暗号化">
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「期限つきで」「特定のファイルだけ」「社外に」→ <strong>署名付き URL</strong>。「別アカウントから」「HTTPS のみ」「VPC エンドポイント経由のみ」→ <strong>バケットポリシー</strong>。「公開を確実に防ぐ」→ <strong>Block Public Access</strong>。「多くのチームが共有・ポリシーが肥大化」→ <strong>アクセスポイント</strong>。「CloudFront 経由だけに絞る」→ <strong>OAC</strong>。</p></div>
+</section>
 
+<section id="s6" data-toc="場面5 暗号化">
+  
   <span class="h2num">06</span>
-  <h2>暗号化 ―― 鍵を誰が持つか</h2>
-  <p class="lead">暗号化の選択肢は、機能の差ではなく<strong>鍵を誰が持ち、誰が管理し、使用履歴を追えるか</strong>の差です。設問は必ずそのどれかを要件として書いてきます。</p>
+  <h2>場面5 ―― 「誰がいつ復号したかを監査したい」「毎秒数万件書いたら、エラーが出始めた」</h2>
 
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>保存時の暗号化</dt><dd>ディスクに置いてあるデータを暗号化しておくこと。読むときに鍵で元に戻す（復号）</dd>
+      <dt>転送中の暗号化</dt><dd>ネットワークを流れている間のデータを暗号化すること。HTTPS がこれにあたる</dd>
+      <dt>SSE<small>Server-Side Encryption（サーバー側の暗号化）</small></dt><dd>受け取った S3 の側で暗号化してから保存する方式。読むときは S3 が復号して返す</dd>
+      <dt>KMS<small>AWS Key Management Service</small></dt><dd>暗号化の鍵を作って保管し、使われた記録を残す AWS のサービス（詳しくはセキュリティの講義）</dd>
+      <dt>KMS キー</dt><dd>KMS の中に置く鍵。誰が使ってよいかを鍵ごとに決められる（キーポリシー）</dd>
+      <dt>CloudTrail<small>AWS CloudTrail</small></dt><dd>「誰が、いつ、どの API を呼んだか」を記録するサービス（IAM 講義で既出）</dd>
+      <dt>スロットリング</dt><dd>決められた回数の上限を超えた呼び出しを、サービスが断ること。<code>ThrottlingException</code> というエラーで返る</dd>
+      <dt>S3 Bucket Keys</dt><dd>SSE-KMS で KMS を呼ぶ回数を減らす、バケットの設定</dd>
+    </dl>
+  </div>
+
+  <p>暗号化の設定は、バケットの「プロパティ」タブの「デフォルトの暗号化」で選びます。選択肢の違いは、機能ではなく<strong>鍵を誰が持ち、誰が管理し、使った記録を追えるか</strong>です。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 250" width="760" height="250" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="S3の暗号化の4方式を並べた表。SSE-S3は鍵をAWSに任せる。SSE-KMSは自分のKMSキーを使い、使用がCloudTrailに残る。SSE-Cは鍵を毎回送る。クライアントサイド暗号化はアプリの中で暗号化する"><text x="150" y="83" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">鍵を管理する</text><text x="150" y="129" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">暗号化の処理をする</text><text x="150" y="175" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">鍵の使用が記録に残るか</text><text x="150" y="221" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">選ぶ合図</text><text x="233" y="44" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">SSE-S3</text><rect x="162" y="62" width="142" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="233" y="84" font-size="11" fill="var(--ink-3)" text-anchor="middle">AWS（おまかせ）</text><rect x="162" y="108" width="142" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="233" y="130" font-size="11" fill="var(--ink-3)" text-anchor="middle">S3</text><rect x="162" y="154" width="142" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="233" y="176" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">追えない</text><rect x="162" y="200" width="142" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="233" y="222" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">暗号化されていればよい</text><text x="382" y="44" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">SSE-KMS</text><rect x="311" y="62" width="142" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="382" y="84" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（KMS キー）</text><rect x="311" y="108" width="142" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="382" y="130" font-size="11" fill="var(--ink-3)" text-anchor="middle">S3</text><rect x="311" y="154" width="142" height="34" rx="6" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="382" y="176" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">CloudTrail に残る</text><rect x="311" y="200" width="142" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="382" y="222" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">誰がいつ復号したか監査</text><text x="531" y="44" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">SSE-C</text><rect x="460" y="62" width="142" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="531" y="84" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（毎回送る）</text><rect x="460" y="108" width="142" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="531" y="130" font-size="11" fill="var(--ink-3)" text-anchor="middle">S3</text><rect x="460" y="154" width="142" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="531" y="176" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">AWS に鍵が残らない</text><rect x="460" y="200" width="142" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="531" y="222" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">鍵を AWS に預けられない</text><text x="680" y="44" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">クライアントサイド暗号化</text><rect x="609" y="62" width="142" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="680" y="84" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">自分（アプリの中）</text><rect x="609" y="108" width="142" height="34" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="680" y="130" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">自分のアプリ</text><rect x="609" y="154" width="142" height="34" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.4"/><text x="680" y="176" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">AWS は平文を見ない</text><rect x="609" y="200" width="142" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="4 3"/><text x="680" y="222" font-size="10.5" fill="var(--ink)" text-anchor="middle" font-weight="700">AWS に平文を渡さない</text><text x="162" y="20" font-size="11" fill="var(--ink-2)" text-anchor="start" font-weight="700">← AWS に任せる</text><text x="752" y="20" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">自分で持つ →</text></svg>
+  </div>
+  <figcaption><strong>暗号化の方式は、機能の差ではなく「鍵を誰が持つか」の差。</strong>青が自分の仕事、灰色が AWS の仕事。右へ行くほど自分で持つものが増える。試験でも実務でも、迷うのはほぼ左の2つ。「暗号化されていればよい」なら SSE-S3、「鍵を使った人を追いたい・止めたい」なら SSE-KMS。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th>方式</th><th>鍵を管理するのは</th><th>鍵の使用を監査できるか</th><th>これが正解になる要件</th></tr></thead>
     <tbody>
-      <tr><td><strong>SSE-S3</strong><br><span style="color:var(--ink-3);font-size:13px">AES-256</span></td><td>AWS（完全におまかせ）</td><td class="no">キー単位の使用記録は追えない</td><td>要件が「保存時に暗号化されていること」だけ。追加費用なし。<strong>2023年1月以降、新規オブジェクトは既定でこれが適用されます</strong></td></tr>
-      <tr><td><strong>SSE-KMS</strong></td><td>顧客（KMSキー）</td><td class="yes">CloudTrail に <code>Decrypt</code> / <code>GenerateDataKey</code> が残る</td><td>「<strong>誰がいつ復号したか監査したい</strong>」「鍵のローテーションを自分で制御したい」「鍵ポリシーで、S3の権限とは別に復号を止められるようにしたい」</td></tr>
-      <tr><td><strong>DSSE-KMS</strong></td><td>顧客（KMSキー）</td><td class="yes">同上</td><td>二重に暗号化する必要がある、極めて厳格な規制要件</td></tr>
-      <tr><td><strong>SSE-C</strong></td><td>顧客（毎リクエストで鍵を送る）</td><td class="no">AWS側に鍵は残らない</td><td>「<strong>鍵をAWSに預けられない</strong>」が暗号化処理はS3に任せたい。HTTPS必須で、鍵を失えば復号不能</td></tr>
-      <tr><td><strong>クライアントサイド暗号化</strong></td><td>顧客（アプリ側で完結）</td><td class="no">AWSは平文を一切見ない</td><td>「AWSに平文を渡さない」ことそのものが要件。鍵管理の責任はすべて自分</td></tr>
+      <tr><td><strong>SSE-S3</strong><br><span style="color:var(--ink-3);font-size:13px">AES-256</span></td><td>AWS（完全におまかせ）</td><td class="no">鍵ごとの使用の記録は追えない</td><td>要件が「保存時に暗号化されていること」だけ。追加の費用なし。<strong>2023年1月以降、新しいオブジェクトには既定でこれが適用される</strong></td></tr>
+      <tr><td><strong>SSE-KMS</strong></td><td>自分（KMS キー）</td><td class="yes">CloudTrail に <code>Decrypt</code> / <code>GenerateDataKey</code> が残る</td><td>「<strong>誰がいつ復号したか監査したい</strong>」「鍵の交換（ローテーション）を自分で決めたい」「キーポリシーで、S3 の権限とは別に復号を止められるようにしたい」</td></tr>
+      <tr><td><strong>DSSE-KMS</strong></td><td>自分（KMS キー）</td><td class="yes">同上</td><td>二重に暗号化する必要がある、きわめて厳しい規制の要件</td></tr>
+      <tr><td><strong>SSE-C</strong></td><td>自分（リクエストのたびに鍵を送る）</td><td class="no">AWS 側に鍵は残らない</td><td>「<strong>鍵を AWS に預けられない</strong>」が、暗号化の処理は S3 に任せたい。HTTPS が必須で、鍵をなくせば復号できない</td></tr>
+      <tr><td><strong>クライアントサイド暗号化</strong></td><td>自分（アプリの中で完結）</td><td class="no">AWS は平文を一切見ない</td><td>「AWS に平文（暗号化する前のデータ）を渡さない」ことそのものが要件。鍵の管理の責任はすべて自分</td></tr>
     </tbody>
   </table></div>
+  <ul>
+    <li><strong>この場面の答え（1つ目）：</strong>「誰がいつ復号したか」を追いたいなら <strong>SSE-KMS</strong>。鍵を使うたびに KMS が呼ばれ、その呼び出しが CloudTrail に残るから</li>
+  </ul>
 
-  <p>実務でも試験でも、判断の中心は <strong>SSE-S3 と SSE-KMS のどちらか</strong>です。切り分けの言葉はひとつ、<em>監査とアクセス制御の粒度</em>です。「暗号化してあればよい」なら SSE-S3、「鍵の使用者を特定・制限したい」なら SSE-KMS。</p>
-
-  <div class="trap">
-    <span class="label">最頻出の引っかけ</span>
-    <p>SSE-KMS でオブジェクトを読み書きすると、<strong>リクエストごとに KMS の API が呼ばれます</strong>。毎秒数万件を処理するデータパイプラインでは KMS 側のリクエストクォータに当たり、<code>ThrottlingException</code> や 503 が出ます。ここで「SSE-S3 に切り替える」を選ぶと監査要件を落とすので不正解。正解は <strong>S3 Bucket Keys</strong> の有効化です。バケット単位のキーを使って KMS の呼び出し回数を大幅に削減し、暗号化方式も監査も維持したまま解決します。</p>
+  <h3>毎秒数万件で、エラーが出始めた</h3>
+  <p>SSE-KMS で監査できるのは、読み書きのたびに KMS を呼ぶからでした。同じ仕組みが、大量の書き込みでは弱点になります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 256" width="760" height="256" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はBucket Keysなしでオブジェクトごとに KMS を呼び、上限に当たる図。右はBucket Keysありで、S3がバケットごとの鍵を使い回し、KMSを呼ぶ回数が減る図"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">S3 Bucket Keys なし</text><rect x="24" y="40" width="104" height="22" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="76" y="55" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><line x1="128" y1="51" x2="241.1" y2="107.5" stroke="var(--deny)" stroke-width="1.4"/><polygon points="250.0,112.0 238.6,112.4 243.5,102.6" fill="var(--deny)"/><rect x="24" y="70" width="104" height="22" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="76" y="85" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><line x1="128" y1="81" x2="240.3" y2="109.5" stroke="var(--deny)" stroke-width="1.4"/><polygon points="250.0,112.0 239.0,114.9 241.7,104.2" fill="var(--deny)"/><rect x="24" y="100" width="104" height="22" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="76" y="115" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><line x1="128" y1="111" x2="240.0" y2="111.9" stroke="var(--deny)" stroke-width="1.4"/><polygon points="250.0,112.0 240.0,117.4 240.0,106.4" fill="var(--deny)"/><rect x="24" y="130" width="104" height="22" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="76" y="145" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><line x1="128" y1="141" x2="240.3" y2="114.3" stroke="var(--deny)" stroke-width="1.4"/><polygon points="250.0,112.0 241.5,119.7 239.0,109.0" fill="var(--deny)"/><rect x="24" y="160" width="104" height="22" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="76" y="175" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><line x1="128" y1="171" x2="241.0" y2="116.4" stroke="var(--deny)" stroke-width="1.4"/><polygon points="250.0,112.0 243.4,121.3 238.6,111.4" fill="var(--deny)"/><rect x="250" y="84" width="112" height="56" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><text x="306.0" y="110.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">KMS</text><text x="306.0" y="125.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">鍵の管理サービス</text><text x="190" y="206" font-size="11" fill="var(--ink-2)" text-anchor="middle">書き込みのたびに KMS を呼ぶ</text><text x="190" y="226" font-size="11" fill="var(--deny)" text-anchor="middle" font-weight="700">毎秒数万件 → KMS の上限に当たる</text><text x="190" y="244" font-size="10.5" fill="var(--deny)" text-anchor="middle">ThrottlingException / 503</text><line x1="382" y1="14" x2="382" y2="252" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">S3 Bucket Keys あり</text><rect x="410" y="40" width="104" height="22" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="462" y="55" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><line x1="514" y1="51" x2="541.4" y2="103.1" stroke="var(--allow)" stroke-width="1.4"/><polygon points="546.0,112.0 536.5,105.7 546.2,100.6" fill="var(--allow)"/><rect x="410" y="70" width="104" height="22" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="462" y="85" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><line x1="514" y1="81" x2="538.8" y2="105.0" stroke="var(--allow)" stroke-width="1.4"/><polygon points="546.0,112.0 535.0,109.0 542.6,101.1" fill="var(--allow)"/><rect x="410" y="100" width="104" height="22" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="462" y="115" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><line x1="514" y1="111" x2="536.0" y2="111.7" stroke="var(--allow)" stroke-width="1.4"/><polygon points="546.0,112.0 535.8,117.2 536.2,106.2" fill="var(--allow)"/><rect x="410" y="130" width="104" height="22" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="462" y="145" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><line x1="514" y1="141" x2="538.6" y2="118.7" stroke="var(--allow)" stroke-width="1.4"/><polygon points="546.0,112.0 542.3,122.8 534.9,114.6" fill="var(--allow)"/><rect x="410" y="160" width="104" height="22" rx="4" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2"/><text x="462" y="175" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">オブジェクト</text><line x1="514" y1="171" x2="541.2" y2="120.8" stroke="var(--allow)" stroke-width="1.4"/><polygon points="546.0,112.0 546.1,123.4 536.4,118.2" fill="var(--allow)"/><rect x="546" y="94" width="96" height="36" rx="18.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="594.0" y="115.85" font-size="11" fill="var(--ink-2)" text-anchor="middle">バケットキー</text><line x1="642" y1="112" x2="662.0" y2="112.0" stroke="var(--allow)" stroke-width="2"/><polygon points="672.0,112.0 662.0,117.5 662.0,106.5" fill="var(--allow)"/><text x="657" y="84" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">ときどき</text><rect x="672" y="84" width="78" height="56" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="711.0" y="116.55" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">KMS</text><text x="575" y="206" font-size="11" fill="var(--ink-2)" text-anchor="middle">バケットごとの鍵を S3 が使い回す</text><text x="575" y="226" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">KMS を呼ぶ回数が大きく減る</text><text x="575" y="244" font-size="10.5" fill="var(--allow)" text-anchor="middle">SSE-KMS も CloudTrail の監査もそのまま</text></svg>
+  </div>
+  <figcaption><strong>SSE-KMS は、読み書きのたびに KMS を呼ぶ。</strong>毎秒数万件のパイプラインでは KMS 側の回数の上限に当たり、エラーが返り始める。S3 Bucket Keys を有効にすると、S3 がバケットごとの鍵を一定時間使い回すので、KMS を呼ぶ回数が大きく減る。暗号化の方式も監査も変えずに済む。</figcaption>
+</figure>
+  <div class="note warn">
+    <span class="label">いちばん多い引っかけ</span>
+    <p>ここで「SSE-S3 に切り替える」を選ぶと、エラーは消えますが監査の要件を落とすので不正解です。<strong>この場面の答え（2つ目）</strong>は <strong>S3 Bucket Keys を有効にする</strong>こと（「デフォルトの暗号化」の画面にあるバケットキーの設定）。暗号化の方式も監査も保ったまま解決します。</p>
   </div>
 
-  <h3>転送中の暗号化</h3>
-  <p>保存時の暗号化とは別の話です。HTTPS を強制したい場合は、バケットポリシーで <code>aws:SecureTransport</code> が <code>false</code> のリクエストを Deny します。「保存時の暗号化は有効なのに、監査で転送経路を指摘された」型の設問はこの形を問うています。</p></section>
+  <h3>転送中の暗号化は別の話</h3>
+  <p>ここまでは保存時の暗号化でした。通信の途中を守るには HTTPS を使わせます。強制したいときは、バケットポリシーで <code>aws:SecureTransport</code> が <code>false</code> のリクエストを Deny します。「保存時の暗号化は有効なのに、監査で転送の経路を指摘された」という設問は、この形を聞いています。</p>
 
-<section id="s7" data-toc="性能と転送">
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「暗号化されていればよい・追加費用なし」→ <strong>SSE-S3</strong>。「誰がいつ復号したか監査」「鍵の使用を制限」→ <strong>SSE-KMS</strong>。「鍵を AWS に預けられない」→ <strong>SSE-C</strong>。「AWS に平文を渡さない」→ <strong>クライアントサイド暗号化</strong>。「KMS のスロットリング」→ <strong>S3 Bucket Keys</strong>。「HTTPS を強制」→ <strong>バケットポリシーで aws:SecureTransport</strong>。</p></div>
+</section>
 
+<section id="s7" data-toc="場面6 速く送る">
+  
   <span class="h2num">07</span>
-  <h2>S3 の性能と大きなファイルの扱い</h2>
-  <p class="lead">性能の設問は「遅い」「失敗する」「高い」のどれかで来ます。原因の切り分けが、そのまま答えになります。</p>
+  <h2>場面6 ―― 「海外の拠点からのアップロードが遅い」「503 Slow Down が返ってくる」</h2>
 
-  <h3>マルチパートアップロード</h3>
-  <ul>
-    <li>単一の PUT で送れる上限は <strong>5GB</strong>。それを超えるオブジェクトはマルチパートが<strong>必須</strong>です。オブジェクト自体の上限は 5TB。</li>
-    <li>AWSは<strong>100MBを超えたらマルチパートを使う</strong>ことを推奨しています。パートを並列に送れるので速く、失敗したパートだけ再送できるので不安定な回線に強い。</li>
-    <li>パートは最大10,000個です。</li>
-    <li><strong>中断したアップロードのパートは課金され続けます。</strong>ライフサイクルの <code>AbortIncompleteMultipartUpload</code> で必ず掃除します。</li>
-  </ul>
-
-  <h3>Transfer Acceleration</h3>
-  <p>CloudFront のエッジロケーションを入口にして、そこから AWS のバックボーン経由でバケットまで運びます。効くのは<strong>クライアントとバケットが地理的に遠いとき</strong>です。同一リージョン内のEC2からのアップロードには効果がありません。「海外の拠点から東京のバケットへの大容量アップロードが遅い」という設問の答えがこれです。なお、有効化前に効果を測定できる比較ツールがAWSから提供されています。</p>
-
-  <h3>プレフィックス設計</h3>
-  <p>S3のリクエストレートは<strong>プレフィックス単位</strong>で決まります。1プレフィックスあたり、書き込み系（PUT / COPY / POST / DELETE）が毎秒3,500、読み取り系（GET / HEAD）が毎秒5,500です。<strong>プレフィックスの数に上限はありません</strong>。したがって、プレフィックスを分けて並列化すればリニアにスケールします。10個に分ければ読み取りは毎秒55,000まで伸びます。</p>
-  <p>設問で <code>503 Slow Down</code> が出てくる場合、原因は「バケットの上限」ではなく「1つのプレフィックスに集中している」ことです。日付をパスの先頭に置く設計（<code>2026/09/20/...</code>）は、その日のデータが1プレフィックスに集中するので不利になりがちです。<strong>スケーリングは即座ではなく段階的に行われる</strong>点も押さえてください。急激なスパイクでは一時的に503が出て、しばらくすると収まります。</p>
-
-  <h3>S3 Select とバイト範囲フェッチ</h3>
-  <p>大きな CSV / JSON / Parquet から<strong>必要な行と列だけ</strong>を SQL のサブセットで抜き出し、転送量とアプリ側の処理を減らす機能です。効くのは「1つのオブジェクトの一部だけが欲しい」ケースです。<strong>複数オブジェクトをまたいだ集計や JOIN は Athena</strong> の仕事で、ここが切り分けの線になります。オブジェクトの特定バイト範囲だけを並列に取得する<strong>バイト範囲フェッチ</strong>も、大きなファイルの先頭メタデータだけ読みたいときに使えます。</p></section>
-
-<section id="s8" data-toc="EBS">
-
-  <span class="h2num">08</span>
-  <h2>EBS とインスタンスストア</h2>
-  <p class="lead">ブロックストレージの設問は、<strong>SSD か HDD か</strong>と<strong>データが消えてよいか</strong>の2択に還元できます。</p>
-
-  <h3>ボリュームタイプの選択軸</h3>
-  <div class="tw"><table>
-    <thead><tr><th>タイプ</th><th>種別</th><th>選ぶ決め手</th><th>ブートボリューム</th></tr></thead>
-    <tbody>
-      <tr><td><strong>gp3</strong></td><td>汎用SSD</td><td><strong>既定の選択肢。</strong>3,000 IOPS と 125 MiB/s が容量に関係なく含まれ、IOPSとスループットを容量と独立に追加できる。gp2 より安い</td><td class="yes">可</td></tr>
-      <tr><td><strong>gp2</strong></td><td>汎用SSD</td><td>旧世代。性能が容量に比例（1GiBあたり3 IOPS）し、小さいボリュームはバーストに依存する。<strong>新規に選ぶ理由はほぼない</strong></td><td class="yes">可</td></tr>
-      <tr><td><strong>io2 / io2 Block Express</strong></td><td>プロビジョンドIOPS SSD</td><td>耐久性 99.999%。Block Express は最大 256,000 IOPS / 4,000 MiB/s。<strong>単一ボリュームに極端なIOPSと低レイテンシが要る本番データベース</strong></td><td class="yes">可</td></tr>
-      <tr><td><strong>st1</strong></td><td>スループット最適化HDD</td><td>最小125GiB、最大500 MiB/s。<strong>大容量のシーケンシャル読み書き</strong>（ログ処理、ビッグデータ、データウェアハウス）を安く</td><td class="no">不可</td></tr>
-      <tr><td><strong>sc1</strong></td><td>コールドHDD</td><td>最小125GiB、最大250 MiB/s。EBSの中で最安。<strong>めったにアクセスしない大容量データ</strong></td><td class="no">不可</td></tr>
-    </tbody>
-  </table></div>
-
-  <div class="note">
-    <span class="label">判断軸</span>
-    <p>設問に <strong>IOPS</strong> という語が出たら SSD 系（gp3 / io2）、<strong>スループット（MiB/s）</strong>や<strong>シーケンシャル</strong>という語が出たら HDD 系（st1 / sc1）です。「gp2 を使っているが性能が足りない。コストは増やしたくない」と来たら、ほぼ確実に <strong>gp3 への変更</strong>が正解です。io2 は高価なので、「データベース」と書いてあるだけでは飛びつかず、<em>サブミリ秒</em>や<em>数万IOPS</em>といった数字の裏付けがあるかを確認してください。</p>
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>PUT・GET</dt><dd>S3 への操作の名前。PUT はオブジェクトを置く（アップロード）、GET は取り出す（ダウンロード）</dd>
+      <dt>パート</dt><dd>マルチパートアップロード（場面2で名前だけ出た）で、ファイルを分けた1つ1つの断片</dd>
+      <dt>S3 Transfer Acceleration</dt><dd>遠くからのアップロードを速くする、バケットの設定</dd>
+      <dt>エッジロケーション</dt><dd>世界各地にある AWS の出入口の拠点。CloudFront が使っている</dd>
+      <dt>リクエストレート</dt><dd>1秒あたりに受け付けるリクエスト（操作）の回数</dd>
+      <dt>503 Slow Down</dt><dd>「リクエストが多すぎるので、ゆっくり送ってください」という S3 のエラー</dd>
+      <dt>S3 Select</dt><dd>1つのオブジェクトの中から、必要な行と列だけを SQL で抜き出す機能</dd>
+      <dt>Athena<small>Amazon Athena</small></dt><dd>S3 に置いたたくさんのファイルを、SQL でまとめて検索・集計するサービス</dd>
+    </dl>
   </div>
 
-  <h3>スナップショットと暗号化</h3>
+  <p>性能の設問は「遅い」「失敗する」「エラーが返る」のどれかで来ます。原因を切り分けると、そのまま答えになります。</p>
+
+  <h3>大きなファイルは分けて送る ―― マルチパートアップロード</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 256" width="760" height="256" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="上は1回のPUTで大きなファイルを送ると途中で切れたら最初からやり直しになる図。中はマルチパートアップロードでパートに分けて並列に送り、失敗したパートだけ送り直す図。下は途中でやめるとパートが残って課金される図"><text x="10" y="22" font-size="12" fill="var(--ink-2)" text-anchor="start" font-weight="700">1回の PUT で送る</text><rect x="10" y="32" width="408" height="28" rx="4" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/><text x="214" y="51" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">大きなファイルを1本で送る（5GB まで）</text><line x1="418" y1="46" x2="616.0" y2="46.0" stroke="var(--ink-3)" stroke-width="1.8"/><polygon points="626.0,46.0 616.0,51.5 616.0,40.5" fill="var(--ink-3)"/><circle cx="522" cy="46" r="10" fill="var(--deny)"/><line x1="517.5" y1="41.5" x2="526.5" y2="50.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="517.5" y1="50.5" x2="526.5" y2="41.5" stroke="var(--bg)" stroke-width="2.4"/><text x="522" y="76" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">途中で切れたら最初から</text><rect x="640" y="28" width="110" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="695.0" y="50.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 バケット</text><text x="10" y="108" font-size="12" fill="var(--ink-2)" text-anchor="start" font-weight="700">マルチパートアップロード：分けて、並べて送る（100MB を超えたら推奨）</text><rect x="10" y="118" width="62" height="28" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="41" y="137" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">パート1</text><rect x="78" y="118" width="62" height="28" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="109" y="137" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">パート2</text><rect x="146" y="118" width="62" height="28" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="177" y="137" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">パート3</text><rect x="214" y="118" width="62" height="28" rx="4" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="245" y="137" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">パート4</text><rect x="282" y="118" width="62" height="28" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="313" y="137" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">パート5</text><rect x="350" y="118" width="62" height="28" rx="4" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.4"/><text x="381" y="137" font-size="10.5" fill="var(--accent)" text-anchor="middle" font-weight="700">パート6</text><line x1="418" y1="132" x2="616.0" y2="132.0" stroke="var(--allow)" stroke-width="2.4"/><polygon points="626.0,132.0 616.0,137.5 616.0,126.5" fill="var(--allow)"/><text x="522" y="122" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">並列に送る</text><rect x="640" y="114" width="110" height="36" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="695.0" y="136.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 バケット</text><text x="245" y="166" font-size="10.5" fill="var(--deny)" text-anchor="middle" font-weight="700">失敗したパートだけ送り直す</text><text x="695" y="166" font-size="10.5" fill="var(--ink-2)" text-anchor="end">最後に1つに組み立てる</text><text x="10" y="206" font-size="12" fill="var(--ink-2)" text-anchor="start" font-weight="700">途中でやめると</text><rect x="10" y="216" width="62" height="28" rx="4" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4" stroke-dasharray="5 4"/><text x="41" y="235" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">パート1</text><rect x="78" y="216" width="62" height="28" rx="4" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4" stroke-dasharray="5 4"/><text x="109" y="235" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">パート2</text><rect x="146" y="216" width="62" height="28" rx="4" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1.4" stroke-dasharray="5 4"/><text x="177" y="235" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">パート3</text><text x="226" y="228" font-size="11" fill="var(--warn)" text-anchor="start" font-weight="700">送り終えたパートは S3 に残る。一覧には見えないまま課金され続ける</text><text x="226" y="246" font-size="11" fill="var(--accent)" text-anchor="start" font-weight="700">→ ライフサイクルの AbortIncompleteMultipartUpload で掃除する（場面2）</text></svg>
+  </div>
+  <figcaption><strong>大きなファイルは、分けて並べて送る。</strong>1回の PUT で送れるのは 5GB まで。マルチパートアップロードは、ファイルをパートに分けて並列に送り、失敗したパートだけを送り直せるので、速くて回線の不調にも強い。ただし途中でやめたときのパートは自動では消えない（下段）。</figcaption>
+</figure>
   <ul>
-    <li>スナップショットは内部的に S3 に保存される<strong>増分</strong>バックアップです。2回目以降は差分だけを取ります。</li>
-    <li>EBSボリュームは<strong>単一AZ</strong>のリソースです。別AZにコピーしたければスナップショットを経由します。別リージョン・別アカウントへのコピーもでき、これがDRの基本形になります。</li>
-    <li>自動化は <strong>Data Lifecycle Manager（DLM）</strong>、または複数サービスをまとめるなら <strong>AWS Backup</strong>。</li>
-    <li>スナップショットから作ったボリュームは、初回アクセス時にレイテンシが出ます。これを避けるのが <strong>Fast Snapshot Restore</strong>（追加料金あり）です。</li>
-    <li>暗号化は KMS を使います。有効にすると、保存データ・インスタンスとボリューム間の転送・スナップショット・そのスナップショットから作るボリュームまで、すべて暗号化されます。</li>
-    <li><strong>既存の暗号化されていないボリュームを、その場で暗号化することはできません。</strong>スナップショットを取り、暗号化を指定してそのスナップショットをコピーし、コピーからボリュームを作ります。この3手順が設問の正解になります。アカウント単位で「既定で暗号化」を有効化しておけば、以後の新規ボリュームは自動的に暗号化されます。</li>
+    <li>1回の PUT で送れる上限は <strong>5GB</strong>。それを超えるオブジェクトはマルチパートが<strong>必須</strong>です。オブジェクト自体の上限は 5TB</li>
+    <li>AWS は <strong>100MB を超えたらマルチパートを使う</strong>ことを勧めています</li>
+    <li>パートは最大 10,000 個です</li>
+    <li>マルチパートにするかどうかはバケットの設定ではなく、送る側（CLI や SDK）が決めます。<code>aws s3 cp</code> などの CLI は、大きなファイルを自動でマルチパートにします</li>
+    <li><strong>中断したアップロードのパートは課金され続けます。</strong>ライフサイクルの <code>AbortIncompleteMultipartUpload</code>（場面2）で必ず掃除します</li>
   </ul>
 
-  <h3>マルチアタッチ</h3>
-  <p>1つのボリュームを複数のEC2に同時にアタッチする機能です。条件が厳しく、<strong>io1 / io2 のみ</strong>、<strong>同一AZ</strong>、<strong>Nitro世代のインスタンス</strong>、<strong>最大16台</strong>です。さらに重要なのは、<strong>XFS や ext4 のような通常のファイルシステムでは壊れる</strong>ことです。クラスタ対応のファイルシステムが前提になります。したがって「複数のEC2からファイルを共有したい」という一般的な設問の答えは<strong>マルチアタッチではなく EFS</strong> です。マルチアタッチが正解になるのは、クラスタソフトウェアを前提とした高可用性構成が明示されている場合に限られます。</p>
+  <h3>遠くから送ると遅い ―― Transfer Acceleration</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 246" width="760" height="246" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="海外の拠点から東京のバケットへの2つの経路。ふつうはインターネットを長く通る。Transfer Accelerationは近くのエッジロケーションから入り、AWSの専用の回線網でバケットまで運ぶ"><rect x="10" y="84" width="136" height="52" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="78.0" y="108.0" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">海外の拠点</text><text x="78.0" y="123.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">大きなファイル</text><rect x="614" y="84" width="136" height="52" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="682.0" y="114.375" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">東京のバケット</text><polyline points="146,96 230,52 330,78 440,44 540,70 614,96" fill="none" stroke="var(--ink-3)" stroke-width="1.8" stroke-linejoin="round" stroke-dasharray="5 4"/><text x="380" y="30" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">ふつうの経路：インターネットを長く通る（遅い・不安定）</text><line x1="146" y1="124" x2="240.7" y2="162.3" stroke="var(--allow)" stroke-width="2.2"/><polygon points="250.0,166.0 238.7,167.4 242.8,157.2" fill="var(--allow)"/><rect x="250" y="148" width="160" height="48" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="330.0" y="170.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">エッジロケーション</text><text x="330.0" y="185.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">拠点の近くの入口</text><line x1="410" y1="172" x2="604.2" y2="128.2" stroke="var(--allow)" stroke-width="3.2"/><polygon points="614.0,126.0 605.5,133.6 603.0,122.8" fill="var(--allow)"/><text x="540" y="176" font-size="11.5" fill="var(--allow)" text-anchor="middle" font-weight="700">AWS の専用の回線網</text><text x="198" y="208" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">インターネットは短い区間だけ</text><text x="10" y="236" font-size="11" fill="var(--ink-2)" text-anchor="start">効くのは、送る側とバケットが地理的に遠いとき。同じリージョンの EC2 から送る場合は速くならない</text></svg>
+  </div>
+  <figcaption><strong>S3 Transfer Acceleration は、入口を近くに持ってくる。</strong>拠点の近くのエッジロケーションで受け取り、そこからは AWS の専用の回線網で運ぶ。バケットのプロパティで有効にし、専用のエンドポイント宛てに送る。遠くからの大きなアップロードが遅い、という設問の答え。</figcaption>
+</figure>
+  <p>有効にする前に、効果を測れる比較ツールが AWS から提供されています。</p>
 
-  <h3>インスタンスストアとの違い</h3>
+  <h3>503 Slow Down が返る ―― プレフィックスの設計</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 242" width="760" height="242" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左は1つのプレフィックスにリクエストが集中して上限を超え、503 Slow Downが返る図。右はプレフィックスを4つに分けると、それぞれが上限を持つので4倍まで受けられる図"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">1つのプレフィックスに集中</text><line x1="20" y1="50" x2="138.2" y2="75.9" stroke="var(--allow)" stroke-width="1.6"/><polygon points="148.0,78.0 137.1,81.2 139.4,70.5" fill="var(--allow)"/><line x1="20" y1="70" x2="138.0" y2="81.1" stroke="var(--allow)" stroke-width="1.6"/><polygon points="148.0,82.0 137.5,86.5 138.6,75.6" fill="var(--allow)"/><line x1="20" y1="90" x2="138.0" y2="86.3" stroke="var(--allow)" stroke-width="1.6"/><polygon points="148.0,86.0 138.2,91.8 137.8,80.8" fill="var(--allow)"/><line x1="20" y1="110" x2="138.1" y2="91.5" stroke="var(--deny)" stroke-width="1.6"/><polygon points="148.0,90.0 139.0,97.0 137.3,86.1" fill="var(--deny)"/><line x1="20" y1="130" x2="138.4" y2="96.7" stroke="var(--deny)" stroke-width="1.6"/><polygon points="148.0,94.0 139.9,102.0 136.9,91.4" fill="var(--deny)"/><rect x="150" y="62" width="200" height="52" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><text x="250.0" y="86.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">logs/2026/09/20/</text><text x="250.0" y="101.0" font-size="10" fill="var(--ink-3)" text-anchor="middle">書き込み 3,500/秒・読み取り 5,500/秒</text><circle cx="84" cy="150" r="10" fill="var(--deny)"/><line x1="79.5" y1="145.5" x2="88.5" y2="154.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="79.5" y1="154.5" x2="88.5" y2="145.5" stroke="var(--bg)" stroke-width="2.4"/><text x="100" y="154" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">超えた分は 503 Slow Down</text><text x="20" y="186" font-size="11" fill="var(--ink-2)" text-anchor="start">バケットの上限ではなく、</text><text x="20" y="204" font-size="11" fill="var(--ink-2)" text-anchor="start">1つのプレフィックスの上限に当たっている</text><line x1="382" y1="14" x2="382" y2="236" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">プレフィックスを分ける</text><line x1="408" y1="55" x2="546.0" y2="55.0" stroke="var(--allow)" stroke-width="1.8"/><polygon points="556.0,55.0 546.0,60.5 546.0,49.5" fill="var(--allow)"/><rect x="558" y="40" width="190" height="30" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="653.0" y="59.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">line-a/</text><line x1="408" y1="95" x2="546.0" y2="95.0" stroke="var(--allow)" stroke-width="1.8"/><polygon points="556.0,95.0 546.0,100.5 546.0,89.5" fill="var(--allow)"/><rect x="558" y="80" width="190" height="30" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="653.0" y="99.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">line-b/</text><line x1="408" y1="135" x2="546.0" y2="135.0" stroke="var(--allow)" stroke-width="1.8"/><polygon points="556.0,135.0 546.0,140.5 546.0,129.5" fill="var(--allow)"/><rect x="558" y="120" width="190" height="30" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="653.0" y="139.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">line-c/</text><line x1="408" y1="175" x2="546.0" y2="175.0" stroke="var(--allow)" stroke-width="1.8"/><polygon points="556.0,175.0 546.0,180.5 546.0,169.5" fill="var(--allow)"/><rect x="558" y="160" width="190" height="30" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="653.0" y="179.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">line-d/</text><text x="573" y="214" font-size="11" fill="var(--allow)" text-anchor="middle" font-weight="700">それぞれが 3,500 / 5,500 を持つ → 4つなら4倍</text><text x="573" y="232" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">プレフィックスの数に上限はない</text></svg>
+  </div>
+  <figcaption><strong>S3 が受けられる回数は、バケット単位ではなくプレフィックス単位で決まる。</strong>1つのプレフィックスにつき、書き込み系は毎秒 3,500、読み取り系は毎秒 5,500。プレフィックスを分ければ、その数だけ伸びる。日付をキーの先頭に置くと、その日のデータが1か所に集中しやすい。</figcaption>
+</figure>
+  <ul>
+    <li>1つのプレフィックスあたり、書き込み系（PUT / COPY / POST / DELETE）が毎秒 3,500、読み取り系（GET / HEAD）が毎秒 5,500。10個に分ければ、読み取りは毎秒 55,000 まで伸びます</li>
+    <li>日付をキーの先頭に置く設計（<code>2026/09/20/...</code>）は、その日のデータが1つのプレフィックスに集中するので不利になりがちです</li>
+    <li><strong>受けられる回数は、すぐにではなく段階的に増えます。</strong>急に増えたときは一時的に 503 が出て、しばらくすると収まります</li>
+  </ul>
+
+  <h3>大きなファイルの一部だけ欲しい ―― S3 Select とバイト範囲フェッチ</h3>
+  <p>S3 Select は、大きな CSV / JSON / Parquet（どれも表形式のデータを入れるファイルの形式）から<strong>必要な行と列だけ</strong>を SQL の一部の文法で抜き出し、転送する量とアプリ側の処理を減らします。効くのは「1つのオブジェクトの一部だけが欲しい」ときです。<strong>複数のオブジェクトにまたがる集計や結合（JOIN）は Athena</strong> の仕事で、ここが切り分けの線になります。オブジェクトの決まった範囲のバイトだけを取り出す<strong>バイト範囲フェッチ</strong>も、大きなファイルの先頭だけ読みたいときや、範囲を分けて並列に取り出したいときに使えます。</p>
+
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「5GB を超えるファイル」「不安定な回線で大きなファイル」→ <strong>マルチパートアップロード</strong>。「海外の拠点から」「遠くから大容量をアップロード」→ <strong>Transfer Acceleration</strong>。「503 Slow Down」→ <strong>プレフィックスを分ける</strong>。「1つのファイルから必要な行だけ」→ <strong>S3 Select</strong>。「多数のファイルを SQL で集計」→ <strong>Athena</strong>。エラーが S3 の層（503 Slow Down）か KMS の層（ThrottlingException、場面5）かを先に見分ける。</p></div>
+</section>
+
+<section id="s8" data-toc="場面7 EC2 のディスク">
+  
+  <span class="h2num">08</span>
+  <h2>場面7 ―― 「gp2 では性能が足りない。費用は増やしたくない」「暗号化していないボリュームを暗号化したい」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>ボリューム</dt><dd>EBS で作る1本1本のディスクのこと</dd>
+      <dt>アタッチ</dt><dd>ボリュームを EC2 につなぐこと</dd>
+      <dt>インスタンスストア</dt><dd>EC2 が載っている物理サーバー（ホスト）に直接付いているディスク。インスタンスタイプによって付いてくる</dd>
+      <dt>SSD・HDD<small>Solid State Drive / Hard Disk Drive</small></dt><dd>ディスクの2つの方式。SSD は細かい読み書きが速い。HDD は安く、大きなデータを順に読み書きするのが得意</dd>
+      <dt>IOPS</dt><dd>ディスクが1秒間に読み書きできる回数（EC2 講義で既出）</dd>
+      <dt>スループット</dt><dd>1秒間に流せるデータの量。MiB/s（メビバイト毎秒）で表す</dd>
+      <dt>シーケンシャル</dt><dd>データを先頭から順番に読み書きすること。ログの処理や動画がこれにあたる</dd>
+      <dt>ブートボリューム</dt><dd>OS が入っていて、EC2 の起動に使うボリューム</dd>
+      <dt>スナップショット</dt><dd>ある時点のボリュームの中身を丸ごと写し取ったバックアップ</dd>
+      <dt>増分</dt><dd>前回から変わった部分だけを保存すること</dd>
+      <dt>DLM<small>Amazon Data Lifecycle Manager</small></dt><dd>スナップショットを決まった間隔で取り、古いものを消す作業を自動にするサービス</dd>
+    </dl>
+  </div>
+
+  <p>EC2 のディスクには2種類あります。違いは「どこにあるか」で、そこから性質がすべて決まります。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 236" width="760" height="236" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="左はEBS。EC2とは別の場所にあり、ネットワーク越しにつながるので、EC2を停止・終了してもデータが残る。右はインスタンスストア。ホストに直結したディスクで、停止・終了すると消える"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">EBS：ネットワーク越しにつなぐディスク</text><rect x="10" y="34" width="360" height="124" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/><text x="22" y="52" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-a</text><rect x="26" y="62" width="150" height="84" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.3"/><text x="101" y="80" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">ホスト（物理サーバー）</text><rect x="46" y="92" width="110" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="101.0" y="117.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="244" y="92" width="110" height="42" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="299.0" y="111.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EBS</text><text x="299.0" y="126.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">ボリューム</text><line x1="156" y1="113" x2="244" y2="113" stroke="var(--accent)" stroke-width="2.2"/><text x="200" y="104" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="700">ネットワーク</text><circle cx="20" cy="180" r="8" fill="var(--allow)"/><polyline points="16.4,180.0 19.2,183.0 24.0,177.0" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="34" y="184" font-size="11.5" fill="var(--allow)" text-anchor="start" font-weight="700">EC2 を停止・終了しても、データは残る</text><text x="34" y="204" font-size="10.5" fill="var(--ink-2)" text-anchor="start">スナップショットが取れる。後からサイズを変えられる</text><text x="34" y="222" font-size="10.5" fill="var(--ink-2)" text-anchor="start">つなげるのは、同じ AZ の EC2 だけ</text><line x1="382" y1="14" x2="382" y2="232" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">インスタンスストア：ホストに直結のディスク</text><rect x="398" y="34" width="352" height="124" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/><text x="410" y="52" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-a</text><rect x="414" y="62" width="320" height="84" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.3"/><text x="574" y="80" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">ホスト（物理サーバー）</text><rect x="430" y="92" width="110" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="485.0" y="117.5" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="596" y="92" width="124" height="42" rx="6" fill="var(--surface)" stroke="var(--warn)" stroke-width="1.6"/><text x="658.0" y="117.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">インスタンスストア</text><line x1="540" y1="113" x2="596" y2="113" stroke="var(--warn)" stroke-width="2.2"/><circle cx="408" cy="180" r="8" fill="var(--deny)"/><line x1="404.4" y1="176.4" x2="411.6" y2="183.6" stroke="var(--bg)" stroke-width="2.4"/><line x1="404.4" y1="183.6" x2="411.6" y2="176.4" stroke="var(--bg)" stroke-width="2.4"/><text x="422" y="184" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">停止・終了すると消える（再起動では残る）</text><text x="422" y="204" font-size="10.5" fill="var(--ink-2)" text-anchor="start">スナップショットは取れない。サイズは型で決まる</text><text x="422" y="222" font-size="10.5" fill="var(--ink-2)" text-anchor="start">最高の IOPS・最小の遅延。キャッシュや一時ファイル向け</text></svg>
+  </div>
+  <figcaption><strong>EBS は EC2 の外にあり、インスタンスストアは EC2 が載っているホストの中にある。</strong>EBS はネットワーク越しにつなぐので、EC2 を止めても終了してもデータが残る。インスタンスストアは直結なので最速だが、停止・終了で消える。「一時的な」「最高の I/O 性能」ならインスタンスストア、「永続化」と一言でもあれば EBS。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th></th><th>EBS</th><th>インスタンスストア</th></tr></thead>
     <tbody>
       <tr><td><strong>実体</strong></td><td>ネットワーク越しのブロックストレージ</td><td>ホストに物理的に直結したディスク</td></tr>
-      <tr><td><strong>性能</strong></td><td>プロビジョニングした分</td><td class="yes">最高のIOPSと最低のレイテンシ</td></tr>
-      <tr><td><strong>インスタンス停止・終了時</strong></td><td class="yes">残る</td><td class="no">消える（再起動では残る）</td></tr>
+      <tr><td><strong>性能</strong></td><td>選んだタイプと設定の分</td><td class="yes">最高の IOPS と最小の遅延</td></tr>
+      <tr><td><strong>インスタンスの停止・終了時</strong></td><td class="yes">残る</td><td class="no">消える（再起動では残る）</td></tr>
       <tr><td><strong>スナップショット</strong></td><td class="yes">取れる</td><td class="no">取れない</td></tr>
-      <tr><td><strong>サイズ変更</strong></td><td class="yes">後から変更可能</td><td class="no">インスタンスタイプで固定</td></tr>
+      <tr><td><strong>サイズの変更</strong></td><td class="yes">後から変更できる</td><td class="no">インスタンスタイプで固定</td></tr>
     </tbody>
   </table></div>
-  <p>インスタンスストアが正解になるのは、<strong>失われても構わないデータ</strong>のときだけです。キャッシュ、一時的なスクラッチ領域、シャッフル処理の中間ファイル、レプリカを他ノードに持つ分散データベース。設問に「一時的な」「バッファ」「最高のI/O性能」が揃っていればこれです。逆に「永続化が必要」と一言でも書いてあれば消えます。</p></section>
+  <p>インスタンスストアが正解になるのは、<strong>失われても構わないデータ</strong>のときだけです。キャッシュ、一時的な作業領域、並べ替え処理の中間ファイル、他のノードに複製を持つ分散データベース。設問に「一時的な」「バッファ」「最高の I/O 性能」が揃っていればこれです。</p>
 
-<section id="s9" data-toc="EFS と FSx">
-
-  <span class="h2num">09</span>
-  <h2>共有ファイルストレージ ―― EFS と FSx</h2>
-  <p class="lead">「複数のサーバーから同じファイルを見たい」と書いてあったら、この節の話です。あとは<strong>プロトコルとOS</strong>で一意に決まります。</p>
-
-  <h3>EFS</h3>
-  <p>EFS は NFS v4.1 のマネージドファイルシステムです。<strong>複数のAZにある複数のEC2から同時にマウントできます</strong>。容量は自動で伸縮し、事前のサイズ指定は不要です。Auto Scaling グループのインスタンスが増減しても、同じディレクトリを共有し続けられる――これが EFS の存在理由であり、そのまま設問の手がかりになります。</p>
+  <h3>ボリュームタイプは SSD か HDD かで分ける</h3>
+  <p>ボリュームタイプは、EC2 の画面の「ボリューム」でボリュームを作るときに選びます。後から「ボリュームの変更」で、EC2 を止めずにタイプ・サイズ・IOPS を変えられます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 246" width="760" height="246" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="EBSのボリュームタイプ。左はSSDでgp3、io2、gp2。右はHDDでst1とsc1。SSDはIOPS、HDDはスループットで選ぶ"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">SSD ＝ 細かい読み書きの回数（IOPS）で選ぶ</text><rect x="10" y="34" width="362" height="68" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/><text x="24" y="57" font-size="13.5" fill="var(--accent)" text-anchor="start" font-weight="700">gp3（汎用 SSD）</text><text x="24" y="76" font-size="10.5" fill="var(--ink-2)" text-anchor="start">迷ったらこれ。3,000 IOPS と 125 MiB/s が最初から付く</text><text x="24" y="92" font-size="10.5" fill="var(--ink-2)" text-anchor="start">IOPS とスループットを、容量とは別に足せる</text><rect x="10" y="110" width="362" height="68" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.5"/><text x="24" y="133" font-size="13.5" fill="var(--ink)" text-anchor="start" font-weight="700">io2 / io2 Block Express</text><text x="24" y="152" font-size="10.5" fill="var(--ink-2)" text-anchor="start">最大 256,000 IOPS・4,000 MiB/s。耐久性 99.999%</text><text x="24" y="168" font-size="10.5" fill="var(--ink-2)" text-anchor="start">極端な IOPS と小さな遅延が要る本番データベース</text><rect x="10" y="186" width="362" height="52" rx="6" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="24" y="209" font-size="13.5" fill="var(--ink-3)" text-anchor="start" font-weight="700">gp2（旧世代の汎用 SSD）</text><text x="24" y="228" font-size="10.5" fill="var(--ink-2)" text-anchor="start">性能が容量に比例（1GiB あたり 3 IOPS）→ gp3 へ替える</text><text x="390" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">HDD ＝ まとめて流す量（スループット）で選ぶ</text><rect x="390" y="34" width="360" height="68" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.5"/><text x="404" y="57" font-size="13.5" fill="var(--ink)" text-anchor="start" font-weight="700">st1（スループット最適化 HDD）</text><text x="404" y="76" font-size="10.5" fill="var(--ink-2)" text-anchor="start">最大 500 MiB/s。順番に読み書きする大きなデータ</text><text x="404" y="92" font-size="10.5" fill="var(--ink-2)" text-anchor="start">ログ処理・ビッグデータ・データウェアハウス</text><rect x="390" y="110" width="360" height="68" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.5"/><text x="404" y="133" font-size="13.5" fill="var(--ink)" text-anchor="start" font-weight="700">sc1（コールド HDD）</text><text x="404" y="152" font-size="10.5" fill="var(--ink-2)" text-anchor="start">最大 250 MiB/s。EBS の中で最安</text><text x="404" y="168" font-size="10.5" fill="var(--ink-2)" text-anchor="start">めったに読まない大容量のデータ</text><rect x="390" y="186" width="360" height="52" rx="6" fill="var(--deny-soft)" stroke="none" stroke-width="0"/><text x="404" y="208" font-size="11.5" fill="var(--deny)" text-anchor="start" font-weight="700">HDD は起動用のディスクにできない</text><text x="404" y="226" font-size="10.5" fill="var(--deny)" text-anchor="start">最小の容量は 125GiB</text></svg>
+  </div>
+  <figcaption><strong>設問に「IOPS」と出たら左（SSD）、「スループット」「シーケンシャル（順番に読む）」と出たら右（HDD）。</strong>既定は gp3。io2 は高いので、「データベース」と書いてあるだけでは選ばず、「数万 IOPS」「サブミリ秒」のような数字の裏付けを探す。</figcaption>
+</figure>
+  <div class="tw"><table>
+    <thead><tr><th>タイプ</th><th>種別</th><th>選ぶ決め手</th><th>ブートボリューム</th></tr></thead>
+    <tbody>
+      <tr><td><strong>gp3</strong></td><td>汎用 SSD</td><td><strong>既定の選択肢。</strong>3,000 IOPS と 125 MiB/s が容量に関係なく含まれ、IOPS とスループットを容量と別に追加できる。gp2 より安い</td><td class="yes">可</td></tr>
+      <tr><td><strong>gp2</strong></td><td>汎用 SSD</td><td>旧世代。性能が容量に比例（1GiB あたり 3 IOPS）し、小さいボリュームは一時的な加速（バースト）に頼る。<strong>新しく選ぶ理由はほぼない</strong></td><td class="yes">可</td></tr>
+      <tr><td><strong>io2 / io2 Block Express</strong></td><td>プロビジョンド IOPS SSD（IOPS を指定して確保する SSD）</td><td>耐久性 99.999%。Block Express は最大 256,000 IOPS / 4,000 MiB/s。<strong>1本のボリュームに極端な IOPS と小さな遅延が要る本番データベース</strong></td><td class="yes">可</td></tr>
+      <tr><td><strong>st1</strong></td><td>スループット最適化 HDD</td><td>最小 125GiB、最大 500 MiB/s。<strong>大容量のシーケンシャルな読み書き</strong>（ログ処理、ビッグデータ、データウェアハウス）を安く</td><td class="no">不可</td></tr>
+      <tr><td><strong>sc1</strong></td><td>コールド HDD</td><td>最小 125GiB、最大 250 MiB/s。EBS の中で最安。<strong>めったにアクセスしない大容量のデータ</strong></td><td class="no">不可</td></tr>
+    </tbody>
+  </table></div>
   <ul>
-    <li><strong>Linux 専用</strong>です。Windows からの SMB は FSx の領域です。</li>
-    <li>ストレージクラスは <strong>Standard / Infrequent Access（IA）/ Archive</strong> の3つ。加えて、単一AZに置く <strong>One Zone</strong> のバリアントがあり、開発環境や再作成可能なデータのコストを下げられます。</li>
-    <li>ライフサイクル管理の既定は、<strong>30日アクセスがなければ IA、90日で Archive</strong> へ移動します。アクセスされても自動では戻りませんが、「初回アクセスで Standard に戻す」設定を有効にできます。</li>
-    <li>スループットモードは Elastic（既定。使った分だけ）、Provisioned、Bursting から選べます。「容量は小さいがスループットが要る」場合に Provisioned を選びます。</li>
-    <li>アクセスにはAZごとの<strong>マウントターゲット</strong>と、NFS のポート 2049 を許可するセキュリティグループが必要です。「マウントできない」型の設問はたいていここです。</li>
+    <li><strong>この場面の答え（1つ目）：</strong>「gp2 で性能が足りない。コストは増やしたくない」→ ほぼ確実に <strong>gp3 への変更</strong>。gp2 は性能を上げるには容量を増やすしかないが、gp3 は IOPS とスループットだけを足せる</li>
   </ul>
 
-  <h3>FSx の4種類</h3>
-  <p>FSx は「既にあるファイルシステムの世界を、そのままAWSに持ってくる」サービス群です。設問には必ず固有名詞のヒントが埋まっています。</p>
+  <h3>スナップショットと暗号化</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 230" width="760" height="230" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="暗号化していないEBSボリュームを暗号化する3手順。スナップショットを取り、暗号化を指定してコピーし、そのコピーから新しいボリュームを作る。そのまま暗号化に切り替えることはできない"><rect x="10" y="96" width="155" height="50" rx="6" fill="var(--surface)" stroke="var(--deny)" stroke-width="1.6"/><text x="87.5" y="124.85" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">暗号化なしのボリューム</text><rect x="205" y="96" width="155" height="50" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="282.5" y="119.0" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">スナップショット</text><text x="282.5" y="134.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">暗号化なし</text><rect x="400" y="96" width="155" height="50" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="477.5" y="119.0" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">コピーしたスナップショット</text><text x="477.5" y="134.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">暗号化あり</text><rect x="595" y="96" width="155" height="50" rx="6" fill="var(--surface)" stroke="var(--allow)" stroke-width="1.6"/><text x="672.5" y="119.0" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">新しいボリューム</text><text x="672.5" y="134.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">暗号化あり</text><line x1="165" y1="121" x2="195.0" y2="121.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="205.0,121.0 195.0,126.5 195.0,115.5" fill="var(--allow)"/><circle cx="185" cy="100" r="10" fill="var(--accent)"/><text x="185" y="104" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><line x1="360" y1="121" x2="390.0" y2="121.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="400.0,121.0 390.0,126.5 390.0,115.5" fill="var(--allow)"/><circle cx="380" cy="100" r="10" fill="var(--accent)"/><text x="380" y="104" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><line x1="555" y1="121" x2="585.0" y2="121.0" stroke="var(--allow)" stroke-width="2.2"/><polygon points="595.0,121.0 585.0,126.5 585.0,115.5" fill="var(--allow)"/><circle cx="575" cy="100" r="10" fill="var(--accent)"/><text x="575" y="104" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><text x="185" y="168" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">スナップショットを取る</text><text x="380" y="168" font-size="10.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">暗号化を指定してコピー</text><text x="575" y="168" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">ボリュームを作る</text><polyline points="87,96 87,46 672,46 672.0,86.0" fill="none" stroke="var(--deny)" stroke-width="1.8" stroke-linejoin="round" stroke-dasharray="6 4"/><polygon points="672.0,96.0 666.5,86.0 677.5,86.0" fill="var(--deny)"/><circle cx="380" cy="46" r="10" fill="var(--deny)"/><line x1="375.5" y1="41.5" x2="384.5" y2="50.5" stroke="var(--bg)" stroke-width="2.4"/><line x1="375.5" y1="50.5" x2="384.5" y2="41.5" stroke="var(--bg)" stroke-width="2.4"/><text x="380" y="26" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">そのまま暗号化に切り替えることはできない</text><text x="10" y="200" font-size="11" fill="var(--ink-2)" text-anchor="start">スナップショットは増分（2回目からは変わった分だけ）で、S3 に保存される</text><text x="10" y="220" font-size="11" fill="var(--ink-2)" text-anchor="start">別の AZ・別のリージョン・別のアカウントへ持ち出すときも、スナップショットを経由する</text></svg>
+  </div>
+  <figcaption><strong>暗号化していないボリュームは、作り直すしかない。</strong>①スナップショットを取る、②暗号化を指定してスナップショットをコピーする、③そのコピーからボリュームを作る。この3手順が設問の正解になる。EBS は1つの AZ の中のものなので、別の AZ へ移すときも同じくスナップショットを使う。</figcaption>
+</figure>
+  <ul>
+    <li><strong>この場面の答え（2つ目）：</strong>図の3手順。その場で暗号化に切り替えることはできない</li>
+    <li>暗号化には KMS（場面5）を使います。有効にすると、保存してあるデータ、EC2 とボリュームの間の転送、スナップショット、そのスナップショットから作るボリュームまで、すべて暗号化されます</li>
+    <li>EC2 の設定で「EBS の暗号化を既定で有効」にしておけば（リージョンごとの設定）、以後の新しいボリュームは自動で暗号化されます</li>
+    <li>スナップショットを別のリージョン・別のアカウントへコピーできます。これが DR の基本形です</li>
+    <li>スナップショットの自動化は <strong>DLM</strong>、複数のサービスをまとめるなら <strong>AWS Backup</strong>（場面9）</li>
+    <li>スナップショットから作ったボリュームは、最初にアクセスするときに遅くなります。これを避けるのが <strong>Fast Snapshot Restore</strong>（追加の料金あり）です</li>
+  </ul>
+
+  <h3>1本のボリュームを複数の EC2 につなぐ ―― マルチアタッチ</h3>
+  <p>EBS は基本的に「1本を1台に」つなぎますが、マルチアタッチを使うと1本を複数の EC2 に同時につなげます。条件が厳しく、<strong>io1 / io2 のみ</strong>、<strong>同じ AZ</strong>、<strong>Nitro 世代のインスタンス</strong>（現行世代の EC2 の基盤）、<strong>最大16台</strong>です。さらに大事なのは、<strong>XFS や ext4 のような普通のファイルシステムでは、同時に書き込むと壊れる</strong>ことです。複数の台から同時に使う前提で作られた、クラスタ対応のファイルシステムが要ります。</p>
+  <div class="note warn">
+    <span class="label">「共有したい」の答えはマルチアタッチではない</span>
+    <p>「複数の EC2 からファイルを共有したい」という一般的な設問の答えは<strong>マルチアタッチではなく EFS</strong>（場面8）です。マルチアタッチが正解になるのは、クラスタ用のソフトウェアを前提にした高可用性の構成だと明示されている場合に限られます。</p>
+  </div>
+
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「IOPS」→ SSD 系（<strong>gp3 / io2</strong>）。「スループット」「シーケンシャル」→ HDD 系（<strong>st1 / sc1</strong>）。「数万 IOPS」「サブミリ秒」→ <strong>io2 Block Express</strong>（「データベース」と書いてあるだけでは飛びつかない）。「一時的」「最高の I/O 性能」→ <strong>インスタンスストア</strong>。「永続化が必要」と一言でもあればインスタンスストアは消える。「既存のボリュームを暗号化」→ <strong>スナップショット → 暗号化してコピー → ボリューム作成</strong>。</p></div>
+</section>
+
+<section id="s9" data-toc="場面8 共有する">
+  
+  <span class="h2num">09</span>
+  <h2>場面8 ―― 「3つの AZ の EC2 から、同じフォルダを読み書きしたい」「Windows の共有ドライブを移したい」</h2>
+
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>POSIX</dt><dd>Linux などの OS が、ファイルの読み書きや権限をどう扱うかを決めた標準。「POSIX 準拠」は「Linux の普通のフォルダと同じように使える」という意味</dd>
+      <dt>マウントターゲット</dt><dd>EFS につなぐための、AZ ごとの入口。サブネットの中に置かれ、セキュリティグループ（VPC 講義で既出）が付く</dd>
+      <dt>Active Directory<small>AD</small></dt><dd>Windows の世界で、社員のアカウントと権限をまとめて管理する仕組み</dd>
+      <dt>HPC<small>High Performance Computing</small></dt><dd>科学計算やシミュレーションなど、大量の台を並べて行う大規模な計算（EC2 講義で既出）</dd>
+      <dt>Lustre</dt><dd>HPC の世界で広く使われている、とても速い共有ファイルシステム</dd>
+      <dt>NetApp ONTAP・OpenZFS</dt><dd>どちらもオンプレミスで広く使われているファイルサーバーの製品・技術の名前</dd>
+    </dl>
+  </div>
+
+  <p>「複数のサーバーから同じファイルを見たい」と書いてあったら、この場面の話です。あとは<strong>プロトコルと OS</strong> で1つに決まります。</p>
+
+  <h3>EFS ―― Linux の共有フォルダ</h3>
+  <p>EFS は NFS（バージョン 4.1）の共有フォルダを AWS が運用してくれるサービスです。EFS の画面でファイルシステムを作り、「ネットワーク」の設定で AZ ごとにマウントターゲットを置きます。容量を先に決める必要はありません。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 300" width="760" height="300" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="3つのAZにあるEC2が、それぞれのAZのマウントターゲットを通って、1つのEFSファイルシステムを共有する図"><rect x="10" y="10" width="240" height="160" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/><text x="22" y="28" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-a</text><rect x="26" y="40" width="96" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="74.0" y="61.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="138" y="40" width="96" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="186.0" y="61.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="54" y="118" width="152" height="32" rx="16.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="130.0" y="137.85" font-size="11" fill="var(--ink-2)" text-anchor="middle">マウントターゲット</text><line x1="74" y1="74" x2="103.7" y2="110.3" stroke="var(--allow)" stroke-width="1.8"/><polygon points="110.0,118.0 99.4,113.7 107.9,106.8" fill="var(--allow)"/><line x1="186" y1="74" x2="156.3" y2="110.3" stroke="var(--allow)" stroke-width="1.8"/><polygon points="150.0,118.0 152.1,106.8 160.6,113.7" fill="var(--allow)"/><polyline points="130,150 130,192 300,192 300.0,204.0" fill="none" stroke="var(--allow)" stroke-width="2" stroke-linejoin="round"/><polygon points="300.0,214.0 294.5,204.0 305.5,204.0" fill="var(--allow)"/><rect x="260" y="10" width="240" height="160" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/><text x="272" y="28" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-c</text><rect x="276" y="40" width="96" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="324.0" y="61.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="388" y="40" width="96" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="436.0" y="61.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="304" y="118" width="152" height="32" rx="16.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="380.0" y="137.85" font-size="11" fill="var(--ink-2)" text-anchor="middle">マウントターゲット</text><line x1="324" y1="74" x2="353.7" y2="110.3" stroke="var(--allow)" stroke-width="1.8"/><polygon points="360.0,118.0 349.4,113.7 357.9,106.8" fill="var(--allow)"/><line x1="436" y1="74" x2="406.3" y2="110.3" stroke="var(--allow)" stroke-width="1.8"/><polygon points="400.0,118.0 402.1,106.8 410.6,113.7" fill="var(--allow)"/><polyline points="380,150 380,192 380,192 380.0,204.0" fill="none" stroke="var(--allow)" stroke-width="2" stroke-linejoin="round"/><polygon points="380.0,214.0 374.5,204.0 385.5,204.0" fill="var(--allow)"/><rect x="510" y="10" width="240" height="160" rx="8" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/><text x="522" y="28" font-size="11" fill="var(--ink-3)" text-anchor="start" font-weight="700">AZ-d</text><rect x="526" y="40" width="96" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="574.0" y="61.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="638" y="40" width="96" height="34" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="686.0" y="61.2" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">EC2</text><rect x="554" y="118" width="152" height="32" rx="16.0" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/><text x="630.0" y="137.85" font-size="11" fill="var(--ink-2)" text-anchor="middle">マウントターゲット</text><line x1="574" y1="74" x2="603.7" y2="110.3" stroke="var(--allow)" stroke-width="1.8"/><polygon points="610.0,118.0 599.4,113.7 607.9,106.8" fill="var(--allow)"/><line x1="686" y1="74" x2="656.3" y2="110.3" stroke="var(--allow)" stroke-width="1.8"/><polygon points="650.0,118.0 652.1,106.8 660.6,113.7" fill="var(--allow)"/><polyline points="630,150 630,192 460,192 460.0,204.0" fill="none" stroke="var(--allow)" stroke-width="2" stroke-linejoin="round"/><polygon points="460.0,214.0 454.5,204.0 465.5,204.0" fill="var(--allow)"/><text x="125" y="232" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">NFS（ポート 2049）</text><text x="125" y="248" font-size="10.5" fill="var(--allow)" text-anchor="middle" font-weight="700">でつなぐ</text><rect x="250" y="214" width="260" height="50" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/><text x="380.0" y="237.0" font-size="13" fill="var(--ink)" text-anchor="middle" font-weight="700">EFS ファイルシステム</text><text x="380.0" y="252.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">容量は自動で伸び縮みする</text><text x="10" y="290" font-size="11" fill="var(--ink-2)" text-anchor="start">マウントターゲットのセキュリティグループで、NFS のポート 2049 を開ける。閉じていると「マウントできない」</text></svg>
+  </div>
+  <figcaption><strong>EFS は、複数の AZ の何台もの EC2 から同時にマウントできる共有フォルダ。</strong>AZ ごとに「マウントターゲット」という入口を置き、EC2 は自分の AZ の入口につなぐ。Auto Scaling で台が増減しても、全員が同じフォルダを見続けられる。Linux 専用（NFS）。</figcaption>
+</figure>
+  <ul>
+    <li><strong>この場面の答え（1つ目）：</strong>複数の AZ・Linux・同時に読み書き → <strong>EFS</strong></li>
+    <li><strong>Linux 専用</strong>です。Windows からの SMB は FSx の領域です</li>
+    <li>ストレージクラスは <strong>Standard / Infrequent Access（IA）/ Archive</strong> の3つ。加えて、1つの AZ だけに置く <strong>One Zone</strong> の種類があり、開発環境や作り直せるデータのコストを下げられます</li>
+    <li>ライフサイクル管理の既定は、<strong>30日アクセスがなければ IA、90日で Archive</strong> へ移します。アクセスされても自動では戻りませんが、「最初のアクセスで Standard に戻す」設定を有効にできます</li>
+    <li>スループットモード（どれだけの速さを出せるかの決め方）は Elastic（既定。使った分だけ払う）、Provisioned（速さを指定して確保する）、Bursting（容量に応じて決まる）から選びます。「容量は小さいがスループットが要る」ときに Provisioned を選びます</li>
+  </ul>
+
+  <h3>FSx ―― 既存のファイルサーバーの世界を持ってくる</h3>
+  <p>FSx は「すでにあるファイルシステムの製品を、そのまま AWS で動かす」サービス群です。FSx の画面で、最初に4種類のどれにするかを選びます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 292" width="760" height="292" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="ファイルストレージを上から順に判定する図。Windowsやアクティブディレクトリ ならFSx for Windows File Server、HPCならFSx for Lustre、NetAppならFSx for NetApp ONTAP、ZFSならFSx for OpenZFS、LinuxのNFS共有ならEFS、1台だけならEBS"><rect x="10" y="12" width="400" height="32" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><circle cx="28" cy="28" r="10" fill="var(--accent)"/><text x="28" y="32" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">1</text><text x="46" y="33" font-size="11.5" fill="var(--ink)" text-anchor="start">Windows・SMB・Active Directory と書いてある？</text><line x1="410" y1="28" x2="468.0" y2="28.0" stroke="var(--allow)" stroke-width="2"/><polygon points="478.0,28.0 468.0,33.5 468.0,22.5" fill="var(--allow)"/><text x="444" y="21" font-size="10" fill="var(--allow)" text-anchor="middle" font-weight="700">はい</text><rect x="480" y="12" width="270" height="32" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/><text x="615" y="33" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">FSx for Windows File Server</text><line x1="60" y1="44" x2="60.0" y2="48.0" stroke="var(--ink-3)" stroke-width="1.4"/><polygon points="60.0,58.0 54.5,48.0 65.5,48.0" fill="var(--ink-3)"/><text x="70" y="56" font-size="9.5" fill="var(--ink-3)" text-anchor="start">いいえ</text><rect x="10" y="58" width="400" height="32" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><circle cx="28" cy="74" r="10" fill="var(--accent)"/><text x="28" y="78" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">2</text><text x="46" y="79" font-size="11.5" fill="var(--ink)" text-anchor="start">HPC・機械学習で、S3 のデータを超高速に処理する？</text><line x1="410" y1="74" x2="468.0" y2="74.0" stroke="var(--allow)" stroke-width="2"/><polygon points="478.0,74.0 468.0,79.5 468.0,68.5" fill="var(--allow)"/><text x="444" y="67" font-size="10" fill="var(--allow)" text-anchor="middle" font-weight="700">はい</text><rect x="480" y="58" width="270" height="32" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/><text x="615" y="79" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">FSx for Lustre</text><line x1="60" y1="90" x2="60.0" y2="94.0" stroke="var(--ink-3)" stroke-width="1.4"/><polygon points="60.0,104.0 54.5,94.0 65.5,94.0" fill="var(--ink-3)"/><text x="70" y="102" font-size="9.5" fill="var(--ink-3)" text-anchor="start">いいえ</text><rect x="10" y="104" width="400" height="32" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><circle cx="28" cy="120" r="10" fill="var(--accent)"/><text x="28" y="124" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">3</text><text x="46" y="125" font-size="11.5" fill="var(--ink)" text-anchor="start">NetApp・ONTAP という名前が出ている？</text><line x1="410" y1="120" x2="468.0" y2="120.0" stroke="var(--allow)" stroke-width="2"/><polygon points="478.0,120.0 468.0,125.5 468.0,114.5" fill="var(--allow)"/><text x="444" y="113" font-size="10" fill="var(--allow)" text-anchor="middle" font-weight="700">はい</text><rect x="480" y="104" width="270" height="32" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/><text x="615" y="125" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">FSx for NetApp ONTAP</text><line x1="60" y1="136" x2="60.0" y2="140.0" stroke="var(--ink-3)" stroke-width="1.4"/><polygon points="60.0,150.0 54.5,140.0 65.5,140.0" fill="var(--ink-3)"/><text x="70" y="148" font-size="9.5" fill="var(--ink-3)" text-anchor="start">いいえ</text><rect x="10" y="150" width="400" height="32" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><circle cx="28" cy="166" r="10" fill="var(--accent)"/><text x="28" y="170" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">4</text><text x="46" y="171" font-size="11.5" fill="var(--ink)" text-anchor="start">ZFS という名前が出ている？</text><line x1="410" y1="166" x2="468.0" y2="166.0" stroke="var(--allow)" stroke-width="2"/><polygon points="478.0,166.0 468.0,171.5 468.0,160.5" fill="var(--allow)"/><text x="444" y="159" font-size="10" fill="var(--allow)" text-anchor="middle" font-weight="700">はい</text><rect x="480" y="150" width="270" height="32" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/><text x="615" y="171" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">FSx for OpenZFS</text><line x1="60" y1="182" x2="60.0" y2="186.0" stroke="var(--ink-3)" stroke-width="1.4"/><polygon points="60.0,196.0 54.5,186.0 65.5,186.0" fill="var(--ink-3)"/><text x="70" y="194" font-size="9.5" fill="var(--ink-3)" text-anchor="start">いいえ</text><rect x="10" y="196" width="400" height="32" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><circle cx="28" cy="212" r="10" fill="var(--accent)"/><text x="28" y="216" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">5</text><text x="46" y="217" font-size="11.5" fill="var(--ink)" text-anchor="start">Linux の複数の台から NFS で共有する？</text><line x1="410" y1="212" x2="468.0" y2="212.0" stroke="var(--allow)" stroke-width="2"/><polygon points="478.0,212.0 468.0,217.5 468.0,206.5" fill="var(--allow)"/><text x="444" y="205" font-size="10" fill="var(--allow)" text-anchor="middle" font-weight="700">はい</text><rect x="480" y="196" width="270" height="32" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/><text x="615" y="217" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">Amazon EFS</text><line x1="60" y1="228" x2="60.0" y2="232.0" stroke="var(--ink-3)" stroke-width="1.4"/><polygon points="60.0,242.0 54.5,232.0 65.5,232.0" fill="var(--ink-3)"/><text x="70" y="240" font-size="9.5" fill="var(--ink-3)" text-anchor="start">いいえ</text><rect x="10" y="242" width="400" height="32" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.3"/><circle cx="28" cy="258" r="10" fill="var(--accent)"/><text x="28" y="262" font-size="12" fill="var(--bg)" text-anchor="middle" font-weight="700">6</text><text x="46" y="263" font-size="11.5" fill="var(--ink)" text-anchor="start">共有は要らない。1台で使うだけ？</text><line x1="410" y1="258" x2="468.0" y2="258.0" stroke="var(--allow)" stroke-width="2"/><polygon points="478.0,258.0 468.0,263.5 468.0,252.5" fill="var(--allow)"/><text x="444" y="251" font-size="10" fill="var(--allow)" text-anchor="middle" font-weight="700">はい</text><rect x="480" y="242" width="270" height="32" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/><text x="615" y="263" font-size="12" fill="var(--accent)" text-anchor="middle" font-weight="700">Amazon EBS（場面7）</text></svg>
+  </div>
+  <figcaption><strong>上から順に聞いていけば迷わない。</strong>FSx の設問には必ず固有名詞（Windows、Lustre、NetApp、ZFS）や用途（HPC）の手がかりが埋まっている。どれにも当たらず、Linux から共有したいだけなら EFS。そもそも1台で使うだけなら EBS。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th>種類</th><th>プロトコル</th><th>設問に出る手がかり</th></tr></thead>
     <tbody>
       <tr><td><strong>FSx for Windows File Server</strong></td><td>SMB</td><td>「Windows」「SMB」「Active Directory との統合」「既存の共有ドライブを移行」。<strong>Windows と書いてあればこれ</strong></td></tr>
-      <tr><td><strong>FSx for Lustre</strong></td><td>Lustre（POSIX）</td><td>「HPC」「機械学習の学習データ」「ゲノム解析」「金融シミュレーション」「数百GB/秒」。<strong>S3バケットとリンクして、S3のオブジェクトをファイルとして高速に処理できる</strong>のが決め手</td></tr>
-      <tr><td><strong>FSx for NetApp ONTAP</strong></td><td>NFS / SMB / iSCSI を同時</td><td>「NetApp」「オンプレの ONTAP をそのまま」「複数プロトコルを同時に使いたい」「スナップショットや重複排除を維持」</td></tr>
-      <tr><td><strong>FSx for OpenZFS</strong></td><td>NFS</td><td>「ZFS」「オンプレのLinuxファイルサーバーを移行」「NFSだけでよい」「低レイテンシ」</td></tr>
+      <tr><td><strong>FSx for Lustre</strong></td><td>Lustre（POSIX）</td><td>「HPC」「機械学習の学習データ」「ゲノム解析」「金融シミュレーション」「数百 GB/秒」。<strong>S3 バケットとつないで、S3 のオブジェクトをファイルとして高速に処理できる</strong>のが決め手</td></tr>
+      <tr><td><strong>FSx for NetApp ONTAP</strong></td><td>NFS / SMB / iSCSI を同時に</td><td>「NetApp」「オンプレミスの ONTAP をそのまま」「複数のプロトコルを同時に使いたい」「スナップショットや重複排除を維持」</td></tr>
+      <tr><td><strong>FSx for OpenZFS</strong></td><td>NFS</td><td>「ZFS」「オンプレミスの Linux ファイルサーバーを移行」「NFS だけでよい」「低遅延」</td></tr>
     </tbody>
   </table></div>
-  <p>Lustre にはデプロイタイプが2つあります。<strong>Scratch</strong> は一時的な処理用でレプリケートされず、サーバー障害でデータを失いますが最も速い。<strong>Persistent</strong> は長期利用向けで、同一AZ内で自動的に復旧します。「一時的な処理」「長期保存は不要」と書いてあれば Scratch です。</p>
+  <p>表の iSCSI は、ネットワーク越しのディスクにつなぐときのプロトコルです（場面9でもう一度出ます）。</p>
+  <p>Lustre には、作るときに選ぶ種類が2つあります。<strong>Scratch</strong> は一時的な処理用で、複製を持たないのでサーバーの障害でデータを失いますが、いちばん速い。<strong>Persistent</strong> は長く使う用で、同じ AZ の中で自動的に復旧します。「一時的な処理」「長期保存は不要」とあれば Scratch です。</p>
+  <ul>
+    <li><strong>この場面の答え（2つ目）：</strong>Windows の共有ドライブ → <strong>FSx for Windows File Server</strong></li>
+  </ul>
 
-  <div class="note">
-    <span class="label">3秒で切る順番</span>
-    <p>① Windows / SMB → FSx for Windows File Server。② HPC・機械学習・S3と連携した超高速処理 → FSx for Lustre。③ NetApp / ZFS という固有名詞 → 対応する FSx。④ それ以外で Linux から NFS 共有 → <strong>EFS</strong>。⑤ そもそも共有が要らない1台だけの話 → EBS。この順で潰せば迷いません。</p>
-  </div></section>
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「複数 AZ」「Linux」「同時に読み書き」「POSIX」→ <strong>EFS</strong>。「Windows」「SMB」「Active Directory」→ <strong>FSx for Windows File Server</strong>。「HPC」「S3 のデータを高速に処理」→ <strong>FSx for Lustre</strong>。「EFS をマウントできない」→ <strong>マウントターゲットのセキュリティグループでポート 2049</strong>。「1台で使うだけ」→ EBS（場面7）。</p></div>
+</section>
 
-<section id="s10" data-toc="移行とハイブリッド">
-
+<section id="s10" data-toc="場面9 オンプレミス">
+  
   <span class="h2num">10</span>
-  <h2>ハイブリッド構成とデータ移行</h2>
-  <p class="lead">オンプレミスが絡む設問は、<strong>移行して終わりなのか、使い続けるのか</strong>をまず読み分けます。使い続けるなら Storage Gateway、移すだけなら DataSync か Snow です。</p>
+  <h2>場面9 ―― 「100TB を今月中に AWS へ移したい」「テープのバックアップをやめたい」</h2>
 
-  <h3>Storage Gateway の4形態</h3>
+  <div class="note terms"><span class="label">この場面で初めて出る言葉</span>
+    <dl>
+      <dt>ハイブリッド</dt><dd>オンプレミスと AWS の両方を、つないだまま使い続ける構成</dd>
+      <dt>Storage Gateway<small>AWS Storage Gateway</small></dt><dd>オンプレミスの機器と AWS のストレージの間に立つ仲介役。オンプレミス側に置いて使う</dd>
+      <dt>iSCSI</dt><dd>ネットワーク越しのディスクを、手元のディスクのように使うためのプロトコル</dd>
+      <dt>VTL<small>Virtual Tape Library（仮想テープライブラリ）</small></dt><dd>バックアップソフトからは本物のテープ装置に見える、ソフトウェアの装置</dd>
+      <dt>DataSync<small>AWS DataSync</small></dt><dd>オンプレミスと AWS の間で、ファイルを回線経由で速く運ぶサービス</dd>
+      <dt>Snowball Edge<small>AWS Snowball Edge（Snow ファミリー）</small></dt><dd>AWS から届く、持ち運べる記憶装置。データを書き込んで送り返すと、AWS が S3 に入れてくれる</dd>
+      <dt>Direct Connect<small>AWS Direct Connect</small></dt><dd>オンプレミスと AWS を結ぶ専用線（VPC 講義で既出）</dd>
+      <dt>AWS Backup</dt><dd>いくつものサービスのバックアップを1か所で管理するサービス</dd>
+    </dl>
+  </div>
+
+  <p>オンプレミスが絡む設問は、<strong>移して終わりなのか、使い続けるのか</strong>をまず読み分けます。使い続けるなら Storage Gateway、移すだけなら DataSync か Snowball Edge です。</p>
+
+  <h3>使い続ける ―― Storage Gateway</h3>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 286" width="760" height="286" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="Storage Gatewayの4種類。S3 File GatewayはNFSやSMBの共有フォルダをS3へ、FSx File GatewayはSMBをFSx for Windows File Serverへ、Volume GatewayはiSCSIのディスクをS3へ、Tape Gatewayは仮想テープをS3とGlacierへつなぐ"><text x="120" y="22" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">オンプレミスからの見え方</text><text x="380" y="22" font-size="11.5" fill="var(--accent)" text-anchor="middle" font-weight="700">Storage Gateway の種類</text><text x="640" y="22" font-size="11.5" fill="var(--ink-2)" text-anchor="middle" font-weight="700">AWS 側の保存先</text><rect x="10" y="34" width="220" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="120.0" y="59.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">NFS / SMB の共有フォルダ</text><rect x="270" y="34" width="220" height="42" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="380.0" y="59.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 File Gateway</text><rect x="530" y="34" width="220" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="640.0" y="58.9" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 のオブジェクト</text><line x1="230" y1="55" x2="260.0" y2="55.0" stroke="var(--allow)" stroke-width="2"/><polygon points="270.0,55.0 260.0,60.5 260.0,49.5" fill="var(--allow)"/><line x1="490" y1="55" x2="520.0" y2="55.0" stroke="var(--allow)" stroke-width="2"/><polygon points="530.0,55.0 520.0,60.5 520.0,49.5" fill="var(--allow)"/><rect x="10" y="90" width="220" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="120.0" y="115.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">SMB の共有フォルダ</text><rect x="270" y="90" width="220" height="42" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="380.0" y="115.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">FSx File Gateway</text><rect x="530" y="90" width="220" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="640.0" y="114.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">FSx for Windows File Server</text><line x1="230" y1="111" x2="260.0" y2="111.0" stroke="var(--allow)" stroke-width="2"/><polygon points="270.0,111.0 260.0,116.5 260.0,105.5" fill="var(--allow)"/><line x1="490" y1="111" x2="520.0" y2="111.0" stroke="var(--allow)" stroke-width="2"/><polygon points="530.0,111.0 520.0,116.5 520.0,105.5" fill="var(--allow)"/><rect x="10" y="146" width="220" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="120.0" y="171.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">iSCSI のディスク</text><rect x="270" y="146" width="220" height="42" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="380.0" y="171.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Volume Gateway</text><rect x="530" y="146" width="220" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="640.0" y="170.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">S3（EBS スナップショットにできる）</text><line x1="230" y1="167" x2="260.0" y2="167.0" stroke="var(--allow)" stroke-width="2"/><polygon points="270.0,167.0 260.0,172.5 260.0,161.5" fill="var(--allow)"/><line x1="490" y1="167" x2="520.0" y2="167.0" stroke="var(--allow)" stroke-width="2"/><polygon points="530.0,167.0 520.0,172.5 520.0,161.5" fill="var(--allow)"/><rect x="10" y="202" width="220" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="120.0" y="227.0" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="700">仮想のテープ装置（VTL）</text><rect x="270" y="202" width="220" height="42" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="380.0" y="227.4" font-size="12.5" fill="var(--ink)" text-anchor="middle" font-weight="700">Tape Gateway</text><rect x="530" y="202" width="220" height="42" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="640.0" y="226.8" font-size="11" fill="var(--ink)" text-anchor="middle" font-weight="700">S3 / Glacier</text><line x1="230" y1="223" x2="260.0" y2="223.0" stroke="var(--allow)" stroke-width="2"/><polygon points="270.0,223.0 260.0,228.5 260.0,217.5" fill="var(--allow)"/><line x1="490" y1="223" x2="520.0" y2="223.0" stroke="var(--allow)" stroke-width="2"/><polygon points="530.0,223.0 520.0,228.5 520.0,217.5" fill="var(--allow)"/><text x="10" y="276" font-size="11" fill="var(--ink-2)" text-anchor="start">オンプレミスの機器からは今までどおりの形に見え、実際のデータは AWS に置かれる。よく使う分は手元にキャッシュする</text></svg>
+  </div>
+  <figcaption><strong>Storage Gateway は、オンプレミスの機器に「今までと同じ姿」を見せながら、中身を AWS に置く仲介役。</strong>左の列（オンプレミスからどう見えるか）で種類が決まる。ファイルなら File Gateway、ディスクなら Volume Gateway、テープなら Tape Gateway。</figcaption>
+</figure>
   <div class="tw"><table>
-    <thead><tr><th>形態</th><th>オンプレ側から見た姿</th><th>クラウド側の保存先</th><th>設問の手がかり</th></tr></thead>
+    <thead><tr><th>種類</th><th>オンプレミス側から見た姿</th><th>AWS 側の保存先</th><th>設問の手がかり</th></tr></thead>
     <tbody>
-      <tr><td><strong>S3 File Gateway</strong></td><td>NFS / SMB の共有</td><td>S3 のオブジェクト</td><td>「ファイルをそのままS3に置きたい」「オンプレにキャッシュを残しつつ容量を無限に」</td></tr>
-      <tr><td><strong>FSx File Gateway</strong></td><td>SMB の共有</td><td>FSx for Windows File Server</td><td>「オンプレの拠点から FSx への低レイテンシアクセスとキャッシュ」</td></tr>
-      <tr><td><strong>Volume Gateway</strong></td><td>iSCSI のブロックデバイス</td><td>S3 / EBSスナップショット</td><td>「ブロックストレージ」「既存アプリがiSCSIを使う」。<strong>Cached</strong> は主データがクラウドで手元はキャッシュ、<strong>Stored</strong> は主データが手元でクラウドはバックアップ</td></tr>
-      <tr><td><strong>Tape Gateway</strong></td><td>仮想テープライブラリ（VTL）</td><td>S3 / Glacier</td><td>「<strong>テープ</strong>」「既存のバックアップソフトを変えずに物理テープを廃止したい」</td></tr>
+      <tr><td><strong>S3 File Gateway</strong></td><td>NFS / SMB の共有</td><td>S3 のオブジェクト</td><td>「ファイルをそのまま S3 に置きたい」「オンプレミスにキャッシュを残しつつ、容量を気にせず使いたい」</td></tr>
+      <tr><td><strong>FSx File Gateway</strong></td><td>SMB の共有</td><td>FSx for Windows File Server</td><td>「オンプレミスの拠点から FSx へ、遅延の少ないアクセスとキャッシュ」</td></tr>
+      <tr><td><strong>Volume Gateway</strong></td><td>iSCSI のブロックデバイス（ディスク）</td><td>S3 / EBS スナップショット</td><td>「ブロックストレージ」「既存のアプリが iSCSI を使う」</td></tr>
+      <tr><td><strong>Tape Gateway</strong></td><td>仮想テープライブラリ（VTL）</td><td>S3 / Glacier</td><td>「<strong>テープ</strong>」「既存のバックアップソフトを変えずに、物理テープをやめたい」</td></tr>
     </tbody>
   </table></div>
-  <p>Volume Gateway の2モードは頻出です。切り分けの言葉は<strong>「主データがどちらにあるか」</strong>。低レイテンシで全データにアクセスし続ける必要があるなら Stored、手元のディスク容量を減らしたいなら Cached です。</p>
+  <ul>
+    <li><strong>この場面の答え（2つ目）：</strong>テープをやめたい → <strong>Tape Gateway</strong>。バックアップソフトはそのまま、保存先だけが S3 と Glacier に変わる</li>
+  </ul>
+  <p>Volume Gateway には2つの型があり、よく問われます。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 174" width="760" height="174" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="Volume Gatewayの2つの型。Cachedは主データがAWSにあり手元はキャッシュ。Storedは主データが手元にありAWSはバックアップ"><text x="10" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Cached（キャッシュ型）</text><text x="86" y="46" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">オンプレミス</text><text x="274" y="46" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">AWS</text><rect x="26" y="74" width="120" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="86.0" y="92.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">キャッシュ</text><text x="86.0" y="107.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">よく使う分だけ</text><rect x="204" y="56" width="140" height="76" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="274.0" y="92.0" font-size="13" fill="var(--accent)" text-anchor="middle" font-weight="700">主データ</text><text x="274.0" y="107.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">全部が AWS にある</text><line x1="146" y1="94" x2="194.0" y2="94.0" stroke="var(--allow)" stroke-width="2"/><polygon points="204.0,94.0 194.0,99.5 194.0,88.5" fill="var(--allow)"/><text x="190" y="158" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">手元のディスクを減らしたい</text><line x1="382" y1="14" x2="382" y2="170" stroke="var(--line)" stroke-width="1.2"/><text x="398" y="22" font-size="12.5" fill="var(--ink)" text-anchor="start" font-weight="700">Stored（保管型）</text><text x="484" y="46" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">オンプレミス</text><text x="672" y="46" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">AWS</text><rect x="414" y="56" width="140" height="76" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/><text x="484.0" y="92.0" font-size="13" fill="var(--accent)" text-anchor="middle" font-weight="700">主データ</text><text x="484.0" y="107.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">全部が手元にある</text><rect x="612" y="74" width="120" height="40" rx="6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width="1.6"/><text x="672.0" y="92.0" font-size="12" fill="var(--ink)" text-anchor="middle" font-weight="700">バックアップ</text><text x="672.0" y="107.0" font-size="10.5" fill="var(--ink-3)" text-anchor="middle">スナップショット</text><line x1="554" y1="94" x2="602.0" y2="94.0" stroke="var(--allow)" stroke-width="2"/><polygon points="612.0,94.0 602.0,99.5 602.0,88.5" fill="var(--allow)"/><text x="573" y="158" font-size="11" fill="var(--ink-2)" text-anchor="middle" font-weight="700">全部のデータに、遅れなくアクセスし続けたい</text></svg>
+  </div>
+  <figcaption><strong>Volume Gateway の2つの型は、「主データがどちらにあるか」で分かれる。</strong>Cached は主データが AWS にあり、手元にはよく使う分だけを置く。Stored は主データが手元にあり、AWS にはバックアップを送る。</figcaption>
+</figure>
+  <p>切り分けの言葉は<strong>「主データがどちらにあるか」</strong>。全部のデータに遅れなくアクセスし続ける必要があるなら Stored、手元のディスクの容量を減らしたいなら Cached です。</p>
 
-  <h3>AWS Backup</h3>
-  <p>EBS、EFS、FSx、RDS、DynamoDB、S3、Storage Gateway など<strong>複数サービスのバックアップを1か所で定義・実行・監査する</strong>サービスです。バックアップ計画に頻度と保持期間とライフサイクル（一定期間後にコールドストレージへ）を書き、タグで対象を選びます。クロスリージョン・クロスアカウントのコピーにも対応します。<strong>Backup Vault Lock</strong> を使えば、バックアップ自体を WORM 化でき、ガバナンスモードとコンプライアンスモードという Object Lock と同じ構図の選択肢を持ちます。</p>
-  <p>設問での切り分けはこうです。「<strong>複数サービスにまたがるバックアップを中央で管理し、コンプライアンス報告を出したい</strong>」→ AWS Backup。「EBSスナップショットのスケジュール取得と世代管理だけ」→ Data Lifecycle Manager でも足ります。</p>
-
-  <h3>大容量移行は計算で決める</h3>
-  <p>ここは暗記ではなく計算の問題です。<strong>所要日数 = データ量 ÷ 実効回線速度</strong>。この一本で判断できます。例えば 100 TB を 1 Gbps の回線で送ると、100 TB = 800,000 Gbit、1 Gbps で 800,000 秒、およそ <strong>9.3 日</strong>。回線を100%占有した理想値なので、実際はこの数倍を見ます。同じ 100 TB を 100 Mbps で送れば約93日で、たいていの期限に間に合いません。</p>
+  <h3>移す ―― 計算で決める</h3>
+  <p>ここは暗記ではなく計算の問題です。<strong>所要日数 = データ量 ÷ 回線の実効速度</strong>。たとえば 100TB を 1Gbps の回線で送ると、100TB = 800,000 ギガビット、1Gbps で 800,000 秒、およそ <strong>9.3日</strong>。回線を 100% 使えた場合の理想の値なので、実際はこの数倍を見ます。同じ 100TB を 100Mbps で送れば約93日で、たいていの期限に間に合いません。</p>
+  <figure>
+  <div class="fig">
+    <svg viewBox="0 0 760 274" width="760" height="274" style="width:100%;min-width:560px;height:auto;display:block" role="img" aria-label="上は移行にかかる日数の棒グラフ。100TBを1Gbpsで送ると約9.3日、100Mbpsだと約93日。下は状況ごとの選択。期限内に終わるならDataSync、間に合わないならSnowball Edge、使い続けるならStorage Gateway、専用線ならDirect Connect"><text x="10" y="22" font-size="11.5" fill="var(--ink)" text-anchor="start" font-weight="700">所要日数 ＝ データ量 ÷ 回線の実効速度（回線を100%使えた場合の理想値。実際はこの数倍）</text><text x="190" y="59" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">100TB を 1Gbps で</text><rect x="200" y="42" width="46.5" height="26" rx="3" fill="var(--allow-soft)" stroke="var(--allow)" stroke-width="1.4"/><text x="256.5" y="59" font-size="11.5" fill="var(--allow)" text-anchor="start" font-weight="700">約 9.3日</text><text x="190" y="99" font-size="11" fill="var(--ink-2)" text-anchor="end" font-weight="700">100TB を 100Mbps で</text><rect x="200" y="82" width="465" height="26" rx="3" fill="var(--deny-soft)" stroke="var(--deny)" stroke-width="1.4"/><text x="500" y="99" font-size="11.5" fill="var(--deny)" text-anchor="middle" font-weight="700">約 93日</text><line x1="350" y1="34" x2="350" y2="116" stroke="var(--warn)" stroke-width="1.6" stroke-dasharray="5 4"/><text x="350" y="132" font-size="10.5" fill="var(--warn)" text-anchor="middle" font-weight="700">期限が30日なら、ここまで</text><rect x="10" y="150" width="740" height="24" rx="4" fill="var(--surface-2)" stroke="none" stroke-width="0"/><text x="20" y="167" font-size="11" fill="var(--ink-2)" text-anchor="start">回線で期限内に終わる。続けて同期もしたい</text><line x1="322" y1="162" x2="342.0" y2="162.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="352.0,162.0 342.0,167.5 342.0,156.5" fill="var(--ink-3)"/><text x="364" y="167" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">AWS DataSync</text><rect x="10" y="180" width="740" height="24" rx="4" fill="var(--surface)" stroke="none" stroke-width="0"/><text x="20" y="197" font-size="11" fill="var(--ink-2)" text-anchor="start">回線では間に合わない。一度きりの大量移行</text><line x1="322" y1="192" x2="342.0" y2="192.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="352.0,192.0 342.0,197.5 342.0,186.5" fill="var(--ink-3)"/><text x="364" y="197" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">AWS Snowball Edge（機器に書き込んで返送する）</text><rect x="10" y="210" width="740" height="24" rx="4" fill="var(--surface-2)" stroke="none" stroke-width="0"/><text x="20" y="227" font-size="11" fill="var(--ink-2)" text-anchor="start">移すのではなく、オンプレミスから使い続ける</text><line x1="322" y1="222" x2="342.0" y2="222.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="352.0,222.0 342.0,227.5 342.0,216.5" fill="var(--ink-3)"/><text x="364" y="227" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">Storage Gateway</text><rect x="10" y="240" width="740" height="24" rx="4" fill="var(--surface)" stroke="none" stroke-width="0"/><text x="20" y="257" font-size="11" fill="var(--ink-2)" text-anchor="start">ずっと使う太い専用線がほしい</text><line x1="322" y1="252" x2="342.0" y2="252.0" stroke="var(--ink-3)" stroke-width="1.6"/><polygon points="352.0,252.0 342.0,257.5 342.0,246.5" fill="var(--ink-3)"/><text x="364" y="257" font-size="11.5" fill="var(--accent)" text-anchor="start" font-weight="700">Direct Connect（開通に数週間〜数か月）</text></svg>
+  </div>
+  <figcaption><strong>大容量の移行は、暗記ではなく割り算で決める。</strong>データ量をビットに直して回線の速度で割ると、理想値の日数が出る。期限に収まれば回線で送る（DataSync）。収まらなければ、機器に書き込んで運ぶ（Snowball Edge）。Direct Connect は開通に時間がかかるので「今月中に」には間に合わない。</figcaption>
+</figure>
   <div class="tw"><table>
     <thead><tr><th>状況</th><th>選ぶもの</th></tr></thead>
     <tbody>
-      <tr><td>回線で期限内に終わる。かつ<strong>継続的に同期</strong>したい</td><td><strong>AWS DataSync</strong>（NFS / SMB / HDFS / オブジェクトストレージ ↔ S3・EFS・FSx。増分転送、検証、スケジュール実行）</td></tr>
-      <tr><td>回線が細い、または<strong>一度きりの大量移行に期限がある</strong></td><td><strong>AWS Snowball Edge</strong>（物理デバイスを郵送。現行世代は Storage Optimized 210TB）</td></tr>
+      <tr><td>回線で期限内に終わる。かつ<strong>続けて同期</strong>したい</td><td><strong>AWS DataSync</strong>（NFS / SMB / HDFS / オブジェクトストレージ ↔ S3・EFS・FSx。変わった分だけの転送、検証、スケジュール実行）</td></tr>
+      <tr><td>回線が細い、または<strong>一度きりの大量移行に期限がある</strong></td><td><strong>AWS Snowball Edge</strong>（物理的な機器を送ってもらう。現行世代は Storage Optimized 210TB）</td></tr>
       <tr><td>移行ではなく<strong>ハイブリッドで使い続ける</strong></td><td><strong>Storage Gateway</strong></td></tr>
-      <tr><td>恒常的に太い専用線が欲しい</td><td><strong>Direct Connect</strong>（ただし開通に数週間〜数か月。<strong>「今月中に移行」には間に合わない</strong>）</td></tr>
+      <tr><td>ずっと使う太い専用線が欲しい</td><td><strong>Direct Connect</strong>（ただし開通に数週間〜数か月。<strong>「今月中に移行」には間に合わない</strong>）</td></tr>
     </tbody>
   </table></div>
+  <p>表の HDFS は、ビッグデータの処理基盤（Hadoop）で使われるファイルシステムの名前です。</p>
+  <ul>
+    <li><strong>この場面の答え（1つ目）：</strong>100TB を今月中に。回線が 1Gbps なら理想値で約9.3日なので DataSync で届く見込みがある。100Mbps なら約93日で間に合わないので Snowball Edge</li>
+  </ul>
   <div class="note warn">
     <span class="label">Snow ファミリーの現状</span>
-    <p>試験の選択肢には Snowcone や旧世代の Snowball Edge が今も登場しますが、実機としては<strong>2024年11月に Snowcone と旧世代 Snowball Edge モデルの提供が終了</strong>しており、現行は Snowball Edge Storage Optimized 210TB などに絞られています。AWS は新規の大容量移行に DataSync や AWS Data Transfer Terminal を案内する方向です。<strong>試験では「回線では間に合わない量のオフライン移行 = Snow」という対応で答えつつ、実務ではまず DataSync を検討する</strong>、と二段構えで持っておいてください。</p>
-  </div></section>
+    <p>試験の選択肢には Snowcone や旧世代の Snowball Edge が今も出てきますが、実際の機器としては <strong>2024年11月に Snowcone と旧世代の Snowball Edge の提供が終わって</strong>おり、現行は Snowball Edge Storage Optimized 210TB などに絞られています。AWS は新しい大容量の移行に DataSync や AWS Data Transfer Terminal を案内する方向です。<strong>試験では「回線では間に合わない量のオフライン移行 = Snow」という対応で答えつつ、実務ではまず DataSync を検討する</strong>、と二段構えで持っておいてください。</p>
+  </div>
 
-<section id="s11" data-toc="試験での判断軸">
+  <h3>バックアップをまとめて管理する ―― AWS Backup</h3>
+  <p>AWS Backup は、EBS、EFS、FSx、RDS、DynamoDB、S3、Storage Gateway など<strong>複数のサービスのバックアップを1か所で決めて、実行し、監査する</strong>サービスです。AWS Backup の画面で<strong>バックアップ計画</strong>を作り、そこに頻度と保持期間とライフサイクル（一定の期間が過ぎたら安い保管先へ移す）を書き、タグで対象を選びます。別のリージョン・別のアカウントへのコピーにも対応します。<strong>Backup Vault Lock</strong>（バックアップの保管庫に鍵をかける機能）を使えば、バックアップそのものを WORM にでき、場面3の Object Lock と同じく、ガバナンスモードとコンプライアンスモードを選べます。</p>
+  <p>切り分けはこうです。「<strong>複数のサービスにまたがるバックアップを中央で管理し、コンプライアンスの報告を出したい</strong>」→ AWS Backup。「EBS スナップショットを決まった間隔で取って、世代を管理するだけ」→ DLM（場面7）でも足ります。</p>
 
+  <div class="note"><span class="label">試験ではこう出る</span>
+    <p>「テープ」→ <strong>Tape Gateway</strong>。「オンプレミスから NFS / SMB で S3 に置く」→ <strong>S3 File Gateway</strong>。「iSCSI」→ <strong>Volume Gateway</strong>（主データが手元なら Stored、AWS なら Cached）。「回線で間に合う・継続的に同期」→ <strong>DataSync</strong>。「回線では期限に間に合わない」→ <strong>Snowball Edge</strong>。「今月中に」の設問で Direct Connect を新しく引く選択肢は不正解。移行の設問は、まず割り算をする。</p></div>
+</section>
+
+<section id="s11" data-toc="場面→答えの早見表">
+  
   <span class="h2num">11</span>
-  <h2>試験での判断軸</h2>
-  <p class="lead">設問文にこの手がかりが出たら、この答えに寄せる――という対応表です。ストレージの設問の多くは、この1行で決着します。</p>
-
+  <h2>場面 → 答えの早見表</h2>
+  <p class="lead">左を読んで右を思い出す訓練に使ってください。実際の設問では、左側の手がかりが2つ3つ重ねて書かれています。1つしか見つからないときは読み落としがあります。</p>
   <div class="judge">
     <div class="row"><span class="cue">アクセスパターンが予測できない / 変動する</span><span class="arrow">→</span><span class="ans">S3 Intelligent-Tiering</span></div>
     <div class="row"><span class="cue">月に数回。読むときはミリ秒で必要</span><span class="arrow">→</span><span class="ans">S3 Standard-IA</span></div>
-    <div class="row"><span class="cue">安く。失っても再生成できる二次コピー</span><span class="arrow">→</span><span class="ans">S3 One Zone-IA</span></div>
+    <div class="row"><span class="cue">安く。失っても作り直せる二次コピー</span><span class="arrow">→</span><span class="ans">S3 One Zone-IA</span></div>
     <div class="row"><span class="cue">アーカイブだが即座に取り出したい</span><span class="arrow">→</span><span class="ans">S3 Glacier Instant Retrieval</span></div>
     <div class="row"><span class="cue">法定保存7年。取り出しは12時間でよい</span><span class="arrow">→</span><span class="ans">S3 Glacier Deep Archive</span></div>
+    <div class="row"><span class="cue">7日で消す一時ファイルのコストを下げたい</span><span class="arrow">→</span><span class="ans">Standard のまま（最小保存期間の罠）</span></div>
+    <div class="row"><span class="cue">30日後にはほとんど読まれないと分かっている</span><span class="arrow">→</span><span class="ans">ライフサイクルルールで Standard-IA へ</span></div>
+    <div class="row"><span class="cue">請求に説明のつかない S3 の容量がある</span><span class="arrow">→</span><span class="ans">AbortIncompleteMultipartUpload</span></div>
+    <div class="row"><span class="cue">誤って上書き・削除したものを戻したい</span><span class="arrow">→</span><span class="ans">バージョニング</span></div>
     <div class="row"><span class="cue">ルートユーザーでも削除できないこと</span><span class="arrow">→</span><span class="ans">Object Lock コンプライアンスモード</span></div>
+    <div class="row"><span class="cue">レプリケーションを設定したのに古いデータが写らない</span><span class="arrow">→</span><span class="ans">S3 Batch Replication</span></div>
+    <div class="row"><span class="cue">期限付きで特定ファイルだけ社外に渡す</span><span class="arrow">→</span><span class="ans">署名付き URL</span></div>
+    <div class="row"><span class="cue">バケットが意図せず公開されるのを防ぐ</span><span class="arrow">→</span><span class="ans">Block Public Access（アカウント単位）</span></div>
+    <div class="row"><span class="cue">チーム別に権限を分けたいがポリシーが肥大化</span><span class="arrow">→</span><span class="ans">S3 アクセスポイント</span></div>
     <div class="row"><span class="cue">誰がいつ復号したかを監査したい</span><span class="arrow">→</span><span class="ans">SSE-KMS</span></div>
-    <div class="row"><span class="cue">KMSのスロットリングで書き込みが失敗</span><span class="arrow">→</span><span class="ans">S3 Bucket Keys を有効化</span></div>
-    <div class="row"><span class="cue">期限付きで特定ファイルだけ社外に渡す</span><span class="arrow">→</span><span class="ans">署名付きURL</span></div>
-    <div class="row"><span class="cue">チーム別に権限を分けたいがポリシーが肥大化</span><span class="arrow">→</span><span class="ans">S3 Access Points</span></div>
-    <div class="row"><span class="cue">複数AZの複数EC2から同じファイルを共有（Linux）</span><span class="arrow">→</span><span class="ans">Amazon EFS</span></div>
+    <div class="row"><span class="cue">KMS のスロットリングで書き込みが失敗</span><span class="arrow">→</span><span class="ans">S3 Bucket Keys を有効化</span></div>
+    <div class="row"><span class="cue">HTTPS 以外のアクセスを拒否したい</span><span class="arrow">→</span><span class="ans">バケットポリシーで aws:SecureTransport</span></div>
+    <div class="row"><span class="cue">海外の拠点からの大容量アップロードが遅い</span><span class="arrow">→</span><span class="ans">S3 Transfer Acceleration</span></div>
+    <div class="row"><span class="cue">503 Slow Down が返る</span><span class="arrow">→</span><span class="ans">プレフィックスを分ける</span></div>
+    <div class="row"><span class="cue">gp2 で性能不足。コストは増やしたくない</span><span class="arrow">→</span><span class="ans">gp3 に変更</span></div>
+    <div class="row"><span class="cue">一時的なデータに最高の I/O 性能</span><span class="arrow">→</span><span class="ans">インスタンスストア</span></div>
+    <div class="row"><span class="cue">暗号化していない EBS ボリュームを暗号化</span><span class="arrow">→</span><span class="ans">スナップショット → 暗号化コピー → 作成</span></div>
+    <div class="row"><span class="cue">複数 AZ の複数 EC2 から同じファイルを共有（Linux）</span><span class="arrow">→</span><span class="ans">Amazon EFS</span></div>
     <div class="row"><span class="cue">Windows / SMB / Active Directory</span><span class="arrow">→</span><span class="ans">FSx for Windows File Server</span></div>
-    <div class="row"><span class="cue">HPC・機械学習でS3のデータを超高速に処理</span><span class="arrow">→</span><span class="ans">FSx for Lustre</span></div>
+    <div class="row"><span class="cue">HPC・機械学習で S3 のデータを超高速に処理</span><span class="arrow">→</span><span class="ans">FSx for Lustre</span></div>
     <div class="row"><span class="cue">既存バックアップソフトのテープを置き換え</span><span class="arrow">→</span><span class="ans">Tape Gateway</span></div>
+    <div class="row"><span class="cue">回線では期限に間に合わない量の移行</span><span class="arrow">→</span><span class="ans">Snowball Edge</span></div>
+    <div class="row"><span class="cue">複数サービスのバックアップを中央で管理</span><span class="arrow">→</span><span class="ans">AWS Backup</span></div>
   </div>
 
   <div class="note">
     <span class="label">迷ったときの最終手段</span>
-    <p>2択まで絞れて決まらないときは、<strong>要件に書かれていない機能を提供している側を落とす</strong>のがSAAの定石です。「取り出しに数時間かかってよい」と書いてある設問で Glacier Instant Retrieval を選ぶのは、要件を超えた性能に金を払うことになり、コスト最適化という出題意図に反します。逆に、<strong>要件を1つでも満たせない選択肢は、他がどれだけ安くても不正解</strong>です。</p>
-  </div></section>
+    <p>2択まで絞れて決まらないときは、<strong>要件に書かれていない機能を提供している側を落とす</strong>のが SAA の定石です。「取り出しに数時間かかってよい」と書いてある設問で Glacier Instant Retrieval を選ぶのは、要件を超えた性能にお金を払うことになり、コスト最適化という出題の意図に反します。逆に、<strong>要件を1つでも満たせない選択肢は、他がどれだけ安くても不正解</strong>です。</p>
+  </div>
+</section>
 
 <section id="s12" data-toc="確認問題">
-
+  
   <span class="h2num">12</span>
   <h2>確認問題</h2>
-  <p class="lead">先に自分で答えを決めてから開いてください。特にQ3は、計算してから開くこと。</p>
+  <p class="lead">先に自分で答えを決めてから開いてください。特に Q3 は、計算してから開くこと。</p>
 
   <details class="q">
     <summary><span class="qnum">Q1</span>新しいデータレイクを構築する。取り込まれるデータがどの程度読まれるかは事前に予測できず、データセットによって大きく異なる見込みである。運用の手間を増やさずにストレージコストを最適化したい。最も適切なのはどれか。
@@ -646,8 +962,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>「アクセスパターンが予測できない」かつ「運用の手間をかけたくない」は Intelligent-Tiering の定義そのものです。オブジェクトごとに監視して自動で階層を移し、取り出し料金もかかりません。</p>
-      <p><strong>判断軸:</strong> C は<em>読まれ方が分かっている</em>ときの手段です。この設問では30日後も頻繁に読まれるデータが混在する可能性があり、IA の取り出し料金でかえって高くつきます。D は単一AZで、データレイクの原本を置く先としては耐久性の要件を満たしません。A は間違いではありませんが最適化になっていません。<strong>「予測できない」という語を見た瞬間に B に寄せてください。</strong></p>
+      <p>「予測できない」「運用の手間をかけたくない」の2つが Intelligent-Tiering を指している。場面1の3枚目の図のとおり、S3 がオブジェクトごとに読まれ方を見張って自動で階層を移し、取り出し料金もかからない。</p>
+      <p><strong>判断軸:</strong> C は<em>読まれ方が分かっている</em>ときの手段（場面2）。この設問では30日後も頻繁に読まれるデータが混ざる可能性があり、IA の取り出し料金でかえって高くつく。D は AZ が1つで、データレイクの原本を置く先としては失ってよい条件を満たさない。A は間違いではないが最適化になっていない。<strong>「予測できない」を見たら B に寄せる。</strong></p>
     </div>
   </details>
 
@@ -662,8 +978,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: C</span></p>
-      <p>コンプライアンスモードは、保持期間中は<strong>ルートユーザーを含め誰も</strong>オブジェクトを削除できず、保持期間の短縮もモードの変更もできません。前提としてバージョニングが有効である必要があり、選択肢もそれを含んでいます。</p>
-      <p><strong>判断軸:</strong> A はバケットポリシー自体を管理者が書き換えられるので、要件の「管理者を含む」を満たしません。B は <code>s3:BypassGovernanceRetention</code> 権限を持つ者が解除できます。D は MFA を持つルートユーザーが削除できます。<strong>「誰も」「ルートユーザーでも」という語は、コンプライアンスモード以外を全部落とすための合図</strong>です。</p>
+      <p>場面3の Object Lock の図の右側。コンプライアンスモードは、保持期間中は<strong>ルートユーザーを含め誰も</strong>オブジェクトを削除できず、保持期間の短縮もモードの変更もできない。前提のバージョニングも選択肢に含まれている。</p>
+      <p><strong>判断軸:</strong> A はバケットポリシーそのものを管理者が書き換えられるので、「管理者を含む」を満たさない。B は <code>s3:BypassGovernanceRetention</code> の権限を持つ人が解除できる（図の左側）。D は MFA を持つルートユーザーが削除できる。<strong>「誰も」「ルートユーザーでも」は、コンプライアンスモード以外を全部落とすための合図。</strong></p>
     </div>
   </details>
 
@@ -678,8 +994,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>計算します。300 TB は 2,400,000 Gbit。500 Mbps（0.5 Gbps）で割ると 4,800,000 秒、およそ<strong>56日</strong>です。これは回線を100%占有した理想値なので、実際はさらに長くかかります。3週間には到底収まらないため、オフライン移送を選びます。</p>
-      <p><strong>判断軸:</strong> A と C は同じ物理回線を使う以上、上限は変わりません。Transfer Acceleration は経路を最適化するもので、回線帯域そのものを増やすわけではありません。D は Direct Connect の開通に数週間から数か月かかるため、期限に間に合いません。<strong>移行の設問を見たら、まずデータ量を bit に直して回線速度で割る。</strong>それが3桁の日数になれば Snow、数日で済むなら DataSync です。</p>
+      <p>場面9の割り算をする。300 TB は 2,400,000 ギガビット。500 Mbps（0.5 Gbps）で割ると 4,800,000 秒、およそ<strong>56日</strong>。回線を 100% 使えた場合の理想の値なので、実際はさらに長い。3週間には収まらないので、機器に書き込んで運ぶ。</p>
+      <p><strong>判断軸:</strong> A と C は同じ回線を使う以上、上限は変わらない。Transfer Acceleration（場面6）は経路を良くするもので、回線の太さを増やすわけではない。D は Direct Connect の開通に数週間から数か月かかり、期限に間に合わない。<strong>移行の設問を見たら、まずデータ量をビットに直して回線速度で割る。</strong>期限を超えるなら Snow、数日で済むなら DataSync。</p>
     </div>
   </details>
 
@@ -694,8 +1010,8 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>EFS は複数AZの複数インスタンスから同時にマウントでき、容量も自動で伸縮します。Auto Scaling でインスタンスが増減する構成と相性が良い、というより、そのために存在するサービスです。</p>
-      <p><strong>判断軸:</strong> A はマルチアタッチが<strong>同一AZ内の最大16台</strong>に限られ、さらに通常のファイルシステムでは同時書き込みでデータが壊れます。この設問は3AZなので成立しません。C は SMB / Windows 向けで、Linux の POSIX 要件に合いません。D は各インスタンスのデータがずれるため、同時読み書きの整合性を満たせません。<strong>「複数AZ」「Linux」「同時に読み書き」の3語が揃ったら EFS</strong> です。</p>
+      <p>場面8の EFS の図そのもの。EFS は複数の AZ の複数のインスタンスから同時にマウントでき、容量も自動で伸び縮みする。Auto Scaling で台が増減しても、全員が同じフォルダを見続けられる。</p>
+      <p><strong>判断軸:</strong> A のマルチアタッチ（場面7）は<strong>同じ AZ の中の最大16台</strong>に限られ、普通のファイルシステムでは同時に書き込むとデータが壊れる。この設問は 3AZ なので成り立たない。C は SMB / Windows 向けで、Linux の POSIX の要件に合わない。D は各インスタンスのデータがずれるので、同時の読み書きの整合性を満たせない。<strong>「複数 AZ」「Linux」「同時に読み書き」が揃ったら EFS。</strong></p>
     </div>
   </details>
 
@@ -710,38 +1026,41 @@ footer{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);font-si
     </summary>
     <div class="a">
       <p><span class="correct">正解: B</span></p>
-      <p>SSE-KMS はオブジェクトごとに KMS の API を呼ぶため、高スループットのパイプラインでは KMS 側のリクエストクォータに当たります。S3 Bucket Keys を有効にすると、バケット単位で生成したキーを再利用して KMS の呼び出し回数を大幅に削減できます。暗号化方式も CloudTrail での監査も維持されたままです。</p>
-      <p><strong>判断軸:</strong> A と D は<strong>要件（鍵の使用履歴を CloudTrail で監査）を落としています</strong>。「エラーは消えるが要件を満たさない」選択肢は、SAAでは常に不正解です。C はプレフィックス分割で S3 側のリクエストレート上限には効きますが、KMS のクォータには一切効きません。<strong>エラーがどの層で出ているかを特定してから対策を選ぶ</strong>、という読み方が問われています。</p>
+      <p>場面5の2枚目の図。SSE-KMS は読み書きのたびに KMS を呼ぶので、大量の書き込みでは KMS 側の回数の上限に当たる。S3 Bucket Keys を有効にすると、バケットごとの鍵を使い回して KMS を呼ぶ回数を大きく減らせる。暗号化の方式も CloudTrail での監査も保たれる。</p>
+      <p><strong>判断軸:</strong> A と D は<strong>要件（鍵の使用履歴を CloudTrail で監査）を落としている</strong>。「エラーは消えるが要件を満たさない」選択肢は、SAA では常に不正解。C のプレフィックスの分割（場面6）は S3 側のリクエストレートの上限には効くが、KMS の上限には効かない。<strong>エラーがどの層で出ているかを見分けてから対策を選ぶ。</strong></p>
     </div>
-  </details></section>
+  </details>
+</section>
 
 <section id="s13" data-toc="今日の宿題">
-
+  
   <span class="h2num">13</span>
   <h2>今日の宿題</h2>
-  <p>ストレージは選択肢が多いぶん、書き出して整理しないと定着しません。25分でここまでやってください。</p>
+  <p>20分で、ここまでやってください。</p>
 
   <div class="hw">
-    <div class="item"><span class="box"></span><span class="t"><code>notes/storage/</code> の README チェックリストを埋める<small>S3クラス / ライフサイクル / 保護 / 暗号化 / EBS / EFS・FSx / ゲートウェイ。各項目に「どんな要件のときに選ぶか」を1行ずつ</small></span></div>
-    <div class="item"><span class="box"></span><span class="t">ストレージクラスの比較表を、資料を見ずに再現する<small>列は「アクセス頻度」「取り出し時間」「最小保存期間」の3つだけでよい。書けなければ02に戻る</small></span></div>
-    <div class="item"><span class="box"></span><span class="t"><code>notes/00_map/d3-performance.md</code> と <code>notes/00_map/d4-cost.md</code> に追記<small>d3 には EBS のタイプ選択とS3のプレフィックス設計、d4 にはライフサイクルと最小保存期間の罠。11の判断軸表から、自分が知らなかった行だけを写す</small></span></div>
-    <div class="item"><span class="box"></span><span class="t">W3 の Issue のチェック項目を埋める<small>「S3: ストレージクラスとライフサイクル」「S3: アクセス制御と暗号化」「ブロック/ファイル: EBS・EFS・FSx の使い分け」</small></span></div>
-    <div class="item"><span class="box"></span><span class="t"><code>plan/log.md</code> に1行残す<small>かかった時間と、今日いちばん腑に落ちなかったこと。次回その1点から始めます</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">9つの場面を、資料を閉じて書き出す<small>「どんな依頼で、答えは何だったか」を9行。書けたら、チャットに貼ってもらえれば私が notes/ に清書します</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">各場面の「初めて出る言葉」を、正式名称なしで一言ずつ言えるか試す<small>言えなかった言葉だけ、その場面に戻る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">ストレージクラスを左から右へ並べて、3つの行を何も見ずに書く<small>読むときに待つ時間 / 最小保存期間 / AZ の数。書けなければ場面1の図に戻る</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">「ファイルを共有したい」と言われたときの判定の順を言う<small>Windows → HPC → NetApp / ZFS → Linux の NFS（EFS）→ 1台だけ（EBS）</small></span></div>
+    <div class="item"><span class="box"></span><span class="t">終わったことを伝える<small>Issue のチェックと plan/log.md は私が更新します</small></span></div>
   </div>
 
   <div class="note">
-    <span class="label">週末のハンズオン</span>
-    <p>2本やります。<strong>① S3 のライフサイクル設定</strong>――テスト用バケットにバージョニングを有効にし、プレフィックスを切って遷移ルールと非現行バージョンの失効、未完了マルチパートの中止を設定します。ルールを保存しようとして「30日未満は指定できない」と怒られる経験を、実際にしておいてください。<strong>② EC2 に IAM ロールを付けて、キーなしで S3 にアクセスする</strong>――W1でやった<em>アクセスキーを書かない</em>を、今度は自分の手で成立させます。ロールを付ける前に <code>aws s3 ls</code> が失敗することを先に確認してから、ロールをアタッチして成功に変わる瞬間を見るのがポイントです。</p>
+    <span class="label">ハンズオンとのつながり</span>
+    <p><strong>ハンズオン②（IAM ロール ＋ Auto Scaling）</strong>の前半は、EC2 に IAM ロールを付けて、アクセスキーなしで S3 にアクセスする作業です。ロールを付ける前に <code>aws s3 ls</code> が失敗することを先に確かめてから、ロールを付けて成功に変わるところを見てください。</p>
+    <p><strong>ハンズオン③（実施するかは 11/22 の判定しだい）</strong>では、S3 のライフサイクルルールを設定します。テスト用のバケットでバージョニングを有効にし、場面2の図と同じルール（遷移、古いバージョンの失効、送りかけの断片の掃除）を作ります。Standard-IA への遷移を 29日にして保存しようとし、断られるところまで試してください。<strong>終わったらバケットを空にして削除</strong>すること。</p>
   </div>
 
   <div class="note">
     <span class="label">次回</span>
-    <p>W4 はデータベースです。RDS と Aurora の違い、リードレプリカとマルチAZの使い分け、DynamoDB のキャパシティモードとインデックス、そして ElastiCache。<strong>「リードレプリカは可用性のためではなく読み取り性能のため」</strong>という一点だけ、先に頭に入れておいてください。ここを取り違えると、マルチAZとの比較問題を全部落とします。</p>
-  </div></section>
+    <p>次はデータベースです。<strong>「リードレプリカは可用性のためではなく、読み取り性能のため」</strong>という一点だけ、先に頭に入れておいてください。</p>
+  </div>
+</section>
 
 <footer>
   AWS SAA-C03 / W3 座学<br>
-  サービス仕様は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
+  サービス仕様と数値は AWS 公式ドキュメントに基づく。出題比率は SAA-C03 試験ガイドによる。
 </footer>
 
 </main>
